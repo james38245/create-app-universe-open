@@ -7,7 +7,6 @@ import { toast } from '@/hooks/use-toast';
 import { useQueryClient } from '@tanstack/react-query';
 import VenueFormProvider from './VenueFormProvider';
 import VenueFormContent from './VenueFormContent';
-import VenuePaymentSection from './VenuePaymentSection';
 import { VenueFormData } from '@/types/venue';
 
 interface AddVenueFormProps {
@@ -73,17 +72,10 @@ const AddVenueForm: React.FC<AddVenueFormProps> = ({ onSuccess, onCancel }) => {
             setBlockedDates={setBlockedDates}
             userProfile={userProfile}
             setUserProfile={setUserProfile}
-          >
-            <VenueFormContent onCancel={onCancel} />
-          </VenueFormProvider>
+            onCancel={onCancel}
+          />
         </CardContent>
       </Card>
-
-      <VenuePaymentSection
-        form={null as any}
-        userProfile={userProfile}
-        setUserProfile={setUserProfile}
-      />
     </div>
   );
 };

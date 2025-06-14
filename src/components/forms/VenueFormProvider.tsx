@@ -6,9 +6,10 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { Form } from '@/components/ui/form';
 import { venueSchema, VenueFormData, defaultVenueFormValues } from '@/types/venue';
+import VenueFormContent from './VenueFormContent';
+import VenuePaymentSection from './VenuePaymentSection';
 
 interface VenueFormProviderProps {
-  children: React.ReactNode;
   onSubmit: (data: VenueFormData, uploadedImages: string[], blockedDates: string[]) => Promise<void>;
   uploadedImages: string[];
   setUploadedImages: (images: string[]) => void;
@@ -16,17 +17,18 @@ interface VenueFormProviderProps {
   setBlockedDates: (dates: string[]) => void;
   userProfile: any;
   setUserProfile: (profile: any) => void;
+  onCancel: () => void;
 }
 
 const VenueFormProvider: React.FC<VenueFormProviderProps> = ({
-  children,
   onSubmit,
   uploadedImages,
   setUploadedImages,
   blockedDates,
   setBlockedDates,
   userProfile,
-  setUserProfile
+  setUserProfile,
+  onCancel
 }) => {
   const { user } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -62,15 +64,21 @@ const VenueFormProvider: React.FC<VenueFormProviderProps> = ({
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
-        {React.cloneElement(children as React.ReactElement, {
-          form,
-          isSubmitting,
-          uploadedImages,
-          setUploadedImages,
-          blockedDates,
-          setBlockedDates,
-          userProfile
-        })}
+        <VenueFormContent
+          form={form}
+          isSubmitting={isSubmitting}
+          uploadedImages={uploadedImages}
+          setUploadedImages={setUploadedImages}
+          blockedDates={blockedDates}
+          setBlockedDates={setBlockedDates}
+          onCancel={onCancel}
+        />
+        
+        <VenuePaymentSection
+          form={form}
+          userProfile={userProfile}
+          setUserProfile={setUserProfile}
+        />
       </form>
     </Form>
   );
