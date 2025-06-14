@@ -52,9 +52,6 @@ const Navigation = () => {
                   <Link to="/messages" className="text-gray-700 hover:text-purple-600 font-medium">
                     Messages
                   </Link>
-                  <Link to="/admin" className="text-gray-700 hover:text-purple-600 font-medium">
-                    Admin
-                  </Link>
                 </>
               )}
             </div>
@@ -156,13 +153,6 @@ const Navigation = () => {
                       onClick={() => setIsOpen(false)}
                     >
                       Messages
-                    </Link>
-                    <Link 
-                      to="/admin" 
-                      className="text-gray-700 hover:text-purple-600 font-medium"
-                      onClick={() => setIsOpen(false)}
-                    >
-                      Admin Dashboard
                     </Link>
                     <Link 
                       to="/profile" 
