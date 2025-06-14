@@ -1,11 +1,16 @@
-
 import React, { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { toast } from 'sonner';
 import { 
   Users, 
   Building, 
@@ -17,7 +22,8 @@ import {
   Edit,
   Trash2,
   CheckCircle,
-  XCircle
+  XCircle,
+  Plus
 } from 'lucide-react';
 import {
   Table,
@@ -30,6 +36,11 @@ import {
 
 const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState('overview');
+  const [editingUser, setEditingUser] = useState<any>(null);
+  const [editingVenue, setEditingVenue] = useState<any>(null);
+  const [editingProvider, setEditingProvider] = useState<any>(null);
+  const [editingBooking, setEditingBooking] = useState<any>(null);
+  const queryClient = useQueryClient();
 
   // Fetch overview stats
   const { data: stats } = useQuery({
@@ -114,6 +125,147 @@ const AdminDashboard = () => {
     }
   });
 
+  // Mutations for CRUD operations
+  const updateUserMutation = useMutation({
+    mutationFn: async (user: any) => {
+      const { error } = await supabase
+        .from('profiles')
+        .update(user)
+        .eq('id', user.id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-users'] });
+      toast.success('User updated successfully');
+      setEditingUser(null);
+    },
+    onError: (error) => {
+      toast.error('Failed to update user: ' + error.message);
+    }
+  });
+
+  const deleteUserMutation = useMutation({
+    mutationFn: async (userId: string) => {
+      const { error } = await supabase
+        .from('profiles')
+        .delete()
+        .eq('id', userId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-users'] });
+      toast.success('User deleted successfully');
+    },
+    onError: (error) => {
+      toast.error('Failed to delete user: ' + error.message);
+    }
+  });
+
+  const updateVenueMutation = useMutation({
+    mutationFn: async (venue: any) => {
+      const { error } = await supabase
+        .from('venues')
+        .update(venue)
+        .eq('id', venue.id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-venues'] });
+      toast.success('Venue updated successfully');
+      setEditingVenue(null);
+    },
+    onError: (error) => {
+      toast.error('Failed to update venue: ' + error.message);
+    }
+  });
+
+  const deleteVenueMutation = useMutation({
+    mutationFn: async (venueId: string) => {
+      const { error } = await supabase
+        .from('venues')
+        .delete()
+        .eq('id', venueId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-venues'] });
+      toast.success('Venue deleted successfully');
+    },
+    onError: (error) => {
+      toast.error('Failed to delete venue: ' + error.message);
+    }
+  });
+
+  const updateProviderMutation = useMutation({
+    mutationFn: async (provider: any) => {
+      const { error } = await supabase
+        .from('service_providers')
+        .update(provider)
+        .eq('id', provider.id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-providers'] });
+      toast.success('Provider updated successfully');
+      setEditingProvider(null);
+    },
+    onError: (error) => {
+      toast.error('Failed to update provider: ' + error.message);
+    }
+  });
+
+  const deleteProviderMutation = useMutation({
+    mutationFn: async (providerId: string) => {
+      const { error } = await supabase
+        .from('service_providers')
+        .delete()
+        .eq('id', providerId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-providers'] });
+      toast.success('Provider deleted successfully');
+    },
+    onError: (error) => {
+      toast.error('Failed to delete provider: ' + error.message);
+    }
+  });
+
+  const updateBookingMutation = useMutation({
+    mutationFn: async (booking: any) => {
+      const { error } = await supabase
+        .from('bookings')
+        .update(booking)
+        .eq('id', booking.id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-bookings'] });
+      toast.success('Booking updated successfully');
+      setEditingBooking(null);
+    },
+    onError: (error) => {
+      toast.error('Failed to update booking: ' + error.message);
+    }
+  });
+
+  const deleteBookingMutation = useMutation({
+    mutationFn: async (bookingId: string) => {
+      const { error } = await supabase
+        .from('bookings')
+        .delete()
+        .eq('id', bookingId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-bookings'] });
+      toast.success('Booking deleted successfully');
+    },
+    onError: (error) => {
+      toast.error('Failed to delete booking: ' + error.message);
+    }
+  });
+
   const toggleVenueStatus = async (venueId: string, currentStatus: boolean) => {
     const { error } = await supabase
       .from('venues')
@@ -122,6 +274,10 @@ const AdminDashboard = () => {
 
     if (error) {
       console.error('Error updating venue status:', error);
+      toast.error('Failed to update venue status');
+    } else {
+      queryClient.invalidateQueries({ queryKey: ['admin-venues'] });
+      toast.success('Venue status updated successfully');
     }
   };
 
@@ -133,6 +289,10 @@ const AdminDashboard = () => {
 
     if (error) {
       console.error('Error updating provider status:', error);
+      toast.error('Failed to update provider status');
+    } else {
+      queryClient.invalidateQueries({ queryKey: ['admin-providers'] });
+      toast.success('Provider status updated successfully');
     }
   };
 
@@ -275,12 +435,79 @@ const AdminDashboard = () => {
                           </TableCell>
                           <TableCell>
                             <div className="flex gap-2">
-                              <Button variant="outline" size="sm">
-                                <Eye className="h-4 w-4" />
-                              </Button>
-                              <Button variant="outline" size="sm">
-                                <Edit className="h-4 w-4" />
-                              </Button>
+                              <Dialog>
+                                <DialogTrigger asChild>
+                                  <Button variant="outline" size="sm" onClick={() => setEditingUser(user)}>
+                                    <Edit className="h-4 w-4" />
+                                  </Button>
+                                </DialogTrigger>
+                                <DialogContent>
+                                  <DialogHeader>
+                                    <DialogTitle>Edit User</DialogTitle>
+                                  </DialogHeader>
+                                  {editingUser && (
+                                    <div className="space-y-4">
+                                      <div>
+                                        <Label htmlFor="full_name">Full Name</Label>
+                                        <Input
+                                          id="full_name"
+                                          value={editingUser.full_name || ''}
+                                          onChange={(e) => setEditingUser({...editingUser, full_name: e.target.value})}
+                                        />
+                                      </div>
+                                      <div>
+                                        <Label htmlFor="user_type">User Type</Label>
+                                        <Select
+                                          value={editingUser.user_type}
+                                          onValueChange={(value) => setEditingUser({...editingUser, user_type: value})}
+                                        >
+                                          <SelectTrigger>
+                                            <SelectValue />
+                                          </SelectTrigger>
+                                          <SelectContent>
+                                            <SelectItem value="client">Client</SelectItem>
+                                            <SelectItem value="venue_owner">Venue Owner</SelectItem>
+                                            <SelectItem value="service_provider">Service Provider</SelectItem>
+                                            <SelectItem value="admin">Admin</SelectItem>
+                                          </SelectContent>
+                                        </Select>
+                                      </div>
+                                      <div>
+                                        <Label htmlFor="phone">Phone</Label>
+                                        <Input
+                                          id="phone"
+                                          value={editingUser.phone || ''}
+                                          onChange={(e) => setEditingUser({...editingUser, phone: e.target.value})}
+                                        />
+                                      </div>
+                                      <Button onClick={() => updateUserMutation.mutate(editingUser)}>
+                                        Save Changes
+                                      </Button>
+                                    </div>
+                                  )}
+                                </DialogContent>
+                              </Dialog>
+                              <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                  <Button variant="outline" size="sm">
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                  <AlertDialogHeader>
+                                    <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                      This action cannot be undone. This will permanently delete the user.
+                                    </AlertDialogDescription>
+                                  </AlertDialogHeader>
+                                  <AlertDialogFooter>
+                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                    <AlertDialogAction onClick={() => deleteUserMutation.mutate(user.id)}>
+                                      Delete
+                                    </AlertDialogAction>
+                                  </AlertDialogFooter>
+                                </AlertDialogContent>
+                              </AlertDialog>
                             </div>
                           </TableCell>
                         </TableRow>
@@ -316,7 +543,7 @@ const AdminDashboard = () => {
                           <TableCell>
                             <Badge variant="outline">{venue.venue_type}</Badge>
                           </TableCell>
-                          <TableCell>KSh {venue.price_per_day.toLocaleString()}</TableCell>
+                          <TableCell>KSh {venue.price_per_day?.toLocaleString()}</TableCell>
                           <TableCell>
                             <Badge variant={venue.is_active ? "default" : "secondary"}>
                               {venue.is_active ? "Active" : "Inactive"}
@@ -324,9 +551,59 @@ const AdminDashboard = () => {
                           </TableCell>
                           <TableCell>
                             <div className="flex gap-2">
-                              <Button variant="outline" size="sm">
-                                <Eye className="h-4 w-4" />
-                              </Button>
+                              <Dialog>
+                                <DialogTrigger asChild>
+                                  <Button variant="outline" size="sm" onClick={() => setEditingVenue(venue)}>
+                                    <Edit className="h-4 w-4" />
+                                  </Button>
+                                </DialogTrigger>
+                                <DialogContent>
+                                  <DialogHeader>
+                                    <DialogTitle>Edit Venue</DialogTitle>
+                                  </DialogHeader>
+                                  {editingVenue && (
+                                    <div className="space-y-4">
+                                      <div>
+                                        <Label htmlFor="name">Name</Label>
+                                        <Input
+                                          id="name"
+                                          value={editingVenue.name || ''}
+                                          onChange={(e) => setEditingVenue({...editingVenue, name: e.target.value})}
+                                        />
+                                      </div>
+                                      <div>
+                                        <Label htmlFor="location">Location</Label>
+                                        <Input
+                                          id="location"
+                                          value={editingVenue.location || ''}
+                                          onChange={(e) => setEditingVenue({...editingVenue, location: e.target.value})}
+                                        />
+                                      </div>
+                                      <div>
+                                        <Label htmlFor="price_per_day">Price per Day</Label>
+                                        <Input
+                                          id="price_per_day"
+                                          type="number"
+                                          value={editingVenue.price_per_day || ''}
+                                          onChange={(e) => setEditingVenue({...editingVenue, price_per_day: parseFloat(e.target.value)})}
+                                        />
+                                      </div>
+                                      <div>
+                                        <Label htmlFor="capacity">Capacity</Label>
+                                        <Input
+                                          id="capacity"
+                                          type="number"
+                                          value={editingVenue.capacity || ''}
+                                          onChange={(e) => setEditingVenue({...editingVenue, capacity: parseInt(e.target.value)})}
+                                        />
+                                      </div>
+                                      <Button onClick={() => updateVenueMutation.mutate(editingVenue)}>
+                                        Save Changes
+                                      </Button>
+                                    </div>
+                                  )}
+                                </DialogContent>
+                              </Dialog>
                               <Button 
                                 variant="outline" 
                                 size="sm"
@@ -334,6 +611,27 @@ const AdminDashboard = () => {
                               >
                                 {venue.is_active ? <XCircle className="h-4 w-4" /> : <CheckCircle className="h-4 w-4" />}
                               </Button>
+                              <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                  <Button variant="outline" size="sm">
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                  <AlertDialogHeader>
+                                    <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                      This action cannot be undone. This will permanently delete the venue.
+                                    </AlertDialogDescription>
+                                  </AlertDialogHeader>
+                                  <AlertDialogFooter>
+                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                    <AlertDialogAction onClick={() => deleteVenueMutation.mutate(venue.id)}>
+                                      Delete
+                                    </AlertDialogAction>
+                                  </AlertDialogFooter>
+                                </AlertDialogContent>
+                              </AlertDialog>
                             </div>
                           </TableCell>
                         </TableRow>
@@ -369,7 +667,7 @@ const AdminDashboard = () => {
                             <Badge variant="outline">{provider.service_category}</Badge>
                           </TableCell>
                           <TableCell>{provider.years_experience}+ years</TableCell>
-                          <TableCell>KSh {provider.price_per_event.toLocaleString()}</TableCell>
+                          <TableCell>KSh {provider.price_per_event?.toLocaleString()}</TableCell>
                           <TableCell>
                             <Badge variant={provider.is_available ? "default" : "secondary"}>
                               {provider.is_available ? "Available" : "Busy"}
@@ -377,9 +675,51 @@ const AdminDashboard = () => {
                           </TableCell>
                           <TableCell>
                             <div className="flex gap-2">
-                              <Button variant="outline" size="sm">
-                                <Eye className="h-4 w-4" />
-                              </Button>
+                              <Dialog>
+                                <DialogTrigger asChild>
+                                  <Button variant="outline" size="sm" onClick={() => setEditingProvider(provider)}>
+                                    <Edit className="h-4 w-4" />
+                                  </Button>
+                                </DialogTrigger>
+                                <DialogContent>
+                                  <DialogHeader>
+                                    <DialogTitle>Edit Service Provider</DialogTitle>
+                                  </DialogHeader>
+                                  {editingProvider && (
+                                    <div className="space-y-4">
+                                      <div>
+                                        <Label htmlFor="service_category">Service Category</Label>
+                                        <Input
+                                          id="service_category"
+                                          value={editingProvider.service_category || ''}
+                                          onChange={(e) => setEditingProvider({...editingProvider, service_category: e.target.value})}
+                                        />
+                                      </div>
+                                      <div>
+                                        <Label htmlFor="price_per_event">Price per Event</Label>
+                                        <Input
+                                          id="price_per_event"
+                                          type="number"
+                                          value={editingProvider.price_per_event || ''}
+                                          onChange={(e) => setEditingProvider({...editingProvider, price_per_event: parseFloat(e.target.value)})}
+                                        />
+                                      </div>
+                                      <div>
+                                        <Label htmlFor="years_experience">Years of Experience</Label>
+                                        <Input
+                                          id="years_experience"
+                                          type="number"
+                                          value={editingProvider.years_experience || ''}
+                                          onChange={(e) => setEditingProvider({...editingProvider, years_experience: parseInt(e.target.value)})}
+                                        />
+                                      </div>
+                                      <Button onClick={() => updateProviderMutation.mutate(editingProvider)}>
+                                        Save Changes
+                                      </Button>
+                                    </div>
+                                  )}
+                                </DialogContent>
+                              </Dialog>
                               <Button 
                                 variant="outline" 
                                 size="sm"
@@ -387,6 +727,27 @@ const AdminDashboard = () => {
                               >
                                 {provider.is_available ? <XCircle className="h-4 w-4" /> : <CheckCircle className="h-4 w-4" />}
                               </Button>
+                              <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                  <Button variant="outline" size="sm">
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                  <AlertDialogHeader>
+                                    <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                      This action cannot be undone. This will permanently delete the service provider.
+                                    </AlertDialogDescription>
+                                  </AlertDialogHeader>
+                                  <AlertDialogFooter>
+                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                    <AlertDialogAction onClick={() => deleteProviderMutation.mutate(provider.id)}>
+                                      Delete
+                                    </AlertDialogAction>
+                                  </AlertDialogFooter>
+                                </AlertDialogContent>
+                              </AlertDialog>
                             </div>
                           </TableCell>
                         </TableRow>
@@ -426,7 +787,7 @@ const AdminDashboard = () => {
                           <TableCell>
                             {new Date(booking.event_date).toLocaleDateString()}
                           </TableCell>
-                          <TableCell>KSh {booking.total_amount.toLocaleString()}</TableCell>
+                          <TableCell>KSh {booking.total_amount?.toLocaleString()}</TableCell>
                           <TableCell>
                             <Badge variant={booking.status === 'confirmed' ? "default" : "secondary"}>
                               {booking.status}
@@ -434,12 +795,88 @@ const AdminDashboard = () => {
                           </TableCell>
                           <TableCell>
                             <div className="flex gap-2">
-                              <Button variant="outline" size="sm">
-                                <Eye className="h-4 w-4" />
-                              </Button>
-                              <Button variant="outline" size="sm">
-                                <Edit className="h-4 w-4" />
-                              </Button>
+                              <Dialog>
+                                <DialogTrigger asChild>
+                                  <Button variant="outline" size="sm" onClick={() => setEditingBooking(booking)}>
+                                    <Edit className="h-4 w-4" />
+                                  </Button>
+                                </DialogTrigger>
+                                <DialogContent>
+                                  <DialogHeader>
+                                    <DialogTitle>Edit Booking</DialogTitle>
+                                  </DialogHeader>
+                                  {editingBooking && (
+                                    <div className="space-y-4">
+                                      <div>
+                                        <Label htmlFor="status">Status</Label>
+                                        <Select
+                                          value={editingBooking.status}
+                                          onValueChange={(value) => setEditingBooking({...editingBooking, status: value})}
+                                        >
+                                          <SelectTrigger>
+                                            <SelectValue />
+                                          </SelectTrigger>
+                                          <SelectContent>
+                                            <SelectItem value="pending">Pending</SelectItem>
+                                            <SelectItem value="confirmed">Confirmed</SelectItem>
+                                            <SelectItem value="completed">Completed</SelectItem>
+                                            <SelectItem value="cancelled">Cancelled</SelectItem>
+                                          </SelectContent>
+                                        </Select>
+                                      </div>
+                                      <div>
+                                        <Label htmlFor="payment_status">Payment Status</Label>
+                                        <Select
+                                          value={editingBooking.payment_status}
+                                          onValueChange={(value) => setEditingBooking({...editingBooking, payment_status: value})}
+                                        >
+                                          <SelectTrigger>
+                                            <SelectValue />
+                                          </SelectTrigger>
+                                          <SelectContent>
+                                            <SelectItem value="pending">Pending</SelectItem>
+                                            <SelectItem value="paid">Paid</SelectItem>
+                                            <SelectItem value="refunded">Refunded</SelectItem>
+                                          </SelectContent>
+                                        </Select>
+                                      </div>
+                                      <div>
+                                        <Label htmlFor="total_amount">Total Amount</Label>
+                                        <Input
+                                          id="total_amount"
+                                          type="number"
+                                          value={editingBooking.total_amount || ''}
+                                          onChange={(e) => setEditingBooking({...editingBooking, total_amount: parseFloat(e.target.value)})}
+                                        />
+                                      </div>
+                                      <Button onClick={() => updateBookingMutation.mutate(editingBooking)}>
+                                        Save Changes
+                                      </Button>
+                                    </div>
+                                  )}
+                                </DialogContent>
+                              </Dialog>
+                              <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                  <Button variant="outline" size="sm">
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                  <AlertDialogHeader>
+                                    <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                      This action cannot be undone. This will permanently delete the booking.
+                                    </AlertDialogDescription>
+                                  </AlertDialogHeader>
+                                  <AlertDialogFooter>
+                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                    <AlertDialogAction onClick={() => deleteBookingMutation.mutate(booking.id)}>
+                                      Delete
+                                    </AlertDialogAction>
+                                  </AlertDialogFooter>
+                                </AlertDialogContent>
+                              </AlertDialog>
                             </div>
                           </TableCell>
                         </TableRow>
