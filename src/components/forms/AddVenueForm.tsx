@@ -12,6 +12,8 @@ import { toast } from '@/hooks/use-toast';
 import { useQueryClient } from '@tanstack/react-query';
 import ImageUpload from './ImageUpload';
 import VenueFormFields from './VenueFormFields';
+import AvailabilityCalendar from './AvailabilityCalendar';
+import BookingTermsSettings from './BookingTermsSettings';
 
 const venueSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
@@ -22,7 +24,16 @@ const venueSchema = z.object({
   venue_type: z.string().min(1, 'Venue type is required'),
   amenities: z.array(z.string()).optional(),
   images: z.array(z.string()).optional(),
-  is_active: z.boolean().default(true)
+  is_active: z.boolean().default(true),
+  booking_terms: z.object({
+    deposit_percentage: z.number().min(0).max(100),
+    cancellation_policy: z.string(),
+    payment_due_days: z.number().min(1),
+    advance_booking_days: z.number().min(1),
+    minimum_booking_hours: z.number().min(1),
+    special_terms: z.string().optional()
+  }).optional(),
+  blocked_dates: z.array(z.string()).optional()
 });
 
 type VenueFormData = z.infer<typeof venueSchema>;
@@ -37,6 +48,7 @@ const AddVenueForm: React.FC<AddVenueFormProps> = ({ onSuccess, onCancel }) => {
   const queryClient = useQueryClient();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [uploadedImages, setUploadedImages] = useState<string[]>([]);
+  const [blockedDates, setBlockedDates] = useState<string[]>([]);
 
   const form = useForm<VenueFormData>({
     resolver: zodResolver(venueSchema),
@@ -49,7 +61,16 @@ const AddVenueForm: React.FC<AddVenueFormProps> = ({ onSuccess, onCancel }) => {
       venue_type: '',
       amenities: [],
       images: [],
-      is_active: true
+      is_active: true,
+      booking_terms: {
+        deposit_percentage: 30,
+        cancellation_policy: 'Full refund if cancelled 7 days before event',
+        payment_due_days: 7,
+        advance_booking_days: 2,
+        minimum_booking_hours: 4,
+        special_terms: ''
+      },
+      blocked_dates: []
     }
   });
 
@@ -68,7 +89,9 @@ const AddVenueForm: React.FC<AddVenueFormProps> = ({ onSuccess, onCancel }) => {
         amenities: data.amenities || [],
         images: uploadedImages,
         is_active: data.is_active,
-        owner_id: user.id
+        owner_id: user.id,
+        booking_terms: data.booking_terms,
+        blocked_dates: blockedDates
       };
 
       const { error } = await supabase
@@ -79,7 +102,7 @@ const AddVenueForm: React.FC<AddVenueFormProps> = ({ onSuccess, onCancel }) => {
 
       toast({
         title: "Success",
-        description: "Venue added successfully!"
+        description: "Venue added successfully with booking terms and availability!"
       });
 
       queryClient.invalidateQueries({ queryKey: ['my-venues'] });
@@ -97,7 +120,7 @@ const AddVenueForm: React.FC<AddVenueFormProps> = ({ onSuccess, onCancel }) => {
   };
 
   return (
-    <Card className="max-w-2xl mx-auto">
+    <Card className="max-w-4xl mx-auto">
       <CardHeader>
         <CardTitle>Add New Venue</CardTitle>
       </CardHeader>
@@ -113,6 +136,14 @@ const AddVenueForm: React.FC<AddVenueFormProps> = ({ onSuccess, onCancel }) => {
               bucketName="venue-images"
               label="Venue Images"
               inputId="image-upload"
+            />
+
+            <BookingTermsSettings form={form} />
+
+            <AvailabilityCalendar
+              blockedDates={blockedDates}
+              setBlockedDates={setBlockedDates}
+              onDatesChange={(dates) => form.setValue('blocked_dates', dates)}
             />
 
             <div className="flex gap-4">

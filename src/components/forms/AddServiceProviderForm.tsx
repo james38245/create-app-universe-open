@@ -12,6 +12,8 @@ import { toast } from '@/hooks/use-toast';
 import { useQueryClient } from '@tanstack/react-query';
 import ImageUpload from './ImageUpload';
 import ServiceProviderFormFields from './ServiceProviderFormFields';
+import AvailabilityCalendar from './AvailabilityCalendar';
+import BookingTermsSettings from './BookingTermsSettings';
 
 const serviceProviderSchema = z.object({
   service_category: z.string().min(1, 'Service category is required'),
@@ -22,7 +24,16 @@ const serviceProviderSchema = z.object({
   certifications: z.array(z.string()).optional(),
   response_time_hours: z.number().min(1, 'Response time must be at least 1 hour'),
   is_available: z.boolean().default(true),
-  portfolio_images: z.array(z.string()).optional()
+  portfolio_images: z.array(z.string()).optional(),
+  booking_terms: z.object({
+    deposit_percentage: z.number().min(0).max(100),
+    cancellation_policy: z.string(),
+    payment_due_days: z.number().min(1),
+    advance_booking_days: z.number().min(1),
+    minimum_booking_hours: z.number().min(1),
+    special_terms: z.string().optional()
+  }).optional(),
+  blocked_dates: z.array(z.string()).optional()
 });
 
 type ServiceProviderFormData = z.infer<typeof serviceProviderSchema>;
@@ -37,6 +48,7 @@ const AddServiceProviderForm: React.FC<AddServiceProviderFormProps> = ({ onSucce
   const queryClient = useQueryClient();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [uploadedImages, setUploadedImages] = useState<string[]>([]);
+  const [blockedDates, setBlockedDates] = useState<string[]>([]);
 
   const form = useForm<ServiceProviderFormData>({
     resolver: zodResolver(serviceProviderSchema),
@@ -49,7 +61,16 @@ const AddServiceProviderForm: React.FC<AddServiceProviderFormProps> = ({ onSucce
       certifications: [],
       response_time_hours: 24,
       is_available: true,
-      portfolio_images: []
+      portfolio_images: [],
+      booking_terms: {
+        deposit_percentage: 50,
+        cancellation_policy: 'Full refund if cancelled 48 hours before event',
+        payment_due_days: 3,
+        advance_booking_days: 1,
+        minimum_booking_hours: 2,
+        special_terms: ''
+      },
+      blocked_dates: []
     }
   });
 
@@ -68,7 +89,9 @@ const AddServiceProviderForm: React.FC<AddServiceProviderFormProps> = ({ onSucce
         response_time_hours: data.response_time_hours,
         is_available: data.is_available,
         portfolio_images: uploadedImages,
-        user_id: user.id
+        user_id: user.id,
+        booking_terms: data.booking_terms,
+        blocked_dates: blockedDates
       };
 
       const { error } = await supabase
@@ -79,7 +102,7 @@ const AddServiceProviderForm: React.FC<AddServiceProviderFormProps> = ({ onSucce
 
       toast({
         title: "Success",
-        description: "Service provider profile created successfully!"
+        description: "Service provider profile created successfully with booking terms!"
       });
 
       queryClient.invalidateQueries({ queryKey: ['my-service-providers'] });
@@ -97,7 +120,7 @@ const AddServiceProviderForm: React.FC<AddServiceProviderFormProps> = ({ onSucce
   };
 
   return (
-    <Card className="max-w-2xl mx-auto">
+    <Card className="max-w-4xl mx-auto">
       <CardHeader>
         <CardTitle>Create Service Provider Profile</CardTitle>
       </CardHeader>
@@ -113,6 +136,14 @@ const AddServiceProviderForm: React.FC<AddServiceProviderFormProps> = ({ onSucce
               bucketName="portfolio-images"
               label="Portfolio Images"
               inputId="portfolio-upload"
+            />
+
+            <BookingTermsSettings form={form} />
+
+            <AvailabilityCalendar
+              blockedDates={blockedDates}
+              setBlockedDates={setBlockedDates}
+              onDatesChange={(dates) => form.setValue('blocked_dates', dates)}
             />
 
             <div className="flex gap-4">
