@@ -13,6 +13,8 @@ interface VenueFormData {
   location: string;
   capacity: number;
   price_per_day: number;
+  price_per_hour: number;
+  pricing_unit: 'day' | 'hour';
   venue_type: string;
   amenities: string[];
   images: string[];
@@ -44,6 +46,8 @@ const VenueFormFields: React.FC<VenueFormFieldsProps> = ({ form }) => {
     'Hotel', 'Conference Center', 'Restaurant', 'Club', 'Hall', 
     'Garden', 'Beach Resort', 'Community Center', 'Church', 'School'
   ];
+
+  const selectedPricingUnit = form.watch('pricing_unit');
 
   return (
     <>
@@ -113,44 +117,92 @@ const VenueFormFields: React.FC<VenueFormFieldsProps> = ({ form }) => {
         />
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <FormField
+        control={form.control}
+        name="capacity"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Capacity (Number of Guests)</FormLabel>
+            <FormControl>
+              <Input 
+                type="number" 
+                placeholder="50"
+                {...field}
+                onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+              />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+
+      {/* Pricing Section */}
+      <div className="space-y-4 p-4 border rounded-lg">
+        <h3 className="text-lg font-semibold">Pricing Configuration</h3>
+        
         <FormField
           control={form.control}
-          name="capacity"
+          name="pricing_unit"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Capacity (Number of Guests)</FormLabel>
-              <FormControl>
-                <Input 
-                  type="number" 
-                  placeholder="50"
-                  {...field}
-                  onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
-                />
-              </FormControl>
+              <FormLabel>Pricing Unit</FormLabel>
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select pricing unit" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectItem value="day">Per Day</SelectItem>
+                  <SelectItem value="hour">Per Hour</SelectItem>
+                </SelectContent>
+              </Select>
               <FormMessage />
             </FormItem>
           )}
         />
 
-        <FormField
-          control={form.control}
-          name="price_per_day"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Price per Day (KSh)</FormLabel>
-              <FormControl>
-                <Input 
-                  type="number" 
-                  placeholder="10000"
-                  {...field}
-                  onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        {selectedPricingUnit === 'day' && (
+          <FormField
+            control={form.control}
+            name="price_per_day"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Price per Day (KSh)</FormLabel>
+                <FormControl>
+                  <Input 
+                    type="number" 
+                    placeholder="10000"
+                    {...field}
+                    onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        )}
+
+        {selectedPricingUnit === 'hour' && (
+          <FormField
+            control={form.control}
+            name="price_per_hour"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Price per Hour (KSh)</FormLabel>
+                <FormControl>
+                  <Input 
+                    type="number" 
+                    placeholder="2000"
+                    {...field}
+                    onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        )}
       </div>
 
       <FormField

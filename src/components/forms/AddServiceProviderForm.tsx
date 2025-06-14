@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -17,7 +18,9 @@ import BookingTermsSettings from './BookingTermsSettings';
 const serviceProviderSchema = z.object({
   service_category: z.string().min(1, 'Service category is required'),
   specialties: z.array(z.string()).min(1, 'At least one specialty is required'),
-  price_per_event: z.number().min(1, 'Price must be greater than 0'),
+  pricing_unit: z.enum(['event', 'hour']),
+  price_per_event: z.number().min(1, 'Price must be greater than 0').optional(),
+  price_per_hour: z.number().min(1, 'Price must be greater than 0').optional(),
   bio: z.string().min(20, 'Bio must be at least 20 characters'),
   years_experience: z.number().min(0, 'Experience cannot be negative'),
   certifications: z.array(z.string()).optional(),
@@ -54,6 +57,15 @@ const serviceProviderSchema = z.object({
     special_terms: z.string().optional()
   }).optional(),
   blocked_dates: z.array(z.string()).optional()
+}).refine((data) => {
+  if (data.pricing_unit === 'event') {
+    return data.price_per_event && data.price_per_event > 0;
+  } else {
+    return data.price_per_hour && data.price_per_hour > 0;
+  }
+}, {
+  message: "Price must be provided for the selected pricing unit",
+  path: ["price_per_event"]
 });
 
 type ServiceProviderFormData = z.infer<typeof serviceProviderSchema>;
@@ -75,7 +87,9 @@ const AddServiceProviderForm: React.FC<AddServiceProviderFormProps> = ({ onSucce
     defaultValues: {
       service_category: '',
       specialties: [],
+      pricing_unit: 'event',
       price_per_event: 25000,
+      price_per_hour: 5000,
       bio: '',
       years_experience: 1,
       certifications: [],
@@ -120,7 +134,9 @@ const AddServiceProviderForm: React.FC<AddServiceProviderFormProps> = ({ onSucce
       const providerData = {
         service_category: data.service_category,
         specialties: data.specialties,
-        price_per_event: data.price_per_event,
+        pricing_unit: data.pricing_unit,
+        price_per_event: data.pricing_unit === 'event' ? data.price_per_event : null,
+        price_per_hour: data.pricing_unit === 'hour' ? data.price_per_hour : null,
         bio: data.bio,
         years_experience: data.years_experience,
         certifications: data.certifications || [],
@@ -142,7 +158,7 @@ const AddServiceProviderForm: React.FC<AddServiceProviderFormProps> = ({ onSucce
 
       toast({
         title: "Success",
-        description: "Service provider profile created successfully with flexible payment terms!"
+        description: "Service provider profile created successfully with flexible pricing options!"
       });
 
       queryClient.invalidateQueries({ queryKey: ['my-service-providers'] });

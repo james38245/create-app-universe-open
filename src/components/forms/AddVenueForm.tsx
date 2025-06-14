@@ -24,7 +24,9 @@ const venueSchema = z.object({
     lng: z.number()
   }).optional().nullable(),
   capacity: z.number().min(1, 'Capacity must be at least 1'),
-  price_per_day: z.number().min(1, 'Price must be greater than 0'),
+  pricing_unit: z.enum(['day', 'hour']),
+  price_per_day: z.number().min(1, 'Price must be greater than 0').optional(),
+  price_per_hour: z.number().min(1, 'Price must be greater than 0').optional(),
   venue_type: z.string().min(1, 'Venue type is required'),
   amenities: z.array(z.string()).optional(),
   images: z.array(z.string()).optional(),
@@ -54,6 +56,15 @@ const venueSchema = z.object({
     special_terms: z.string().optional()
   }).optional(),
   blocked_dates: z.array(z.string()).optional()
+}).refine((data) => {
+  if (data.pricing_unit === 'day') {
+    return data.price_per_day && data.price_per_day > 0;
+  } else {
+    return data.price_per_hour && data.price_per_hour > 0;
+  }
+}, {
+  message: "Price must be provided for the selected pricing unit",
+  path: ["price_per_day"]
 });
 
 type VenueFormData = z.infer<typeof venueSchema>;
@@ -78,7 +89,9 @@ const AddVenueForm: React.FC<AddVenueFormProps> = ({ onSuccess, onCancel }) => {
       location: '',
       coordinates: null,
       capacity: 50,
+      pricing_unit: 'day',
       price_per_day: 10000,
+      price_per_hour: 2000,
       venue_type: '',
       amenities: [],
       images: [],
@@ -122,7 +135,9 @@ const AddVenueForm: React.FC<AddVenueFormProps> = ({ onSuccess, onCancel }) => {
         location: data.location,
         coordinates: data.coordinates,
         capacity: data.capacity,
-        price_per_day: data.price_per_day,
+        pricing_unit: data.pricing_unit,
+        price_per_day: data.pricing_unit === 'day' ? data.price_per_day : null,
+        price_per_hour: data.pricing_unit === 'hour' ? data.price_per_hour : null,
         venue_type: data.venue_type,
         amenities: data.amenities || [],
         images: uploadedImages,
@@ -140,7 +155,7 @@ const AddVenueForm: React.FC<AddVenueFormProps> = ({ onSuccess, onCancel }) => {
 
       toast({
         title: "Success",
-        description: "Venue added successfully with comprehensive booking terms!"
+        description: "Venue added successfully with flexible pricing options!"
       });
 
       queryClient.invalidateQueries({ queryKey: ['my-venues'] });
