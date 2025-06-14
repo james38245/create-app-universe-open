@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Star, MapPin, Phone, MessageSquare } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 interface ServiceProvider {
   id: string;
@@ -29,6 +29,7 @@ interface ServiceProviderCardProps {
 }
 
 const ServiceProviderCard: React.FC<ServiceProviderCardProps> = ({ provider }) => {
+  const navigate = useNavigate();
   const displayName = provider.profiles.full_name || provider.profiles.email.split('@')[0];
   const displayRating = provider.rating || 0;
   const displayReviews = provider.total_reviews || 0;
@@ -39,8 +40,25 @@ const ServiceProviderCard: React.FC<ServiceProviderCardProps> = ({ provider }) =
     ? provider.portfolio_images[0] 
     : '/placeholder.svg';
 
+  const handleCardClick = () => {
+    navigate(`/provider/${provider.id}`);
+  };
+
+  const handleMessageClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    navigate(`/messages?provider=${provider.id}`);
+  };
+
+  const handleHireClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    navigate(`/provider/${provider.id}`);
+  };
+
   return (
-    <Card className="overflow-hidden hover:shadow-lg transition-shadow">
+    <Card 
+      className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer"
+      onClick={handleCardClick}
+    >
       <CardHeader className="pb-3">
         <div className="flex items-start gap-3">
           <Avatar className="h-12 w-12">
@@ -85,17 +103,20 @@ const ServiceProviderCard: React.FC<ServiceProviderCardProps> = ({ provider }) =
             </div>
             
             <div className="flex gap-2">
-              <Link to={`/messages?provider=${provider.id}`}>
-                <Button variant="outline" size="sm">
-                  <MessageSquare className="h-4 w-4" />
-                </Button>
-              </Link>
-              <Link to={`/provider/${provider.id}`}>
-                <Button size="sm">
-                  <Phone className="h-4 w-4 mr-1" />
-                  Hire
-                </Button>
-              </Link>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={handleMessageClick}
+              >
+                <MessageSquare className="h-4 w-4" />
+              </Button>
+              <Button 
+                size="sm"
+                onClick={handleHireClick}
+              >
+                <Phone className="h-4 w-4 mr-1" />
+                Hire
+              </Button>
             </div>
           </div>
         </div>

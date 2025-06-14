@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { MapPin, Star, Users, Calendar } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 interface Venue {
   id: string;
@@ -25,13 +25,26 @@ interface VenueCardProps {
 }
 
 const VenueCard: React.FC<VenueCardProps> = ({ venue }) => {
+  const navigate = useNavigate();
   const displayImage = venue.images && venue.images.length > 0 ? venue.images[0] : '/placeholder.svg';
   const displayRating = venue.rating || 0;
   const displayReviews = venue.total_reviews || 0;
   const displayPricePerDay = venue.price_per_day || 0;
 
+  const handleCardClick = () => {
+    navigate(`/venue/${venue.id}`);
+  };
+
+  const handleBookNowClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    navigate(`/venue/${venue.id}`);
+  };
+
   return (
-    <Card className="overflow-hidden hover:shadow-lg transition-shadow">
+    <Card 
+      className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer"
+      onClick={handleCardClick}
+    >
       <div className="relative">
         <img 
           src={displayImage} 
@@ -74,12 +87,13 @@ const VenueCard: React.FC<VenueCardProps> = ({ venue }) => {
               <span className="text-lg font-bold">KSh {displayPricePerDay.toLocaleString()}</span>
               <span className="text-sm text-muted-foreground">/day</span>
             </div>
-            <Link to={`/venue/${venue.id}`}>
-              <Button className="flex items-center gap-2">
-                <Calendar className="h-4 w-4" />
-                Book Now
-              </Button>
-            </Link>
+            <Button 
+              className="flex items-center gap-2"
+              onClick={handleBookNowClick}
+            >
+              <Calendar className="h-4 w-4" />
+              Book Now
+            </Button>
           </div>
         </div>
       </CardContent>
