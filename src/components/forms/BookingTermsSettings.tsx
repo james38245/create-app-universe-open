@@ -212,28 +212,52 @@ const BookingTermsSettings: React.FC<BookingTermsSettingsProps> = ({ form }) => 
             )}
           />
 
-          <FormField
-            control={form.control}
-            name="booking_terms.minimum_booking_hours"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Minimum Booking Duration (Hours)</FormLabel>
-                <FormControl>
-                  <Input 
-                    type="number" 
-                    placeholder="4"
-                    min="1"
-                    {...field}
-                    onChange={(e) => field.onChange(parseInt(e.target.value) || 1)}
-                  />
-                </FormControl>
-                <FormDescription>
-                  Minimum hours for a booking
-                </FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+          <div className="space-y-2">
+            <FormLabel>Minimum Booking Duration</FormLabel>
+            <div className="grid grid-cols-3 gap-2">
+              <FormField
+                control={form.control}
+                name="booking_terms.minimum_booking_duration"
+                render={({ field }) => (
+                  <FormItem className="col-span-2">
+                    <FormControl>
+                      <Input 
+                        type="number" 
+                        placeholder="4"
+                        min="1"
+                        {...field}
+                        onChange={(e) => field.onChange(parseInt(e.target.value) || 1)}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="booking_terms.minimum_booking_unit"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormControl>
+                      <Select onValueChange={field.onChange} defaultValue={field.value || "hours"}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="hours">Hours</SelectItem>
+                          <SelectItem value="days">Days</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+            <FormDescription>
+              Minimum duration for a booking
+            </FormDescription>
+          </div>
         </div>
 
         {/* Cancellation Policy */}
