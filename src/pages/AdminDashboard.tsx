@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { LogOut, Shield, Activity, Clock } from 'lucide-react';
+import { LogOut, Shield, Activity, Clock, Settings } from 'lucide-react';
 import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
 import AdminLogin from '@/components/admin/AdminLogin';
@@ -11,6 +11,7 @@ import UserManagement from '@/components/admin/UserManagement';
 import VenueManagement from '@/components/admin/VenueManagement';
 import ProviderManagement from '@/components/admin/ProviderManagement';
 import BookingManagement from '@/components/admin/BookingManagement';
+import AdminSettings from '@/components/admin/AdminSettings';
 
 const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState('overview');
@@ -140,7 +141,7 @@ const AdminDashboard = () => {
           </div>
 
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-            <TabsList className="grid w-full grid-cols-5 bg-slate-100">
+            <TabsList className="grid w-full grid-cols-6 bg-slate-100">
               <TabsTrigger value="overview" className="data-[state=active]:bg-purple-600 data-[state=active]:text-white">
                 System Overview
               </TabsTrigger>
@@ -155,6 +156,10 @@ const AdminDashboard = () => {
               </TabsTrigger>
               <TabsTrigger value="bookings" className="data-[state=active]:bg-purple-600 data-[state=active]:text-white">
                 Booking Analytics
+              </TabsTrigger>
+              <TabsTrigger value="settings" className="data-[state=active]:bg-purple-600 data-[state=active]:text-white">
+                <Settings className="h-4 w-4 mr-1" />
+                Settings
               </TabsTrigger>
             </TabsList>
 
@@ -176,6 +181,10 @@ const AdminDashboard = () => {
 
             <TabsContent value="bookings">
               <BookingManagement />
+            </TabsContent>
+
+            <TabsContent value="settings">
+              <AdminSettings />
             </TabsContent>
           </Tabs>
         </div>
