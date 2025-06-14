@@ -44,34 +44,83 @@ const UserSettings = () => {
 
   // Load settings from localStorage on component mount
   useEffect(() => {
-    const savedSettings = localStorage.getItem('user_settings');
-    if (savedSettings) {
-      setSettings(JSON.parse(savedSettings));
+    try {
+      const savedSettings = localStorage.getItem('user_settings');
+      if (savedSettings) {
+        const parsed = JSON.parse(savedSettings);
+        setSettings(prev => ({ ...prev, ...parsed }));
+      }
+    } catch (error) {
+      console.error('Error loading settings:', error);
+      toast.error('Failed to load saved settings');
     }
   }, []);
 
+  // Auto-save when settings change (if enabled)
+  useEffect(() => {
+    if (settings.autoSave) {
+      const timeoutId = setTimeout(() => {
+        try {
+          localStorage.setItem('user_settings', JSON.stringify(settings));
+        } catch (error) {
+          console.error('Auto-save failed:', error);
+        }
+      }, 1000);
+      return () => clearTimeout(timeoutId);
+    }
+  }, [settings]);
+
   const handleSettingChange = (key: string, value: any) => {
-    setSettings(prev => ({ ...prev, [key]: value }));
+    setSettings(prev => {
+      const newSettings = { ...prev, [key]: value };
+      
+      // Apply theme changes immediately
+      if (key === 'darkMode') {
+        document.documentElement.classList.toggle('dark', value);
+      }
+      
+      if (key === 'fontSize') {
+        document.documentElement.style.fontSize = 
+          value === 'small' ? '14px' : 
+          value === 'large' ? '18px' : 
+          value === 'xl' ? '20px' : '16px';
+      }
+      
+      return newSettings;
+    });
   };
 
   const handleSaveSettings = () => {
-    localStorage.setItem('user_settings', JSON.stringify(settings));
-    toast.success('Settings saved successfully');
+    try {
+      localStorage.setItem('user_settings', JSON.stringify(settings));
+      toast.success('Settings saved successfully');
+    } catch (error) {
+      console.error('Save failed:', error);
+      toast.error('Failed to save settings');
+    }
   };
 
   const handleExportSettings = () => {
-    const dataStr = JSON.stringify(settings, null, 2);
-    const dataBlob = new Blob([dataStr], { type: 'application/json' });
-    const url = URL.createObjectURL(dataBlob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = 'my_settings.json';
-    link.click();
-    toast.success('Settings exported successfully');
+    try {
+      const dataStr = JSON.stringify(settings, null, 2);
+      const dataBlob = new Blob([dataStr], { type: 'application/json' });
+      const url = URL.createObjectURL(dataBlob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `eventspace_settings_${new Date().toISOString().split('T')[0]}.json`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      toast.success('Settings exported successfully');
+    } catch (error) {
+      console.error('Export failed:', error);
+      toast.error('Failed to export settings');
+    }
   };
 
   const handleResetSettings = () => {
-    if (confirm('Are you sure you want to reset all settings to default?')) {
+    if (window.confirm('Are you sure you want to reset all settings to default? This action cannot be undone.')) {
       const defaultSettings = {
         darkMode: false,
         theme: 'default',
@@ -89,8 +138,34 @@ const UserSettings = () => {
       };
       setSettings(defaultSettings);
       localStorage.setItem('user_settings', JSON.stringify(defaultSettings));
+      
+      // Reset visual changes
+      document.documentElement.classList.remove('dark');
+      document.documentElement.style.fontSize = '16px';
+      
       toast.success('Settings reset to default');
     }
+  };
+
+  const handleImportSettings = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const importedSettings = JSON.parse(e.target?.result as string);
+          setSettings(prev => ({ ...prev, ...importedSettings }));
+          localStorage.setItem('user_settings', JSON.stringify({ ...settings, ...importedSettings }));
+          toast.success('Settings imported successfully');
+        } catch (error) {
+          console.error('Import failed:', error);
+          toast.error('Failed to import settings. Please check the file format.');
+        }
+      };
+      reader.readAsText(file);
+    }
+    // Reset input
+    event.target.value = '';
   };
 
   return (
@@ -99,9 +174,22 @@ const UserSettings = () => {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold">My Settings</h2>
-          <p className="text-muted-foreground">Customize your experience</p>
+          <p className="text-muted-foreground">Customize your EventSpace experience</p>
         </div>
         <div className="flex space-x-2">
+          <input
+            type="file"
+            accept=".json"
+            onChange={handleImportSettings}
+            className="hidden"
+            id="import-settings"
+          />
+          <Button 
+            variant="outline" 
+            onClick={() => document.getElementById('import-settings')?.click()}
+          >
+            Import
+          </Button>
           <Button variant="outline" onClick={handleExportSettings}>
             <Download className="h-4 w-4 mr-2" />
             Export
@@ -194,6 +282,19 @@ const UserSettings = () => {
                       <SelectItem value="german">Deutsch</SelectItem>
                     </SelectContent>
                   </Select>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label>Auto-Save Settings</Label>
+                    <p className="text-xs text-muted-foreground">Automatically save changes as you make them</p>
+                  </div>
+                  <Switch
+                    checked={settings.autoSave}
+                    onCheckedChange={(checked) => handleSettingChange('autoSave', checked)}
+                  />
                 </div>
               </div>
             </CardContent>
