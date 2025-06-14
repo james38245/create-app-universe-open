@@ -26,7 +26,7 @@ const serviceProviderSchema = z.object({
   certifications: z.array(z.string()).optional(),
   response_time_hours: z.number().min(1, 'Response time must be at least 1 hour'),
   is_available: z.boolean().default(true),
-  portfolio_images: z.array(z.string()).optional(),
+  portfolio_images: z.array(z.string()).min(2, 'At least 2 portfolio images are required'),
   location: z.string().optional(),
   coordinates: z.object({
     lat: z.number(),
@@ -192,6 +192,7 @@ const AddServiceProviderForm: React.FC<AddServiceProviderFormProps> = ({ onSucce
               bucketName="portfolio-images"
               label="Portfolio Images"
               inputId="portfolio-upload"
+              error={form.formState.errors.portfolio_images?.message}
             />
 
             <BookingTermsSettings form={form} />

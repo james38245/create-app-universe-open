@@ -29,7 +29,7 @@ const venueSchema = z.object({
   price_per_hour: z.number().min(1, 'Price must be greater than 0').optional(),
   venue_type: z.string().min(1, 'Venue type is required'),
   amenities: z.array(z.string()).optional(),
-  images: z.array(z.string()).optional(),
+  images: z.array(z.string()).min(2, 'At least 2 images are required'),
   is_active: z.boolean().default(true),
   booking_terms: z.object({
     payment_type: z.enum(['deposit_only', 'full_payment', 'installments']).default('deposit_only'),
@@ -189,6 +189,7 @@ const AddVenueForm: React.FC<AddVenueFormProps> = ({ onSuccess, onCancel }) => {
               bucketName="venue-images"
               label="Venue Images"
               inputId="image-upload"
+              error={form.formState.errors.images?.message}
             />
 
             <BookingTermsSettings form={form} />
