@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Calendar, Menu, X, User, LogOut } from 'lucide-react';
+import { Calendar, Menu, X, User, LogOut, Building } from 'lucide-react';
 import { AuthModal } from '@/components/AuthModal';
 import { useAuth } from '@/hooks/useAuth';
 import {
@@ -43,6 +43,9 @@ const Navigation = () => {
               </Link>
               {user && (
                 <>
+                  <Link to="/listings" className="text-gray-700 hover:text-purple-600 font-medium">
+                    My Listings
+                  </Link>
                   <Link to="/bookings" className="text-gray-700 hover:text-purple-600 font-medium">
                     My Bookings
                   </Link>
@@ -67,6 +70,10 @@ const Navigation = () => {
                     <DropdownMenuItem onClick={() => navigate('/profile')}>
                       <User className="h-4 w-4 mr-2" />
                       Profile
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => navigate('/listings')}>
+                      <Building className="h-4 w-4 mr-2" />
+                      My Listings
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={handleSignOut}>
                       <LogOut className="h-4 w-4 mr-2" />
@@ -110,6 +117,13 @@ const Navigation = () => {
                 </Link>
                 {user && (
                   <>
+                    <Link 
+                      to="/listings" 
+                      className="text-gray-700 hover:text-purple-600 font-medium"
+                      onClick={() => setIsOpen(false)}
+                    >
+                      My Listings
+                    </Link>
                     <Link 
                       to="/bookings" 
                       className="text-gray-700 hover:text-purple-600 font-medium"

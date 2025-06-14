@@ -8,6 +8,8 @@ import { AuthProvider } from "@/hooks/useAuth";
 import Navigation from "@/components/Navigation";
 import Index from "./pages/Index";
 import VenuesPage from "./pages/VenuesPage";
+import ProvidersPage from "./pages/ProvidersPage";
+import ListingsPage from "./pages/ListingsPage";
 import VenueDetailPage from "./pages/VenueDetailPage";
 import ProviderDetailPage from "./pages/ProviderDetailPage";
 import BookingsPage from "./pages/BookingsPage";
@@ -29,6 +31,8 @@ const App = () => (
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/venues" element={<VenuesPage />} />
+              <Route path="/providers" element={<ProvidersPage />} />
+              <Route path="/listings" element={<ListingsPage />} />
               <Route path="/venue/:id" element={<VenueDetailPage />} />
               <Route path="/provider/:id" element={<ProviderDetailPage />} />
               <Route path="/bookings" element={<BookingsPage />} />

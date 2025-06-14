@@ -11,11 +11,13 @@ interface Venue {
   name: string;
   location: string;
   capacity: number;
-  price: number;
-  rating: number;
-  image: string;
-  type: string;
-  availability: 'available' | 'limited' | 'booked';
+  price_per_day: number;
+  rating: number | null;
+  images: string[] | null;
+  venue_type: string;
+  is_active: boolean;
+  total_reviews: number | null;
+  description: string | null;
 }
 
 interface VenueCardProps {
@@ -23,27 +25,22 @@ interface VenueCardProps {
 }
 
 const VenueCard: React.FC<VenueCardProps> = ({ venue }) => {
-  const getAvailabilityColor = (availability: string) => {
-    switch (availability) {
-      case 'available': return 'bg-green-500';
-      case 'limited': return 'bg-yellow-500';
-      case 'booked': return 'bg-red-500';
-      default: return 'bg-gray-500';
-    }
-  };
+  const displayImage = venue.images && venue.images.length > 0 ? venue.images[0] : '/placeholder.svg';
+  const displayRating = venue.rating || 0;
+  const displayReviews = venue.total_reviews || 0;
 
   return (
     <Card className="overflow-hidden hover:shadow-lg transition-shadow">
       <div className="relative">
         <img 
-          src={venue.image} 
+          src={displayImage} 
           alt={venue.name}
           className="w-full h-48 object-cover"
         />
         <Badge 
-          className={`absolute top-2 right-2 ${getAvailabilityColor(venue.availability)} text-white`}
+          className={`absolute top-2 right-2 ${venue.is_active ? 'bg-green-500' : 'bg-red-500'} text-white`}
         >
-          {venue.availability}
+          {venue.is_active ? 'Available' : 'Unavailable'}
         </Badge>
       </div>
       
@@ -52,7 +49,7 @@ const VenueCard: React.FC<VenueCardProps> = ({ venue }) => {
           <CardTitle className="text-lg line-clamp-1">{venue.name}</CardTitle>
           <div className="flex items-center gap-1">
             <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-            <span className="text-sm font-medium">{venue.rating}</span>
+            <span className="text-sm font-medium">{displayRating.toFixed(1)}</span>
           </div>
         </div>
         <div className="flex items-center gap-1 text-muted-foreground">
@@ -68,12 +65,12 @@ const VenueCard: React.FC<VenueCardProps> = ({ venue }) => {
               <Users className="h-4 w-4" />
               <span>{venue.capacity} guests</span>
             </div>
-            <Badge variant="secondary">{venue.type}</Badge>
+            <Badge variant="secondary">{venue.venue_type}</Badge>
           </div>
           
           <div className="flex items-center justify-between">
             <div>
-              <span className="text-lg font-bold">KSh {venue.price.toLocaleString()}</span>
+              <span className="text-lg font-bold">KSh {venue.price_per_day.toLocaleString()}</span>
               <span className="text-sm text-muted-foreground">/day</span>
             </div>
             <Link to={`/venue/${venue.id}`}>

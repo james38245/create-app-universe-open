@@ -9,15 +9,19 @@ import { Link } from 'react-router-dom';
 
 interface ServiceProvider {
   id: string;
-  name: string;
-  service: string;
-  location: string;
-  rating: number;
-  reviews: number;
-  price: number;
-  avatar: string;
-  isAvailable: boolean;
-  specialties: string[];
+  service_category: string;
+  specialties: string[] | null;
+  price_per_event: number;
+  rating: number | null;
+  total_reviews: number | null;
+  is_available: boolean;
+  bio: string | null;
+  years_experience: number | null;
+  portfolio_images: string[] | null;
+  profiles: {
+    full_name: string | null;
+    email: string;
+  };
 }
 
 interface ServiceProviderCardProps {
@@ -25,27 +29,35 @@ interface ServiceProviderCardProps {
 }
 
 const ServiceProviderCard: React.FC<ServiceProviderCardProps> = ({ provider }) => {
+  const displayName = provider.profiles.full_name || provider.profiles.email.split('@')[0];
+  const displayRating = provider.rating || 0;
+  const displayReviews = provider.total_reviews || 0;
+  const displaySpecialties = provider.specialties || [];
+  const avatarImage = provider.portfolio_images && provider.portfolio_images.length > 0 
+    ? provider.portfolio_images[0] 
+    : '/placeholder.svg';
+
   return (
     <Card className="overflow-hidden hover:shadow-lg transition-shadow">
       <CardHeader className="pb-3">
         <div className="flex items-start gap-3">
           <Avatar className="h-12 w-12">
-            <AvatarImage src={provider.avatar} alt={provider.name} />
-            <AvatarFallback>{provider.name.charAt(0)}</AvatarFallback>
+            <AvatarImage src={avatarImage} alt={displayName} />
+            <AvatarFallback>{displayName.charAt(0).toUpperCase()}</AvatarFallback>
           </Avatar>
           
           <div className="flex-1 min-w-0">
-            <CardTitle className="text-lg line-clamp-1">{provider.name}</CardTitle>
-            <p className="text-sm text-muted-foreground">{provider.service}</p>
+            <CardTitle className="text-lg line-clamp-1">{displayName}</CardTitle>
+            <p className="text-sm text-muted-foreground">{provider.service_category}</p>
             <div className="flex items-center gap-1 mt-1">
               <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-              <span className="text-sm font-medium">{provider.rating}</span>
-              <span className="text-sm text-muted-foreground">({provider.reviews})</span>
+              <span className="text-sm font-medium">{displayRating.toFixed(1)}</span>
+              <span className="text-sm text-muted-foreground">({displayReviews})</span>
             </div>
           </div>
           
-          <Badge variant={provider.isAvailable ? "default" : "secondary"}>
-            {provider.isAvailable ? "Available" : "Busy"}
+          <Badge variant={provider.is_available ? "default" : "secondary"}>
+            {provider.is_available ? "Available" : "Busy"}
           </Badge>
         </div>
       </CardHeader>
@@ -53,12 +65,11 @@ const ServiceProviderCard: React.FC<ServiceProviderCardProps> = ({ provider }) =
       <CardContent className="pt-0">
         <div className="space-y-3">
           <div className="flex items-center gap-1 text-sm text-muted-foreground">
-            <MapPin className="h-4 w-4" />
-            <span>{provider.location}</span>
+            <span>{provider.years_experience || 0}+ years experience</span>
           </div>
           
           <div className="flex flex-wrap gap-1">
-            {provider.specialties.slice(0, 3).map((specialty, index) => (
+            {displaySpecialties.slice(0, 3).map((specialty, index) => (
               <Badge key={index} variant="outline" className="text-xs">
                 {specialty}
               </Badge>
@@ -67,7 +78,7 @@ const ServiceProviderCard: React.FC<ServiceProviderCardProps> = ({ provider }) =
           
           <div className="flex items-center justify-between">
             <div>
-              <span className="text-lg font-bold">KSh {provider.price.toLocaleString()}</span>
+              <span className="text-lg font-bold">KSh {provider.price_per_event.toLocaleString()}</span>
               <span className="text-sm text-muted-foreground">/event</span>
             </div>
             
