@@ -74,6 +74,10 @@ const Navigation = () => {
                       <User className="h-4 w-4 mr-2" />
                       Profile
                     </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => navigate('/settings')}>
+                      <Settings className="h-4 w-4 mr-2" />
+                      Settings
+                    </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => navigate('/listings')}>
                       <Building className="h-4 w-4 mr-2" />
                       My Listings
@@ -158,6 +162,13 @@ const Navigation = () => {
                       onClick={() => setIsOpen(false)}
                     >
                       Profile
+                    </Link>
+                    <Link 
+                      to="/settings" 
+                      className="text-gray-700 hover:text-purple-600 font-medium"
+                      onClick={() => setIsOpen(false)}
+                    >
+                      Settings
                     </Link>
                     <Button onClick={handleSignOut} variant="outline" className="w-fit">
                       Sign Out
