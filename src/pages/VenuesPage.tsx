@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -11,8 +10,8 @@ import ServiceProviderCard from '@/components/ServiceProviderCard';
 const VenuesPage = () => {
   const [activeTab, setActiveTab] = useState<'venues' | 'providers'>('venues');
   const [searchQuery, setSearchQuery] = useState('');
-  const [locationFilter, setLocationFilter] = useState('');
-  const [typeFilter, setTypeFilter] = useState('');
+  const [locationFilter, setLocationFilter] = useState('all');
+  const [typeFilter, setTypeFilter] = useState('all');
 
   // Mock data for venues
   const venues = [
@@ -105,8 +104,8 @@ const VenuesPage = () => {
   const filteredVenues = venues.filter(venue => {
     const matchesSearch = venue.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          venue.location.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesLocation = !locationFilter || venue.location === locationFilter;
-    const matchesType = !typeFilter || venue.type === typeFilter;
+    const matchesLocation = locationFilter === 'all' || venue.location === locationFilter;
+    const matchesType = typeFilter === 'all' || venue.type === typeFilter;
     
     return matchesSearch && matchesLocation && matchesType;
   });
@@ -114,7 +113,7 @@ const VenuesPage = () => {
   const filteredProviders = serviceProviders.filter(provider => {
     const matchesSearch = provider.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          provider.service.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesLocation = !locationFilter || provider.location === locationFilter;
+    const matchesLocation = locationFilter === 'all' || provider.location === locationFilter;
     
     return matchesSearch && matchesLocation;
   });
@@ -170,7 +169,7 @@ const VenuesPage = () => {
                   <SelectValue placeholder="All Locations" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Locations</SelectItem>
+                  <SelectItem value="all">All Locations</SelectItem>
                   <SelectItem value="Nairobi">Nairobi</SelectItem>
                   <SelectItem value="Mombasa">Mombasa</SelectItem>
                   <SelectItem value="Kisumu">Kisumu</SelectItem>
@@ -184,7 +183,7 @@ const VenuesPage = () => {
                     <SelectValue placeholder="All Types" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">All Types</SelectItem>
+                    <SelectItem value="all">All Types</SelectItem>
                     <SelectItem value="Hotel">Hotel</SelectItem>
                     <SelectItem value="Conference Center">Conference Center</SelectItem>
                     <SelectItem value="Club">Club</SelectItem>
