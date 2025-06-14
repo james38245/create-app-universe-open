@@ -1,5 +1,6 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -7,90 +8,48 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Send, Search, Phone, Video, MoreVertical } from 'lucide-react';
+import { useMessaging } from '@/hooks/useMessaging';
 
 const MessagesPage = () => {
-  const [selectedChat, setSelectedChat] = useState<string>('1');
+  const [searchParams] = useSearchParams();
   const [newMessage, setNewMessage] = useState('');
+  const {
+    conversations,
+    messages,
+    selectedChat,
+    setSelectedChat,
+    sendMessage,
+    loadMessages,
+    startConversation
+  } = useMessaging();
 
-  // Mock conversations data
-  const conversations = [
-    {
-      id: '1',
-      name: 'Sarah Kimani',
-      role: 'Event Coordinator',
-      avatar: '/placeholder.svg',
-      lastMessage: 'Perfect! I can help you plan your wedding. When is the date?',
-      timestamp: '2 min ago',
-      unread: 2,
-      isOnline: true
-    },
-    {
-      id: '2',
-      name: 'James Mwangi',
-      role: 'Wedding Photographer',
-      avatar: '/placeholder.svg',
-      lastMessage: 'I have availability for that weekend. Let me send you my portfolio.',
-      timestamp: '1 hour ago',
-      unread: 0,
-      isOnline: false
-    },
-    {
-      id: '3',
-      name: 'Safari Park Hotel',
-      role: 'Venue Manager',
-      avatar: '/placeholder.svg',
-      lastMessage: 'Thank you for your booking inquiry. The venue is available.',
-      timestamp: '3 hours ago',
-      unread: 1,
-      isOnline: true
-    }
-  ];
+  // Handle URL parameters for starting conversations
+  useEffect(() => {
+    const userId = searchParams.get('user');
+    const userName = searchParams.get('name');
+    const userRole = searchParams.get('role');
 
-  // Mock messages for selected chat
-  const messages = [
-    {
-      id: '1',
-      senderId: '2',
-      content: 'Hi! I saw your inquiry about wedding coordination services.',
-      timestamp: '10:30 AM',
-      isOwn: false
-    },
-    {
-      id: '2',
-      senderId: '1',
-      content: 'Yes, I\'m planning a wedding for December 15th. Can you help?',
-      timestamp: '10:32 AM',
-      isOwn: true
-    },
-    {
-      id: '3',
-      senderId: '2',
-      content: 'Absolutely! I specialize in wedding planning. What\'s your estimated guest count?',
-      timestamp: '10:33 AM',
-      isOwn: false
-    },
-    {
-      id: '4',
-      senderId: '1',
-      content: 'We\'re expecting around 200 guests. Looking for a venue in Nairobi.',
-      timestamp: '10:35 AM',
-      isOwn: true
-    },
-    {
-      id: '5',
-      senderId: '2',
-      content: 'Perfect! I can help you plan your wedding. When is the date?',
-      timestamp: '10:36 AM',
-      isOwn: false
+    if (userId && userName && userRole) {
+      const initConversation = async () => {
+        const conversationId = await startConversation(userId, userName, userRole);
+        setSelectedChat(conversationId);
+      };
+      initConversation();
     }
-  ];
+  }, [searchParams, startConversation, setSelectedChat]);
+
+  // Load messages when a chat is selected
+  useEffect(() => {
+    if (selectedChat) {
+      loadMessages(selectedChat);
+    }
+  }, [selectedChat, loadMessages]);
 
   const selectedConversation = conversations.find(conv => conv.id === selectedChat);
 
-  const handleSendMessage = () => {
-    if (newMessage.trim()) {
-      // Here you would typically send the message to your backend
-      console.log('Sending message:', newMessage);
+  const handleSendMessage = async () => {
+    if (newMessage.trim() && selectedConversation) {
+      await sendMessage(newMessage, selectedConversation.userId);
       setNewMessage('');
     }
   };
