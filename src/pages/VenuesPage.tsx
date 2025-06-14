@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -13,91 +14,111 @@ const VenuesPage = () => {
   const [locationFilter, setLocationFilter] = useState('all');
   const [typeFilter, setTypeFilter] = useState('all');
 
-  // Mock data for venues
+  // Mock data for venues - matching the Venue interface
   const venues = [
     {
       id: '1',
       name: 'Safari Park Hotel',
       location: 'Nairobi',
       capacity: 500,
-      price: 150000,
+      price_per_day: 150000,
       rating: 4.8,
-      image: '/placeholder.svg',
-      type: 'Hotel',
-      availability: 'available' as const
+      images: ['/placeholder.svg'],
+      venue_type: 'Hotel',
+      is_active: true,
+      total_reviews: 45,
+      description: 'Luxury hotel with excellent facilities'
     },
     {
       id: '2',
       name: 'KICC Amphitheatre',
       location: 'Nairobi CBD',
       capacity: 1000,
-      price: 300000,
+      price_per_day: 300000,
       rating: 4.6,
-      image: '/placeholder.svg',
-      type: 'Conference Center',
-      availability: 'limited' as const
+      images: ['/placeholder.svg'],
+      venue_type: 'Conference Center',
+      is_active: true,
+      total_reviews: 32,
+      description: 'Modern conference facility in the heart of the city'
     },
     {
       id: '3',
       name: 'Villa Rosa Kempinski',
       location: 'Westlands',
       capacity: 300,
-      price: 200000,
+      price_per_day: 200000,
       rating: 4.9,
-      image: '/placeholder.svg',
-      type: 'Hotel',
-      availability: 'available' as const
+      images: ['/placeholder.svg'],
+      venue_type: 'Hotel',
+      is_active: true,
+      total_reviews: 78,
+      description: 'Premium hotel with world-class amenities'
     },
     {
       id: '4',
       name: 'Karen Country Club',
       location: 'Karen',
       capacity: 400,
-      price: 180000,
+      price_per_day: 180000,
       rating: 4.7,
-      image: '/placeholder.svg',
-      type: 'Club',
-      availability: 'booked' as const
+      images: ['/placeholder.svg'],
+      venue_type: 'Club',
+      is_active: false,
+      total_reviews: 23,
+      description: 'Exclusive club in serene Karen environment'
     }
   ];
 
-  // Mock data for service providers
+  // Mock data for service providers - matching the ServiceProvider interface
   const serviceProviders = [
     {
       id: '1',
-      name: 'James Mwangi',
-      service: 'Wedding Photographer',
-      location: 'Nairobi',
+      service_category: 'Photography',
+      specialties: ['Wedding', 'Portrait', 'Events'],
+      price_per_event: 45000,
       rating: 4.9,
-      reviews: 156,
-      price: 45000,
-      avatar: '/placeholder.svg',
-      isAvailable: true,
-      specialties: ['Wedding', 'Portrait', 'Events']
+      total_reviews: 156,
+      is_available: true,
+      bio: 'Professional photographer with 10+ years experience',
+      years_experience: 10,
+      portfolio_images: ['/placeholder.svg'],
+      profiles: {
+        full_name: 'James Mwangi',
+        email: 'james@example.com'
+      }
     },
     {
       id: '2',
-      name: 'Sarah Kimani',
-      service: 'Event Coordinator',
-      location: 'Mombasa',
+      service_category: 'Event Planning',
+      specialties: ['Corporate Events', 'Weddings', 'Planning'],
+      price_per_event: 60000,
       rating: 4.8,
-      reviews: 89,
-      price: 60000,
-      avatar: '/placeholder.svg',
-      isAvailable: true,
-      specialties: ['Corporate Events', 'Weddings', 'Planning']
+      total_reviews: 89,
+      is_available: true,
+      bio: 'Experienced event coordinator specializing in luxury events',
+      years_experience: 8,
+      portfolio_images: ['/placeholder.svg'],
+      profiles: {
+        full_name: 'Sarah Kimani',
+        email: 'sarah@example.com'
+      }
     },
     {
       id: '3',
-      name: 'David Ochieng',
-      service: 'DJ & Music',
-      location: 'Kisumu',
+      service_category: 'Music & DJ',
+      specialties: ['Wedding DJ', 'Corporate', 'Sound System'],
+      price_per_event: 25000,
       rating: 4.7,
-      reviews: 203,
-      price: 25000,
-      avatar: '/placeholder.svg',
-      isAvailable: false,
-      specialties: ['Wedding DJ', 'Corporate', 'Sound System']
+      total_reviews: 203,
+      is_available: false,
+      bio: 'Professional DJ with state-of-the-art equipment',
+      years_experience: 6,
+      portfolio_images: ['/placeholder.svg'],
+      profiles: {
+        full_name: 'David Ochieng',
+        email: 'david@example.com'
+      }
     }
   ];
 
@@ -105,15 +126,15 @@ const VenuesPage = () => {
     const matchesSearch = venue.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          venue.location.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesLocation = locationFilter === 'all' || venue.location === locationFilter;
-    const matchesType = typeFilter === 'all' || venue.type === typeFilter;
+    const matchesType = typeFilter === 'all' || venue.venue_type === typeFilter;
     
     return matchesSearch && matchesLocation && matchesType;
   });
 
   const filteredProviders = serviceProviders.filter(provider => {
-    const matchesSearch = provider.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         provider.service.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesLocation = locationFilter === 'all' || provider.location === locationFilter;
+    const matchesSearch = provider.profiles.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         provider.service_category.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesLocation = locationFilter === 'all';
     
     return matchesSearch && matchesLocation;
   });

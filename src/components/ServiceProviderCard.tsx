@@ -33,6 +33,8 @@ const ServiceProviderCard: React.FC<ServiceProviderCardProps> = ({ provider }) =
   const displayRating = provider.rating || 0;
   const displayReviews = provider.total_reviews || 0;
   const displaySpecialties = provider.specialties || [];
+  const displayPricePerEvent = provider.price_per_event || 0;
+  const displayYearsExperience = provider.years_experience || 0;
   const avatarImage = provider.portfolio_images && provider.portfolio_images.length > 0 
     ? provider.portfolio_images[0] 
     : '/placeholder.svg';
@@ -65,7 +67,7 @@ const ServiceProviderCard: React.FC<ServiceProviderCardProps> = ({ provider }) =
       <CardContent className="pt-0">
         <div className="space-y-3">
           <div className="flex items-center gap-1 text-sm text-muted-foreground">
-            <span>{provider.years_experience || 0}+ years experience</span>
+            <span>{displayYearsExperience}+ years experience</span>
           </div>
           
           <div className="flex flex-wrap gap-1">
@@ -78,7 +80,7 @@ const ServiceProviderCard: React.FC<ServiceProviderCardProps> = ({ provider }) =
           
           <div className="flex items-center justify-between">
             <div>
-              <span className="text-lg font-bold">KSh {provider.price_per_event.toLocaleString()}</span>
+              <span className="text-lg font-bold">KSh {displayPricePerEvent.toLocaleString()}</span>
               <span className="text-sm text-muted-foreground">/event</span>
             </div>
             

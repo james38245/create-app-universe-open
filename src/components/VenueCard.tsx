@@ -28,6 +28,7 @@ const VenueCard: React.FC<VenueCardProps> = ({ venue }) => {
   const displayImage = venue.images && venue.images.length > 0 ? venue.images[0] : '/placeholder.svg';
   const displayRating = venue.rating || 0;
   const displayReviews = venue.total_reviews || 0;
+  const displayPricePerDay = venue.price_per_day || 0;
 
   return (
     <Card className="overflow-hidden hover:shadow-lg transition-shadow">
@@ -70,7 +71,7 @@ const VenueCard: React.FC<VenueCardProps> = ({ venue }) => {
           
           <div className="flex items-center justify-between">
             <div>
-              <span className="text-lg font-bold">KSh {venue.price_per_day.toLocaleString()}</span>
+              <span className="text-lg font-bold">KSh {displayPricePerDay.toLocaleString()}</span>
               <span className="text-sm text-muted-foreground">/day</span>
             </div>
             <Link to={`/venue/${venue.id}`}>
