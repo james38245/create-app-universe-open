@@ -1,7 +1,7 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { ServiceProviderCard } from '@/components/ServiceProviderCard';
+import ServiceProviderCard from '@/components/ServiceProviderCard';
 import { Button } from '@/components/ui/button';
 
 export const FeaturedProviders = () => {
