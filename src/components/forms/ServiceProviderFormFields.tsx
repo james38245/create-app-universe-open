@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { UseFormReturn } from 'react-hook-form';
 import { Input } from '@/components/ui/input';
@@ -6,6 +5,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import LocationInput from './LocationInput';
 
 interface ServiceProviderFormData {
   service_category: string;
@@ -17,6 +17,8 @@ interface ServiceProviderFormData {
   response_time_hours: number;
   is_available: boolean;
   portfolio_images: string[];
+  location?: string;
+  coordinates?: { lat: number; lng: number } | null;
   booking_terms?: {
     deposit_percentage: number;
     cancellation_policy: string;
@@ -135,6 +137,13 @@ const ServiceProviderFormFields: React.FC<ServiceProviderFormFieldsProps> = ({ f
           )}
         />
       )}
+
+      <LocationInput 
+        form={form}
+        fieldName="location"
+        label="Service Location"
+        placeholder="Enter your service area or use GPS"
+      />
 
       <FormField
         control={form.control}

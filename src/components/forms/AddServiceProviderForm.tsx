@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -25,6 +24,11 @@ const serviceProviderSchema = z.object({
   response_time_hours: z.number().min(1, 'Response time must be at least 1 hour'),
   is_available: z.boolean().default(true),
   portfolio_images: z.array(z.string()).optional(),
+  location: z.string().optional(),
+  coordinates: z.object({
+    lat: z.number(),
+    lng: z.number()
+  }).optional().nullable(),
   booking_terms: z.object({
     payment_type: z.enum(['deposit_only', 'full_payment', 'installments']).default('deposit_only'),
     deposit_percentage: z.number().min(0).max(100),
@@ -78,6 +82,8 @@ const AddServiceProviderForm: React.FC<AddServiceProviderFormProps> = ({ onSucce
       response_time_hours: 24,
       is_available: true,
       portfolio_images: [],
+      location: '',
+      coordinates: null,
       booking_terms: {
         payment_type: 'deposit_only',
         deposit_percentage: 50,
@@ -121,6 +127,8 @@ const AddServiceProviderForm: React.FC<AddServiceProviderFormProps> = ({ onSucce
         response_time_hours: data.response_time_hours,
         is_available: data.is_available,
         portfolio_images: uploadedImages,
+        location: data.location,
+        coordinates: data.coordinates,
         user_id: user.id,
         booking_terms: data.booking_terms,
         blocked_dates: blockedDates

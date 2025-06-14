@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { UseFormReturn } from 'react-hook-form';
 import { Input } from '@/components/ui/input';
@@ -6,6 +5,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import LocationInput from './LocationInput';
 
 interface VenueFormData {
   name: string;
@@ -17,6 +17,7 @@ interface VenueFormData {
   amenities: string[];
   images: string[];
   is_active: boolean;
+  coordinates?: { lat: number; lng: number } | null;
   booking_terms?: {
     deposit_percentage: number;
     cancellation_policy: string;
@@ -79,18 +80,11 @@ const VenueFormFields: React.FC<VenueFormFieldsProps> = ({ form }) => {
       />
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <FormField
-          control={form.control}
-          name="location"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Location</FormLabel>
-              <FormControl>
-                <Input placeholder="City, Area" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
+        <LocationInput 
+          form={form}
+          fieldName="location"
+          label="Location"
+          placeholder="Enter location or use GPS"
         />
 
         <FormField

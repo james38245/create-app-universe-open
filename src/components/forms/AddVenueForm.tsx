@@ -19,6 +19,10 @@ const venueSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
   description: z.string().min(10, 'Description must be at least 10 characters'),
   location: z.string().min(2, 'Location is required'),
+  coordinates: z.object({
+    lat: z.number(),
+    lng: z.number()
+  }).optional().nullable(),
   capacity: z.number().min(1, 'Capacity must be at least 1'),
   price_per_day: z.number().min(1, 'Price must be greater than 0'),
   venue_type: z.string().min(1, 'Venue type is required'),
@@ -72,6 +76,7 @@ const AddVenueForm: React.FC<AddVenueFormProps> = ({ onSuccess, onCancel }) => {
       name: '',
       description: '',
       location: '',
+      coordinates: null,
       capacity: 50,
       price_per_day: 10000,
       venue_type: '',
@@ -115,6 +120,7 @@ const AddVenueForm: React.FC<AddVenueFormProps> = ({ onSuccess, onCancel }) => {
         name: data.name,
         description: data.description,
         location: data.location,
+        coordinates: data.coordinates,
         capacity: data.capacity,
         price_per_day: data.price_per_day,
         venue_type: data.venue_type,
