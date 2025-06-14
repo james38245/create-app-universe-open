@@ -6,20 +6,15 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
-import { Badge } from '@/components/ui/badge';
 import { 
   Palette, 
   Bell, 
-  HelpCircle, 
-  MessageSquare, 
-  Info, 
-  Moon, 
-  Sun, 
   Eye,
   Save,
   Download,
-  RefreshCw
+  RefreshCw,
+  Moon, 
+  Sun
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -123,12 +118,10 @@ const UserSettings = () => {
       </div>
 
       <Tabs defaultValue="appearance" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="appearance">Appearance</TabsTrigger>
           <TabsTrigger value="notifications">Notifications</TabsTrigger>
           <TabsTrigger value="display">Display</TabsTrigger>
-          <TabsTrigger value="faq">FAQ</TabsTrigger>
-          <TabsTrigger value="support">Support</TabsTrigger>
         </TabsList>
 
         {/* Appearance Settings */}
@@ -336,131 +329,6 @@ const UserSettings = () => {
                       <SelectItem value="JPY">JPY (¥)</SelectItem>
                     </SelectContent>
                   </Select>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* FAQ */}
-        <TabsContent value="faq">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <HelpCircle className="h-5 w-5" />
-                <span>Frequently Asked Questions</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {[
-                  {
-                    question: "How do I book a venue?",
-                    answer: "Browse venues, select your preferred one, choose dates and services, then proceed with booking confirmation and payment."
-                  },
-                  {
-                    question: "Can I cancel my booking?",
-                    answer: "Yes, cancellation policies vary by venue. Check the specific venue's cancellation terms during booking."
-                  },
-                  {
-                    question: "How do I contact a service provider?",
-                    answer: "Visit the provider's profile page and use the messaging system to communicate directly."
-                  },
-                  {
-                    question: "What payment methods are accepted?",
-                    answer: "We accept major credit cards, debit cards, and digital payment methods. Payment options are shown during checkout."
-                  },
-                  {
-                    question: "How do I update my profile?",
-                    answer: "Go to your Profile page from the navigation menu to update your personal information and preferences."
-                  }
-                ].map((faq, index) => (
-                  <div key={index} className="border rounded-lg p-4">
-                    <h3 className="font-medium mb-2">{faq.question}</h3>
-                    <p className="text-sm text-muted-foreground">{faq.answer}</p>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* Support */}
-        <TabsContent value="support">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <MessageSquare className="h-5 w-5" />
-                <span>Help & Support</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-4">
-                  <h3 className="font-medium">Contact Information</h3>
-                  <div className="space-y-2 text-sm">
-                    <p><strong>Support Email:</strong> support@eventspace.com</p>
-                    <p><strong>Phone:</strong> +1 (555) 123-4567</p>
-                    <p><strong>Hours:</strong> Mon-Fri 9AM-6PM EST</p>
-                    <p><strong>Response Time:</strong> Within 24 hours</p>
-                  </div>
-                </div>
-
-                <div className="space-y-4">
-                  <h3 className="font-medium">Quick Links</h3>
-                  <div className="space-y-2">
-                    <div className="flex items-center space-x-2">
-                      <Badge variant="outline">Guide</Badge>
-                      <span className="text-sm">Getting Started Guide</span>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Badge variant="outline">Video</Badge>
-                      <span className="text-sm">How to Book a Venue</span>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Badge variant="outline">Help</Badge>
-                      <span className="text-sm">Payment & Billing Help</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="space-y-4">
-                <h3 className="font-medium">Contact Support</h3>
-                <div className="space-y-3">
-                  <div>
-                    <Label>Issue Type</Label>
-                    <Select>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select issue type" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="booking">Booking Issue</SelectItem>
-                        <SelectItem value="payment">Payment Problem</SelectItem>
-                        <SelectItem value="account">Account Access</SelectItem>
-                        <SelectItem value="technical">Technical Issue</SelectItem>
-                        <SelectItem value="other">Other</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <Label>Message</Label>
-                    <Textarea placeholder="Describe your issue..." />
-                  </div>
-                  <Button>Send Message</Button>
-                </div>
-              </div>
-
-              <div className="border-t pt-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="font-medium">About EventSpace</h3>
-                    <p className="text-sm text-muted-foreground">Version 2.1.4 • Built with ❤️</p>
-                  </div>
-                  <Badge variant="outline">
-                    <Info className="h-3 w-3 mr-1" />
-                    App Info
-                  </Badge>
                 </div>
               </div>
             </CardContent>

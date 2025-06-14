@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Calendar, Menu, X, User, LogOut, Building, Settings } from 'lucide-react';
+import { Calendar, Menu, X, User, LogOut, Building, Settings, HelpCircle, MessageSquare } from 'lucide-react';
 import { AuthModal } from '@/components/AuthModal';
 import { useAuth } from '@/hooks/useAuth';
 import {
@@ -40,6 +40,12 @@ const Navigation = () => {
               </Link>
               <Link to="/providers" className="text-gray-700 hover:text-purple-600 font-medium">
                 Providers
+              </Link>
+              <Link to="/faq" className="text-gray-700 hover:text-purple-600 font-medium">
+                FAQ
+              </Link>
+              <Link to="/support" className="text-gray-700 hover:text-purple-600 font-medium">
+                Support
               </Link>
               {user && (
                 <>
@@ -125,6 +131,20 @@ const Navigation = () => {
                   onClick={() => setIsOpen(false)}
                 >
                   Providers
+                </Link>
+                <Link 
+                  to="/faq" 
+                  className="text-gray-700 hover:text-purple-600 font-medium"
+                  onClick={() => setIsOpen(false)}
+                >
+                  FAQ
+                </Link>
+                <Link 
+                  to="/support" 
+                  className="text-gray-700 hover:text-purple-600 font-medium"
+                  onClick={() => setIsOpen(false)}
+                >
+                  Support
                 </Link>
                 {user && (
                   <>
