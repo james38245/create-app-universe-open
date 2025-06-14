@@ -29,7 +29,6 @@ const MessageButton: React.FC<MessageButtonProps> = ({
 
   const handleMessage = async () => {
     if (!user) {
-      // Redirect to auth if not logged in
       navigate('/');
       return;
     }
