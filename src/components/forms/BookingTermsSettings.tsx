@@ -7,6 +7,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from '@/components/ui/form';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { AlertTriangle } from 'lucide-react';
 
 interface BookingTermsSettingsProps {
   form: UseFormReturn<any>;
@@ -14,6 +17,7 @@ interface BookingTermsSettingsProps {
 
 const BookingTermsSettings: React.FC<BookingTermsSettingsProps> = ({ form }) => {
   const paymentType = form.watch('booking_terms.payment_type');
+  const cancellationTimeUnit = form.watch('booking_terms.cancellation_time_unit');
 
   return (
     <Card>
@@ -260,81 +264,336 @@ const BookingTermsSettings: React.FC<BookingTermsSettingsProps> = ({ form }) => 
           </div>
         </div>
 
-        {/* Cancellation Policy */}
-        <FormField
-          control={form.control}
-          name="booking_terms.cancellation_policy"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Cancellation Policy</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select cancellation policy" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  <SelectItem value="Full refund if cancelled 7 days before event">
-                    Full refund - 7 days notice
-                  </SelectItem>
-                  <SelectItem value="Full refund if cancelled 48 hours before event">
-                    Full refund - 48 hours notice
-                  </SelectItem>
-                  <SelectItem value="50% refund if cancelled 24 hours before event">
-                    50% refund - 24 hours notice
-                  </SelectItem>
-                  <SelectItem value="Deposit non-refundable, balance refunded if cancelled 48 hours before">
-                    Deposit non-refundable
-                  </SelectItem>
-                  <SelectItem value="No refund for cancellations">
-                    No refund policy
-                  </SelectItem>
-                  <SelectItem value="Custom policy - see special terms">
-                    Custom policy
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        {/* Enhanced Cancellation Policy */}
+        <div className="space-y-4">
+          <FormLabel className="text-base font-semibold">Cancellation & Refund Policy</FormLabel>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <FormField
+              control={form.control}
+              name="booking_terms.cancellation_time_value"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Cancellation Notice Period</FormLabel>
+                  <FormControl>
+                    <Input 
+                      type="number" 
+                      placeholder="48"
+                      min="1"
+                      {...field}
+                      onChange={(e) => field.onChange(parseInt(e.target.value) || 1)}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-        {/* Late Payment Policy */}
-        <FormField
-          control={form.control}
-          name="booking_terms.late_payment_policy"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Late Payment Policy (Optional)</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
+            <FormField
+              control={form.control}
+              name="booking_terms.cancellation_time_unit"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Time Unit</FormLabel>
+                  <FormControl>
+                    <Select onValueChange={field.onChange} defaultValue={field.value || "hours"}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select unit" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="hours">Hours</SelectItem>
+                        <SelectItem value="days">Days</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="booking_terms.refund_percentage"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Refund Percentage (%)</FormLabel>
+                  <FormControl>
+                    <Input 
+                      type="number" 
+                      placeholder="100"
+                      min="0"
+                      max="100"
+                      {...field}
+                      onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+
+          {/* Refund Deductions */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <FormField
+              control={form.control}
+              name="booking_terms.transaction_fee_deduction"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Transaction Fee Deduction (%)</FormLabel>
+                  <FormControl>
+                    <Input 
+                      type="number" 
+                      placeholder="3"
+                      min="0"
+                      max="10"
+                      {...field}
+                      onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                    />
+                  </FormControl>
+                  <FormDescription>
+                    Percentage deducted from refund for transaction fees
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="booking_terms.processing_fee_amount"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Processing Fee (Fixed Amount KSh)</FormLabel>
+                  <FormControl>
+                    <Input 
+                      type="number" 
+                      placeholder="500"
+                      min="0"
+                      {...field}
+                      onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                    />
+                  </FormControl>
+                  <FormDescription>
+                    Fixed amount deducted from refund for processing
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+        </div>
+
+        {/* Enhanced Late Payment Policy */}
+        <div className="space-y-4">
+          <FormLabel className="text-base font-semibold">Late Payment Penalties (Mandatory)</FormLabel>
+          <Alert>
+            <AlertTriangle className="h-4 w-4" />
+            <AlertDescription>
+              All late payment penalties are chargeable without exception. Non-compliance may result in legal action.
+            </AlertDescription>
+          </Alert>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <FormField
+              control={form.control}
+              name="booking_terms.late_payment_daily_rate"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Daily Late Fee (%)</FormLabel>
+                  <FormControl>
+                    <Input 
+                      type="number" 
+                      placeholder="2"
+                      min="0"
+                      max="10"
+                      {...field}
+                      onChange={(e) => field.onChange(parseInt(e.target.value) || 2)}
+                    />
+                  </FormControl>
+                  <FormDescription>
+                    Daily percentage charged for late payments
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="booking_terms.maximum_late_fee_percentage"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Maximum Late Fee Cap (%)</FormLabel>
+                  <FormControl>
+                    <Input 
+                      type="number" 
+                      placeholder="25"
+                      min="0"
+                      max="50"
+                      {...field}
+                      onChange={(e) => field.onChange(parseInt(e.target.value) || 25)}
+                    />
+                  </FormControl>
+                  <FormDescription>
+                    Maximum total late fee as percentage of booking amount
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+
+          <FormField
+            control={form.control}
+            name="booking_terms.grace_period_hours"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Grace Period (Hours)</FormLabel>
                 <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select late payment policy" />
-                  </SelectTrigger>
+                  <Input 
+                    type="number" 
+                    placeholder="24"
+                    min="0"
+                    max="72"
+                    {...field}
+                    onChange={(e) => field.onChange(parseInt(e.target.value) || 24)}
+                  />
                 </FormControl>
-                <SelectContent>
-                  <SelectItem value="no_policy">No specific policy</SelectItem>
-                  <SelectItem value="Booking cancelled if payment late">
-                    Cancel booking if payment late
-                  </SelectItem>
-                  <SelectItem value="5% late fee per day">
-                    5% late fee per day
-                  </SelectItem>
-                  <SelectItem value="10% late fee after 3 days">
-                    10% late fee after 3 days
-                  </SelectItem>
-                  <SelectItem value="Flat 500 KSh late fee">
-                    Flat 500 KSh late fee
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-              <FormDescription>
-                Policy for handling late payments
-              </FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+                <FormDescription>
+                  Hours after due date before late fees apply
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+
+        {/* Platform Terms & Legal Compliance */}
+        <div className="space-y-4">
+          <FormLabel className="text-base font-semibold">Platform Terms & Legal Compliance</FormLabel>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <FormField
+              control={form.control}
+              name="booking_terms.platform_commission_percentage"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Platform Commission (%)</FormLabel>
+                  <FormControl>
+                    <Input 
+                      type="number" 
+                      placeholder="10"
+                      min="5"
+                      max="20"
+                      {...field}
+                      onChange={(e) => field.onChange(parseInt(e.target.value) || 10)}
+                    />
+                  </FormControl>
+                  <FormDescription>
+                    Platform commission on successful bookings
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="booking_terms.dispute_resolution_fee"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Dispute Resolution Fee (KSh)</FormLabel>
+                  <FormControl>
+                    <Input 
+                      type="number" 
+                      placeholder="2000"
+                      min="500"
+                      {...field}
+                      onChange={(e) => field.onChange(parseInt(e.target.value) || 2000)}
+                    />
+                  </FormControl>
+                  <FormDescription>
+                    Fee charged for dispute resolution services
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+
+          {/* Mandatory Seller Agreements */}
+          <div className="space-y-3">
+            <FormField
+              control={form.control}
+              name="booking_terms.agree_to_platform_terms"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                  <FormControl>
+                    <Checkbox
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                  <div className="space-y-1 leading-none">
+                    <FormLabel className="text-sm font-medium">
+                      I agree to platform terms and commission structure
+                    </FormLabel>
+                    <FormDescription>
+                      Mandatory agreement to platform terms of service
+                    </FormDescription>
+                  </div>
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="booking_terms.agree_to_legal_compliance"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                  <FormControl>
+                    <Checkbox
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                  <div className="space-y-1 leading-none">
+                    <FormLabel className="text-sm font-medium">
+                      I agree to legal compliance and fraud liability
+                    </FormLabel>
+                    <FormDescription>
+                      Any fraudulent activity is chargeable by law
+                    </FormDescription>
+                  </div>
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="booking_terms.agree_to_service_delivery"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                  <FormControl>
+                    <Checkbox
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                  <div className="space-y-1 leading-none">
+                    <FormLabel className="text-sm font-medium">
+                      I guarantee service delivery and integrity
+                    </FormLabel>
+                    <FormDescription>
+                      Commitment to deliver services as promised
+                    </FormDescription>
+                  </div>
+                </FormItem>
+              )}
+            />
+          </div>
+        </div>
 
         {/* Special Terms */}
         <FormField
@@ -342,11 +601,11 @@ const BookingTermsSettings: React.FC<BookingTermsSettingsProps> = ({ form }) => 
           name="booking_terms.special_terms"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Special Terms & Conditions (Optional)</FormLabel>
+              <FormLabel>Additional Terms & Conditions</FormLabel>
               <FormControl>
                 <Textarea 
                   placeholder="Any additional terms, restrictions, or special conditions..."
-                  className="min-h-[80px]"
+                  className="min-h-[100px]"
                   {...field} 
                 />
               </FormControl>
