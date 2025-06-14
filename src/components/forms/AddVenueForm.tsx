@@ -26,11 +26,15 @@ const venueSchema = z.object({
   images: z.array(z.string()).optional(),
   is_active: z.boolean().default(true),
   booking_terms: z.object({
+    payment_type: z.enum(['deposit_only', 'full_payment', 'installments']).default('deposit_only'),
     deposit_percentage: z.number().min(0).max(100),
     cancellation_policy: z.string(),
     payment_due_days: z.number().min(1),
     advance_booking_days: z.number().min(1),
     minimum_booking_hours: z.number().min(1),
+    installment_count: z.number().optional(),
+    installment_interval_days: z.number().optional(),
+    late_payment_policy: z.string().optional(),
     special_terms: z.string().optional()
   }).optional(),
   blocked_dates: z.array(z.string()).optional()
@@ -63,11 +67,15 @@ const AddVenueForm: React.FC<AddVenueFormProps> = ({ onSuccess, onCancel }) => {
       images: [],
       is_active: true,
       booking_terms: {
+        payment_type: 'deposit_only',
         deposit_percentage: 30,
         cancellation_policy: 'Full refund if cancelled 7 days before event',
         payment_due_days: 7,
         advance_booking_days: 2,
         minimum_booking_hours: 4,
+        installment_count: 2,
+        installment_interval_days: 30,
+        late_payment_policy: '',
         special_terms: ''
       },
       blocked_dates: []
@@ -102,7 +110,7 @@ const AddVenueForm: React.FC<AddVenueFormProps> = ({ onSuccess, onCancel }) => {
 
       toast({
         title: "Success",
-        description: "Venue added successfully with booking terms and availability!"
+        description: "Venue added successfully with comprehensive booking terms!"
       });
 
       queryClient.invalidateQueries({ queryKey: ['my-venues'] });

@@ -26,11 +26,15 @@ const serviceProviderSchema = z.object({
   is_available: z.boolean().default(true),
   portfolio_images: z.array(z.string()).optional(),
   booking_terms: z.object({
+    payment_type: z.enum(['deposit_only', 'full_payment', 'installments']).default('deposit_only'),
     deposit_percentage: z.number().min(0).max(100),
     cancellation_policy: z.string(),
     payment_due_days: z.number().min(1),
     advance_booking_days: z.number().min(1),
     minimum_booking_hours: z.number().min(1),
+    installment_count: z.number().optional(),
+    installment_interval_days: z.number().optional(),
+    late_payment_policy: z.string().optional(),
     special_terms: z.string().optional()
   }).optional(),
   blocked_dates: z.array(z.string()).optional()
@@ -63,11 +67,15 @@ const AddServiceProviderForm: React.FC<AddServiceProviderFormProps> = ({ onSucce
       is_available: true,
       portfolio_images: [],
       booking_terms: {
+        payment_type: 'deposit_only',
         deposit_percentage: 50,
         cancellation_policy: 'Full refund if cancelled 48 hours before event',
         payment_due_days: 3,
         advance_booking_days: 1,
         minimum_booking_hours: 2,
+        installment_count: 2,
+        installment_interval_days: 21,
+        late_payment_policy: '',
         special_terms: ''
       },
       blocked_dates: []
@@ -102,7 +110,7 @@ const AddServiceProviderForm: React.FC<AddServiceProviderFormProps> = ({ onSucce
 
       toast({
         title: "Success",
-        description: "Service provider profile created successfully with booking terms!"
+        description: "Service provider profile created successfully with flexible payment terms!"
       });
 
       queryClient.invalidateQueries({ queryKey: ['my-service-providers'] });
