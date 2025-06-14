@@ -289,7 +289,7 @@ const BookingTermsSettings: React.FC<BookingTermsSettingsProps> = ({ form }) => 
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  <SelectItem value="">No specific policy</SelectItem>
+                  <SelectItem value="no_policy">No specific policy</SelectItem>
                   <SelectItem value="Booking cancelled if payment late">
                     Cancel booking if payment late
                   </SelectItem>
