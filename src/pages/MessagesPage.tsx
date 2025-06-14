@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { Send, Search, Phone, MoreVertical } from 'lucide-react';
+import { Send, Search, Phone, MoreVertical, Check, CheckCheck } from 'lucide-react';
 import { useMessaging } from '@/hooks/useMessaging';
 import { useToast } from '@/hooks/use-toast';
 
@@ -59,13 +59,8 @@ const MessagesPage = () => {
   const handleVoiceCall = () => {
     if (!selectedConversation) return;
     
-    // Mock phone number - in real app, this would come from user profile
-    const phoneNumber = "+254700000000"; // Example Kenyan number
-    
-    // Create tel: link to initiate phone call
+    const phoneNumber = selectedConversation.phoneNumber || "+254700000000";
     const telLink = `tel:${phoneNumber}`;
-    
-    // For mobile devices, this will open the phone app
     window.location.href = telLink;
     
     toast({
@@ -101,7 +96,7 @@ const MessagesPage = () => {
                       onClick={() => setSelectedChat(conversation.id)}
                       className={`p-4 cursor-pointer transition-colors hover:bg-muted ${
                         selectedChat === conversation.id ? 'bg-muted' : ''
-                      }`}
+                      } ${conversation.unread > 0 ? 'border-l-4 border-l-primary' : ''}`}
                     >
                       <div className="flex items-start gap-3">
                         <div className="relative">
@@ -116,17 +111,21 @@ const MessagesPage = () => {
                         
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center justify-between mb-1">
-                            <h4 className="font-medium truncate">{conversation.name}</h4>
-                            <span className="text-xs text-muted-foreground">{conversation.timestamp}</span>
+                            <h4 className={`font-medium truncate ${conversation.unread > 0 ? 'font-semibold' : ''}`}>
+                              {conversation.name}
+                            </h4>
+                            <span className={`text-xs ${conversation.unread > 0 ? 'text-primary font-medium' : 'text-muted-foreground'}`}>
+                              {conversation.timestamp}
+                            </span>
                           </div>
-                          <p className="text-sm text-muted-foreground truncate mb-1">
+                          <p className={`text-sm truncate mb-1 ${conversation.unread > 0 ? 'text-foreground font-medium' : 'text-muted-foreground'}`}>
                             {conversation.lastMessage}
                           </p>
                           <p className="text-xs text-muted-foreground">{conversation.role}</p>
                         </div>
                         
                         {conversation.unread > 0 && (
-                          <Badge variant="default" className="text-xs">
+                          <Badge variant="default" className="text-xs bg-primary">
                             {conversation.unread}
                           </Badge>
                         )}
@@ -192,9 +191,20 @@ const MessagesPage = () => {
                             }`}
                           >
                             <p className="text-sm">{message.content}</p>
-                            <span className="text-xs opacity-70 mt-1 block">
-                              {message.timestamp}
-                            </span>
+                            <div className="flex items-center justify-between mt-1">
+                              <span className="text-xs opacity-70">
+                                {message.timestamp}
+                              </span>
+                              {message.isOwn && (
+                                <div className="ml-2">
+                                  {message.isRead ? (
+                                    <CheckCheck className="h-3 w-3 opacity-70" />
+                                  ) : (
+                                    <Check className="h-3 w-3 opacity-70" />
+                                  )}
+                                </div>
+                              )}
+                            </div>
                           </div>
                         </div>
                       ))}
