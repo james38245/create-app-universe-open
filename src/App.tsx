@@ -8,6 +8,7 @@ import Navigation from "@/components/Navigation";
 import Index from "./pages/Index";
 import VenuesPage from "./pages/VenuesPage";
 import VenueDetailPage from "./pages/VenueDetailPage";
+import ProviderDetailPage from "./pages/ProviderDetailPage";
 import BookingsPage from "./pages/BookingsPage";
 import MessagesPage from "./pages/MessagesPage";
 import ProfilePage from "./pages/ProfilePage";
@@ -27,6 +28,7 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/venues" element={<VenuesPage />} />
             <Route path="/venue/:id" element={<VenueDetailPage />} />
+            <Route path="/provider/:id" element={<ProviderDetailPage />} />
             <Route path="/bookings" element={<BookingsPage />} />
             <Route path="/messages" element={<MessagesPage />} />
             <Route path="/profile" element={<ProfilePage />} />
