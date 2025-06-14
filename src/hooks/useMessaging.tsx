@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
@@ -54,117 +55,155 @@ export const MessagingProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const loadConversations = async () => {
     if (!user) return;
 
-    // Mock conversations with phone numbers - in real app, this would fetch from Supabase
-    const mockConversations: Conversation[] = [
-      {
-        id: '1',
-        name: 'Sarah Kimani',
-        role: 'Event Coordinator',
-        avatar: '/placeholder.svg',
-        lastMessage: 'Perfect! I can help you plan your wedding. When is the date?',
-        timestamp: '2 min ago',
-        unread: 2,
-        isOnline: true,
-        userId: 'user-1',
-        phoneNumber: '+254701234567'
-      },
-      {
-        id: '2',
-        name: 'James Mwangi',
-        role: 'Wedding Photographer',
-        avatar: '/placeholder.svg',
-        lastMessage: 'I have availability for that weekend. Let me send you my portfolio.',
-        timestamp: '1 hour ago',
-        unread: 0,
-        isOnline: false,
-        userId: 'user-2',
-        phoneNumber: '+254702345678'
-      },
-      {
-        id: '3',
-        name: 'Safari Park Hotel',
-        role: 'Venue Manager',
-        avatar: '/placeholder.svg',
-        lastMessage: 'Thank you for your booking inquiry. The venue is available.',
-        timestamp: '3 hours ago',
-        unread: 1,
-        isOnline: true,
-        userId: 'user-3',
-        phoneNumber: '+254703456789'
-      }
-    ];
+    try {
+      // First, get all messages where user is sender or recipient
+      const { data: userMessages, error: messagesError } = await supabase
+        .from('messages')
+        .select(`
+          *,
+          sender:profiles!messages_sender_id_fkey(full_name, avatar_url, phone),
+          recipient:profiles!messages_recipient_id_fkey(full_name, avatar_url, phone)
+        `)
+        .or(`sender_id.eq.${user.id},recipient_id.eq.${user.id}`)
+        .order('created_at', { ascending: false });
 
-    setConversations(mockConversations);
+      if (messagesError) {
+        console.error('Error loading messages:', messagesError);
+        return;
+      }
+
+      // Group messages by conversation (other participant)
+      const conversationMap = new Map();
+      
+      userMessages?.forEach((message) => {
+        const isOwn = message.sender_id === user.id;
+        const otherParticipant = isOwn ? message.recipient : message.sender;
+        const otherParticipantId = isOwn ? message.recipient_id : message.sender_id;
+        
+        if (!otherParticipant) return;
+
+        const conversationId = otherParticipantId;
+        
+        if (!conversationMap.has(conversationId)) {
+          conversationMap.set(conversationId, {
+            id: conversationId,
+            name: otherParticipant.full_name || 'Unknown User',
+            role: 'User', // You can extend this to include user roles
+            avatar: otherParticipant.avatar_url || '/placeholder.svg',
+            lastMessage: message.message,
+            timestamp: new Date(message.created_at).toLocaleString(),
+            unread: 0, // We'll calculate this separately
+            isOnline: Math.random() > 0.5, // Mock online status
+            userId: conversationId,
+            phoneNumber: otherParticipant.phone || '+254700000000'
+          });
+        }
+      });
+
+      const conversationsList = Array.from(conversationMap.values());
+      
+      // Calculate unread messages for each conversation
+      for (const conversation of conversationsList) {
+        const { count } = await supabase
+          .from('messages')
+          .select('*', { count: 'exact', head: true })
+          .eq('sender_id', conversation.userId)
+          .eq('recipient_id', user.id)
+          .eq('is_read', false);
+        
+        conversation.unread = count || 0;
+      }
+
+      setConversations(conversationsList);
+    } catch (error) {
+      console.error('Error loading conversations:', error);
+      // Fallback to mock data if there's an error
+      setConversations([]);
+    }
   };
 
   const loadMessages = async (conversationId: string) => {
-    // Mock messages for now - in real app, this would fetch from Supabase
-    const mockMessages: Message[] = [
-      {
-        id: '1',
-        senderId: 'user-2',
-        recipientId: user?.id || '',
-        content: 'Hi! I saw your inquiry about wedding coordination services.',
-        timestamp: '10:30 AM',
-        isOwn: false,
-        isRead: true
-      },
-      {
-        id: '2',
-        senderId: user?.id || '',
-        recipientId: 'user-2',
-        content: 'Yes, I\'m planning a wedding for December 15th. Can you help?',
-        timestamp: '10:32 AM',
-        isOwn: true,
-        isRead: true
-      },
-      {
-        id: '3',
-        senderId: 'user-2',
-        recipientId: user?.id || '',
-        content: 'Absolutely! I specialize in wedding planning. What\'s your estimated guest count?',
-        timestamp: '10:33 AM',
-        isOwn: false,
-        isRead: true
-      },
-      {
-        id: '4',
-        senderId: user?.id || '',
-        recipientId: 'user-2',
-        content: 'We\'re expecting around 200 guests. Looking for a venue in Nairobi.',
-        timestamp: '10:35 AM',
-        isOwn: true,
-        isRead: true
-      },
-      {
-        id: '5',
-        senderId: 'user-2',
-        recipientId: user?.id || '',
-        content: 'Perfect! I can help you plan your wedding. When is the date?',
-        timestamp: '10:36 AM',
-        isOwn: false,
-        isRead: false
-      }
-    ];
+    if (!user) return;
 
-    setMessages(mockMessages);
+    try {
+      const { data: messagesData, error } = await supabase
+        .from('messages')
+        .select('*')
+        .or(`and(sender_id.eq.${user.id},recipient_id.eq.${conversationId}),and(sender_id.eq.${conversationId},recipient_id.eq.${user.id})`)
+        .order('created_at', { ascending: true });
+
+      if (error) {
+        console.error('Error loading messages:', error);
+        return;
+      }
+
+      const formattedMessages: Message[] = messagesData?.map(msg => ({
+        id: msg.id,
+        senderId: msg.sender_id,
+        recipientId: msg.recipient_id,
+        content: msg.message,
+        timestamp: new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        isOwn: msg.sender_id === user.id,
+        isRead: msg.is_read,
+        bookingId: msg.booking_id
+      })) || [];
+
+      setMessages(formattedMessages);
+
+      // Mark messages as read
+      await supabase
+        .from('messages')
+        .update({ is_read: true })
+        .eq('sender_id', conversationId)
+        .eq('recipient_id', user.id)
+        .eq('is_read', false);
+
+      // Refresh conversations to update unread counts
+      loadConversations();
+    } catch (error) {
+      console.error('Error loading messages:', error);
+    }
   };
 
   const sendMessage = async (content: string, recipientId: string) => {
     if (!user) return;
 
-    // In real app, this would send to Supabase
-    const newMessage: Message = {
-      id: Date.now().toString(),
-      senderId: user.id,
-      recipientId,
-      content,
-      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      isOwn: true,
-      isRead: false
-    };
+    try {
+      const { data, error } = await supabase
+        .from('messages')
+        .insert({
+          sender_id: user.id,
+          recipient_id: recipientId,
+          message: content,
+          is_read: false
+        })
+        .select()
+        .single();
 
-    setMessages(prev => [...prev, newMessage]);
+      if (error) {
+        console.error('Error sending message:', error);
+        return;
+      }
+
+      // Add the new message to the current messages
+      const newMessage: Message = {
+        id: data.id,
+        senderId: data.sender_id,
+        recipientId: data.recipient_id,
+        content: data.message,
+        timestamp: new Date(data.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        isOwn: true,
+        isRead: false,
+        bookingId: data.booking_id
+      };
+
+      setMessages(prev => [...prev, newMessage]);
+      
+      // Refresh conversations to update last message
+      loadConversations();
+    } catch (error) {
+      console.error('Error sending message:', error);
+    }
   };
 
   const startConversation = async (userId: string, userName: string, userRole: string, phoneNumber?: string): Promise<string> => {
@@ -175,9 +214,9 @@ export const MessagingProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       return existingConversation.id;
     }
 
-    // Create new conversation
+    // Create new conversation entry
     const newConversation: Conversation = {
-      id: Date.now().toString(),
+      id: userId,
       name: userName,
       role: userRole,
       avatar: '/placeholder.svg',
@@ -186,11 +225,11 @@ export const MessagingProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       unread: 0,
       isOnline: Math.random() > 0.5,
       userId,
-      phoneNumber: phoneNumber || '+254700000000' // Default number if not provided
+      phoneNumber: phoneNumber || '+254700000000'
     };
 
     setConversations(prev => [newConversation, ...prev]);
-    return newConversation.id;
+    return userId;
   };
 
   return (
