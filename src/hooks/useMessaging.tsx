@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
@@ -24,6 +23,7 @@ interface Conversation {
   unread: number;
   isOnline: boolean;
   userId: string;
+  phoneNumber?: string;
 }
 
 interface MessagingContextType {
@@ -32,7 +32,7 @@ interface MessagingContextType {
   selectedChat: string | null;
   setSelectedChat: (chatId: string | null) => void;
   sendMessage: (content: string, recipientId: string) => Promise<void>;
-  startConversation: (userId: string, userName: string, userRole: string) => Promise<string>;
+  startConversation: (userId: string, userName: string, userRole: string, phoneNumber?: string) => Promise<string>;
   loadMessages: (conversationId: string) => Promise<void>;
 }
 
@@ -54,7 +54,7 @@ export const MessagingProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const loadConversations = async () => {
     if (!user) return;
 
-    // Mock conversations for now - in real app, this would fetch from Supabase
+    // Mock conversations with phone numbers - in real app, this would fetch from Supabase
     const mockConversations: Conversation[] = [
       {
         id: '1',
@@ -65,7 +65,8 @@ export const MessagingProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         timestamp: '2 min ago',
         unread: 2,
         isOnline: true,
-        userId: 'user-1'
+        userId: 'user-1',
+        phoneNumber: '+254701234567'
       },
       {
         id: '2',
@@ -76,7 +77,8 @@ export const MessagingProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         timestamp: '1 hour ago',
         unread: 0,
         isOnline: false,
-        userId: 'user-2'
+        userId: 'user-2',
+        phoneNumber: '+254702345678'
       },
       {
         id: '3',
@@ -87,7 +89,8 @@ export const MessagingProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         timestamp: '3 hours ago',
         unread: 1,
         isOnline: true,
-        userId: 'user-3'
+        userId: 'user-3',
+        phoneNumber: '+254703456789'
       }
     ];
 
@@ -164,7 +167,7 @@ export const MessagingProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     setMessages(prev => [...prev, newMessage]);
   };
 
-  const startConversation = async (userId: string, userName: string, userRole: string): Promise<string> => {
+  const startConversation = async (userId: string, userName: string, userRole: string, phoneNumber?: string): Promise<string> => {
     // Check if conversation already exists
     const existingConversation = conversations.find(conv => conv.userId === userId);
     
@@ -182,7 +185,8 @@ export const MessagingProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       timestamp: 'now',
       unread: 0,
       isOnline: Math.random() > 0.5,
-      userId
+      userId,
+      phoneNumber: phoneNumber || '+254700000000' // Default number if not provided
     };
 
     setConversations(prev => [newConversation, ...prev]);

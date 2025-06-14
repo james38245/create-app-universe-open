@@ -7,12 +7,14 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { Send, Search, Phone, Video, MoreVertical } from 'lucide-react';
+import { Send, Search, Phone, MoreVertical } from 'lucide-react';
 import { useMessaging } from '@/hooks/useMessaging';
+import { useToast } from '@/hooks/use-toast';
 
 const MessagesPage = () => {
   const [searchParams] = useSearchParams();
   const [newMessage, setNewMessage] = useState('');
+  const { toast } = useToast();
   const {
     conversations,
     messages,
@@ -52,6 +54,24 @@ const MessagesPage = () => {
       await sendMessage(newMessage, selectedConversation.userId);
       setNewMessage('');
     }
+  };
+
+  const handleVoiceCall = () => {
+    if (!selectedConversation) return;
+    
+    // Mock phone number - in real app, this would come from user profile
+    const phoneNumber = "+254700000000"; // Example Kenyan number
+    
+    // Create tel: link to initiate phone call
+    const telLink = `tel:${phoneNumber}`;
+    
+    // For mobile devices, this will open the phone app
+    window.location.href = telLink;
+    
+    toast({
+      title: "Initiating Voice Call",
+      description: `Calling ${selectedConversation.name} at ${phoneNumber}`,
+    });
   };
 
   return (
@@ -141,11 +161,13 @@ const MessagesPage = () => {
                       </div>
                       
                       <div className="flex items-center gap-2">
-                        <Button variant="ghost" size="icon">
+                        <Button 
+                          variant="ghost" 
+                          size="icon"
+                          onClick={handleVoiceCall}
+                          title="Voice Call (will open phone app)"
+                        >
                           <Phone className="h-4 w-4" />
-                        </Button>
-                        <Button variant="ghost" size="icon">
-                          <Video className="h-4 w-4" />
                         </Button>
                         <Button variant="ghost" size="icon">
                           <MoreVertical className="h-4 w-4" />
