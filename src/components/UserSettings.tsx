@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -277,11 +276,11 @@ const UserSettings = () => {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="english">English</SelectItem>
-                      <SelectItem value="spanish">Español</SelectItem>
-                      <SelectItem value="french">Français</SelectItem>
-                      <SelectItem value="german">Deutsch</SelectItem>
                     </SelectContent>
                   </Select>
+                  <p className="text-xs text-muted-foreground">
+                    English is the only supported language
+                  </p>
                 </div>
               </div>
 
