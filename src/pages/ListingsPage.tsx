@@ -9,10 +9,14 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Plus, Building, User, Eye, Edit, Trash2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { toast } from '@/hooks/use-toast';
+import AddVenueForm from '@/components/forms/AddVenueForm';
+import AddServiceProviderForm from '@/components/forms/AddServiceProviderForm';
 
 const ListingsPage = () => {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('venues');
+  const [showAddVenueForm, setShowAddVenueForm] = useState(false);
+  const [showAddServiceForm, setShowAddServiceForm] = useState(false);
 
   const { data: venues, isLoading: venuesLoading } = useQuery({
     queryKey: ['my-venues', user?.id],
@@ -98,6 +102,36 @@ const ListingsPage = () => {
     );
   }
 
+  if (showAddVenueForm) {
+    return (
+      <div className="min-h-screen bg-background">
+        <div className="pt-16 md:pt-0 pb-20 md:pb-0 md:ml-64">
+          <div className="max-w-7xl mx-auto p-4 md:p-6">
+            <AddVenueForm 
+              onSuccess={() => setShowAddVenueForm(false)}
+              onCancel={() => setShowAddVenueForm(false)}
+            />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (showAddServiceForm) {
+    return (
+      <div className="min-h-screen bg-background">
+        <div className="pt-16 md:pt-0 pb-20 md:pb-0 md:ml-64">
+          <div className="max-w-7xl mx-auto p-4 md:p-6">
+            <AddServiceProviderForm 
+              onSuccess={() => setShowAddServiceForm(false)}
+              onCancel={() => setShowAddServiceForm(false)}
+            />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background">
       <div className="pt-16 md:pt-0 pb-20 md:pb-0 md:ml-64">
@@ -125,7 +159,7 @@ const ListingsPage = () => {
             <TabsContent value="venues" className="space-y-6">
               <div className="flex justify-between items-center">
                 <h2 className="text-xl font-semibold">My Venues</h2>
-                <Button>
+                <Button onClick={() => setShowAddVenueForm(true)}>
                   <Plus className="h-4 w-4 mr-2" />
                   Add Venue
                 </Button>
@@ -158,6 +192,13 @@ const ListingsPage = () => {
                           <p className="text-sm text-muted-foreground">{venue.location}</p>
                           <p className="text-sm">Capacity: {venue.capacity} guests</p>
                           <p className="text-sm font-semibold">KSh {venue.price_per_day.toLocaleString()}/day</p>
+                          <p className="text-sm text-muted-foreground">{venue.venue_type}</p>
+                          {venue.amenities && venue.amenities.length > 0 && (
+                            <p className="text-xs text-muted-foreground">
+                              Amenities: {venue.amenities.slice(0, 3).join(', ')}
+                              {venue.amenities.length > 3 && ` +${venue.amenities.length - 3} more`}
+                            </p>
+                          )}
                         </div>
                         <div className="flex gap-2">
                           <Button variant="outline" size="sm">
@@ -186,7 +227,7 @@ const ListingsPage = () => {
                   <Building className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                   <h3 className="text-lg font-semibold mb-2">No venues yet</h3>
                   <p className="text-muted-foreground mb-4">Start by creating your first venue listing</p>
-                  <Button>
+                  <Button onClick={() => setShowAddVenueForm(true)}>
                     <Plus className="h-4 w-4 mr-2" />
                     Add Your First Venue
                   </Button>
@@ -197,7 +238,7 @@ const ListingsPage = () => {
             <TabsContent value="services" className="space-y-6">
               <div className="flex justify-between items-center">
                 <h2 className="text-xl font-semibold">My Services</h2>
-                <Button>
+                <Button onClick={() => setShowAddServiceForm(true)}>
                   <Plus className="h-4 w-4 mr-2" />
                   Add Service
                 </Button>
@@ -233,6 +274,9 @@ const ListingsPage = () => {
                           <p className="text-sm font-semibold">
                             KSh {provider.price_per_event.toLocaleString()}/event
                           </p>
+                          <p className="text-xs text-muted-foreground">
+                            Response time: {provider.response_time_hours}h
+                          </p>
                           {provider.specialties && provider.specialties.length > 0 && (
                             <div className="flex flex-wrap gap-1">
                               {provider.specialties.slice(0, 2).map((specialty, index) => (
@@ -240,6 +284,11 @@ const ListingsPage = () => {
                                   {specialty}
                                 </Badge>
                               ))}
+                              {provider.specialties.length > 2 && (
+                                <Badge variant="outline" className="text-xs">
+                                  +{provider.specialties.length - 2} more
+                                </Badge>
+                              )}
                             </div>
                           )}
                         </div>
@@ -270,7 +319,7 @@ const ListingsPage = () => {
                   <User className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                   <h3 className="text-lg font-semibold mb-2">No services yet</h3>
                   <p className="text-muted-foreground mb-4">Start by creating your service provider profile</p>
-                  <Button>
+                  <Button onClick={() => setShowAddServiceForm(true)}>
                     <Plus className="h-4 w-4 mr-2" />
                     Add Your First Service
                   </Button>
