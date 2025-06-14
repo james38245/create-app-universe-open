@@ -17,10 +17,19 @@ interface VenueFormData {
   amenities: string[];
   images: string[];
   is_active: boolean;
+  booking_terms?: {
+    deposit_percentage: number;
+    cancellation_policy: string;
+    payment_due_days: number;
+    advance_booking_days: number;
+    minimum_booking_hours: number;
+    special_terms?: string;
+  };
+  blocked_dates?: string[];
 }
 
 interface VenueFormFieldsProps {
-  form: UseFormReturn<VenueFormData>;
+  form: UseFormReturn<any>;
 }
 
 const VenueFormFields: React.FC<VenueFormFieldsProps> = ({ form }) => {

@@ -241,6 +241,8 @@ export type Database = {
       service_providers: {
         Row: {
           bio: string | null
+          blocked_dates: string[] | null
+          booking_terms: Json | null
           certifications: string[] | null
           created_at: string | null
           id: string
@@ -258,6 +260,8 @@ export type Database = {
         }
         Insert: {
           bio?: string | null
+          blocked_dates?: string[] | null
+          booking_terms?: Json | null
           certifications?: string[] | null
           created_at?: string | null
           id?: string
@@ -275,6 +279,8 @@ export type Database = {
         }
         Update: {
           bio?: string | null
+          blocked_dates?: string[] | null
+          booking_terms?: Json | null
           certifications?: string[] | null
           created_at?: string | null
           id?: string
@@ -303,6 +309,8 @@ export type Database = {
       venues: {
         Row: {
           amenities: string[] | null
+          blocked_dates: string[] | null
+          booking_terms: Json | null
           capacity: number
           created_at: string | null
           description: string | null
@@ -320,6 +328,8 @@ export type Database = {
         }
         Insert: {
           amenities?: string[] | null
+          blocked_dates?: string[] | null
+          booking_terms?: Json | null
           capacity: number
           created_at?: string | null
           description?: string | null
@@ -337,6 +347,8 @@ export type Database = {
         }
         Update: {
           amenities?: string[] | null
+          blocked_dates?: string[] | null
+          booking_terms?: Json | null
           capacity?: number
           created_at?: string | null
           description?: string | null

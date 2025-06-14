@@ -17,10 +17,19 @@ interface ServiceProviderFormData {
   response_time_hours: number;
   is_available: boolean;
   portfolio_images: string[];
+  booking_terms?: {
+    deposit_percentage: number;
+    cancellation_policy: string;
+    payment_due_days: number;
+    advance_booking_days: number;
+    minimum_booking_hours: number;
+    special_terms?: string;
+  };
+  blocked_dates?: string[];
 }
 
 interface ServiceProviderFormFieldsProps {
-  form: UseFormReturn<ServiceProviderFormData>;
+  form: UseFormReturn<any>;
 }
 
 const ServiceProviderFormFields: React.FC<ServiceProviderFormFieldsProps> = ({ form }) => {
