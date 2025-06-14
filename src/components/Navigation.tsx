@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Calendar, Menu, X, User, LogOut, Building } from 'lucide-react';
+import { Calendar, Menu, X, User, LogOut, Building, Settings } from 'lucide-react';
 import { AuthModal } from '@/components/AuthModal';
 import { useAuth } from '@/hooks/useAuth';
 import {
@@ -52,6 +52,9 @@ const Navigation = () => {
                   <Link to="/messages" className="text-gray-700 hover:text-purple-600 font-medium">
                     Messages
                   </Link>
+                  <Link to="/admin" className="text-gray-700 hover:text-purple-600 font-medium">
+                    Admin
+                  </Link>
                 </>
               )}
             </div>
@@ -74,6 +77,10 @@ const Navigation = () => {
                     <DropdownMenuItem onClick={() => navigate('/listings')}>
                       <Building className="h-4 w-4 mr-2" />
                       My Listings
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => navigate('/admin')}>
+                      <Settings className="h-4 w-4 mr-2" />
+                      Admin Dashboard
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={handleSignOut}>
                       <LogOut className="h-4 w-4 mr-2" />
@@ -137,6 +144,13 @@ const Navigation = () => {
                       onClick={() => setIsOpen(false)}
                     >
                       Messages
+                    </Link>
+                    <Link 
+                      to="/admin" 
+                      className="text-gray-700 hover:text-purple-600 font-medium"
+                      onClick={() => setIsOpen(false)}
+                    >
+                      Admin Dashboard
                     </Link>
                     <Link 
                       to="/profile" 
