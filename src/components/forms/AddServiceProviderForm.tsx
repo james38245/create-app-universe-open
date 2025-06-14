@@ -14,6 +14,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { toast } from '@/hooks/use-toast';
 import { useQueryClient } from '@tanstack/react-query';
+import { Upload, X, Image } from 'lucide-react';
 
 const serviceProviderSchema = z.object({
   service_category: z.string().min(1, 'Service category is required'),
@@ -23,7 +24,8 @@ const serviceProviderSchema = z.object({
   years_experience: z.number().min(0, 'Experience cannot be negative'),
   certifications: z.array(z.string()).optional(),
   response_time_hours: z.number().min(1, 'Response time must be at least 1 hour'),
-  is_available: z.boolean().default(true)
+  is_available: z.boolean().default(true),
+  portfolio_images: z.array(z.string()).optional()
 });
 
 type ServiceProviderFormData = z.infer<typeof serviceProviderSchema>;
@@ -37,6 +39,8 @@ const AddServiceProviderForm: React.FC<AddServiceProviderFormProps> = ({ onSucce
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [uploadedImages, setUploadedImages] = useState<string[]>([]);
+  const [isUploading, setIsUploading] = useState(false);
 
   const form = useForm<ServiceProviderFormData>({
     resolver: zodResolver(serviceProviderSchema),
@@ -48,7 +52,8 @@ const AddServiceProviderForm: React.FC<AddServiceProviderFormProps> = ({ onSucce
       years_experience: 1,
       certifications: [],
       response_time_hours: 24,
-      is_available: true
+      is_available: true,
+      portfolio_images: []
     }
   });
 
@@ -78,17 +83,78 @@ const AddServiceProviderForm: React.FC<AddServiceProviderFormProps> = ({ onSucce
   const selectedCategory = form.watch('service_category');
   const availableSpecialties = selectedCategory ? specialtiesByCategory[selectedCategory] || [] : [];
 
+  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (!files || !user) return;
+
+    setIsUploading(true);
+    const newImageUrls: string[] = [];
+
+    try {
+      for (const file of Array.from(files)) {
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${user.id}/${Date.now()}.${fileExt}`;
+
+        const { data, error } = await supabase.storage
+          .from('portfolio-images')
+          .upload(fileName, file);
+
+        if (error) throw error;
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('portfolio-images')
+          .getPublicUrl(data.path);
+
+        newImageUrls.push(publicUrl);
+      }
+
+      const updatedImages = [...uploadedImages, ...newImageUrls];
+      setUploadedImages(updatedImages);
+      form.setValue('portfolio_images', updatedImages);
+
+      toast({
+        title: "Success",
+        description: `${newImageUrls.length} portfolio image(s) uploaded successfully!`
+      });
+    } catch (error) {
+      console.error('Error uploading images:', error);
+      toast({
+        title: "Error",
+        description: "Failed to upload portfolio images",
+        variant: "destructive"
+      });
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const removeImage = (indexToRemove: number) => {
+    const updatedImages = uploadedImages.filter((_, index) => index !== indexToRemove);
+    setUploadedImages(updatedImages);
+    form.setValue('portfolio_images', updatedImages);
+  };
+
   const onSubmit = async (data: ServiceProviderFormData) => {
     if (!user) return;
 
     setIsSubmitting(true);
     try {
+      const providerData = {
+        service_category: data.service_category,
+        specialties: data.specialties,
+        price_per_event: data.price_per_event,
+        bio: data.bio,
+        years_experience: data.years_experience,
+        certifications: data.certifications || [],
+        response_time_hours: data.response_time_hours,
+        is_available: data.is_available,
+        portfolio_images: uploadedImages,
+        user_id: user.id
+      };
+
       const { error } = await supabase
         .from('service_providers')
-        .insert({
-          ...data,
-          user_id: user.id
-        });
+        .insert(providerData);
 
       if (error) throw error;
 
@@ -252,6 +318,60 @@ const AddServiceProviderForm: React.FC<AddServiceProviderFormProps> = ({ onSucce
               />
             </div>
 
+            {/* Portfolio Images Upload Section */}
+            <FormItem>
+              <FormLabel>Portfolio Images</FormLabel>
+              <div className="space-y-4">
+                <div className="flex items-center justify-center w-full">
+                  <label htmlFor="portfolio-upload" className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100">
+                    <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                      <Upload className="w-8 h-8 mb-4 text-gray-500" />
+                      <p className="mb-2 text-sm text-gray-500">
+                        <span className="font-semibold">Click to upload</span> portfolio images
+                      </p>
+                      <p className="text-xs text-gray-500">PNG, JPG or JPEG (MAX. 10MB)</p>
+                    </div>
+                    <input
+                      id="portfolio-upload"
+                      type="file"
+                      multiple
+                      accept="image/*"
+                      className="hidden"
+                      onChange={handleImageUpload}
+                      disabled={isUploading}
+                    />
+                  </label>
+                </div>
+
+                {isUploading && (
+                  <div className="flex items-center justify-center">
+                    <div className="text-sm text-gray-600">Uploading portfolio images...</div>
+                  </div>
+                )}
+
+                {uploadedImages.length > 0 && (
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                    {uploadedImages.map((imageUrl, index) => (
+                      <div key={index} className="relative group">
+                        <img
+                          src={imageUrl}
+                          alt={`Portfolio image ${index + 1}`}
+                          className="w-full h-24 object-cover rounded-lg"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => removeImage(index)}
+                          className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </FormItem>
+
             <FormField
               control={form.control}
               name="response_time_hours"
@@ -308,7 +428,7 @@ const AddServiceProviderForm: React.FC<AddServiceProviderFormProps> = ({ onSucce
               </Button>
               <Button
                 type="submit"
-                disabled={isSubmitting}
+                disabled={isSubmitting || isUploading}
                 className="flex-1"
               >
                 {isSubmitting ? 'Creating...' : 'Create Profile'}

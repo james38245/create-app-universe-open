@@ -14,6 +14,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { toast } from '@/hooks/use-toast';
 import { useQueryClient } from '@tanstack/react-query';
+import { Upload, X, Image } from 'lucide-react';
 
 const venueSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
@@ -38,6 +39,8 @@ const AddVenueForm: React.FC<AddVenueFormProps> = ({ onSuccess, onCancel }) => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [uploadedImages, setUploadedImages] = useState<string[]>([]);
+  const [isUploading, setIsUploading] = useState(false);
 
   const form = useForm<VenueFormData>({
     resolver: zodResolver(venueSchema),
@@ -65,17 +68,78 @@ const AddVenueForm: React.FC<AddVenueFormProps> = ({ onSuccess, onCancel }) => {
     'Garden', 'Beach Resort', 'Community Center', 'Church', 'School'
   ];
 
+  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (!files || !user) return;
+
+    setIsUploading(true);
+    const newImageUrls: string[] = [];
+
+    try {
+      for (const file of Array.from(files)) {
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${user.id}/${Date.now()}.${fileExt}`;
+
+        const { data, error } = await supabase.storage
+          .from('venue-images')
+          .upload(fileName, file);
+
+        if (error) throw error;
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('venue-images')
+          .getPublicUrl(data.path);
+
+        newImageUrls.push(publicUrl);
+      }
+
+      const updatedImages = [...uploadedImages, ...newImageUrls];
+      setUploadedImages(updatedImages);
+      form.setValue('images', updatedImages);
+
+      toast({
+        title: "Success",
+        description: `${newImageUrls.length} image(s) uploaded successfully!`
+      });
+    } catch (error) {
+      console.error('Error uploading images:', error);
+      toast({
+        title: "Error",
+        description: "Failed to upload images",
+        variant: "destructive"
+      });
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const removeImage = (indexToRemove: number) => {
+    const updatedImages = uploadedImages.filter((_, index) => index !== indexToRemove);
+    setUploadedImages(updatedImages);
+    form.setValue('images', updatedImages);
+  };
+
   const onSubmit = async (data: VenueFormData) => {
     if (!user) return;
 
     setIsSubmitting(true);
     try {
+      const venueData = {
+        name: data.name,
+        description: data.description,
+        location: data.location,
+        capacity: data.capacity,
+        price_per_day: data.price_per_day,
+        venue_type: data.venue_type,
+        amenities: data.amenities || [],
+        images: uploadedImages,
+        is_active: data.is_active,
+        owner_id: user.id
+      };
+
       const { error } = await supabase
         .from('venues')
-        .insert({
-          ...data,
-          owner_id: user.id
-        });
+        .insert(venueData);
 
       if (error) throw error;
 
@@ -219,6 +283,60 @@ const AddVenueForm: React.FC<AddVenueFormProps> = ({ onSuccess, onCancel }) => {
               />
             </div>
 
+            {/* Image Upload Section */}
+            <FormItem>
+              <FormLabel>Venue Images</FormLabel>
+              <div className="space-y-4">
+                <div className="flex items-center justify-center w-full">
+                  <label htmlFor="image-upload" className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100">
+                    <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                      <Upload className="w-8 h-8 mb-4 text-gray-500" />
+                      <p className="mb-2 text-sm text-gray-500">
+                        <span className="font-semibold">Click to upload</span> venue images
+                      </p>
+                      <p className="text-xs text-gray-500">PNG, JPG or JPEG (MAX. 10MB)</p>
+                    </div>
+                    <input
+                      id="image-upload"
+                      type="file"
+                      multiple
+                      accept="image/*"
+                      className="hidden"
+                      onChange={handleImageUpload}
+                      disabled={isUploading}
+                    />
+                  </label>
+                </div>
+
+                {isUploading && (
+                  <div className="flex items-center justify-center">
+                    <div className="text-sm text-gray-600">Uploading images...</div>
+                  </div>
+                )}
+
+                {uploadedImages.length > 0 && (
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                    {uploadedImages.map((imageUrl, index) => (
+                      <div key={index} className="relative group">
+                        <img
+                          src={imageUrl}
+                          alt={`Venue image ${index + 1}`}
+                          className="w-full h-24 object-cover rounded-lg"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => removeImage(index)}
+                          className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </FormItem>
+
             <FormField
               control={form.control}
               name="amenities"
@@ -295,7 +413,7 @@ const AddVenueForm: React.FC<AddVenueFormProps> = ({ onSuccess, onCancel }) => {
               </Button>
               <Button
                 type="submit"
-                disabled={isSubmitting}
+                disabled={isSubmitting || isUploading}
                 className="flex-1"
               >
                 {isSubmitting ? 'Adding...' : 'Add Venue'}
