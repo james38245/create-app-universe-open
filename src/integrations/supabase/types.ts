@@ -9,7 +9,359 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      bookings: {
+        Row: {
+          booking_type: string
+          client_id: string
+          created_at: string | null
+          end_time: string | null
+          event_date: string
+          event_type: string
+          guest_count: number | null
+          id: string
+          payment_method: string | null
+          payment_status: string | null
+          service_provider_id: string | null
+          special_requirements: string | null
+          start_time: string | null
+          status: string | null
+          total_amount: number
+          updated_at: string | null
+          venue_id: string | null
+        }
+        Insert: {
+          booking_type: string
+          client_id: string
+          created_at?: string | null
+          end_time?: string | null
+          event_date: string
+          event_type: string
+          guest_count?: number | null
+          id?: string
+          payment_method?: string | null
+          payment_status?: string | null
+          service_provider_id?: string | null
+          special_requirements?: string | null
+          start_time?: string | null
+          status?: string | null
+          total_amount: number
+          updated_at?: string | null
+          venue_id?: string | null
+        }
+        Update: {
+          booking_type?: string
+          client_id?: string
+          created_at?: string | null
+          end_time?: string | null
+          event_date?: string
+          event_type?: string
+          guest_count?: number | null
+          id?: string
+          payment_method?: string | null
+          payment_status?: string | null
+          service_provider_id?: string | null
+          special_requirements?: string | null
+          start_time?: string | null
+          status?: string | null
+          total_amount?: number
+          updated_at?: string | null
+          venue_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bookings_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bookings_service_provider_id_fkey"
+            columns: ["service_provider_id"]
+            isOneToOne: false
+            referencedRelation: "service_providers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bookings_venue_id_fkey"
+            columns: ["venue_id"]
+            isOneToOne: false
+            referencedRelation: "venues"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      messages: {
+        Row: {
+          booking_id: string | null
+          created_at: string | null
+          id: string
+          is_read: boolean | null
+          message: string
+          recipient_id: string
+          sender_id: string
+        }
+        Insert: {
+          booking_id?: string | null
+          created_at?: string | null
+          id?: string
+          is_read?: boolean | null
+          message: string
+          recipient_id: string
+          sender_id: string
+        }
+        Update: {
+          booking_id?: string | null
+          created_at?: string | null
+          id?: string
+          is_read?: boolean | null
+          message?: string
+          recipient_id?: string
+          sender_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "messages_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "messages_recipient_id_fkey"
+            columns: ["recipient_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "messages_sender_id_fkey"
+            columns: ["sender_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string | null
+          email: string
+          full_name: string | null
+          id: string
+          phone: string | null
+          updated_at: string | null
+          user_type: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string | null
+          email: string
+          full_name?: string | null
+          id: string
+          phone?: string | null
+          updated_at?: string | null
+          user_type?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string | null
+          email?: string
+          full_name?: string | null
+          id?: string
+          phone?: string | null
+          updated_at?: string | null
+          user_type?: string | null
+        }
+        Relationships: []
+      }
+      reviews: {
+        Row: {
+          booking_id: string
+          comment: string | null
+          created_at: string | null
+          id: string
+          rating: number
+          reviewer_id: string
+          service_provider_id: string | null
+          venue_id: string | null
+        }
+        Insert: {
+          booking_id: string
+          comment?: string | null
+          created_at?: string | null
+          id?: string
+          rating: number
+          reviewer_id: string
+          service_provider_id?: string | null
+          venue_id?: string | null
+        }
+        Update: {
+          booking_id?: string
+          comment?: string | null
+          created_at?: string | null
+          id?: string
+          rating?: number
+          reviewer_id?: string
+          service_provider_id?: string | null
+          venue_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reviews_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reviews_reviewer_id_fkey"
+            columns: ["reviewer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reviews_service_provider_id_fkey"
+            columns: ["service_provider_id"]
+            isOneToOne: false
+            referencedRelation: "service_providers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reviews_venue_id_fkey"
+            columns: ["venue_id"]
+            isOneToOne: false
+            referencedRelation: "venues"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      service_providers: {
+        Row: {
+          bio: string | null
+          certifications: string[] | null
+          created_at: string | null
+          id: string
+          is_available: boolean | null
+          portfolio_images: string[] | null
+          price_per_event: number
+          rating: number | null
+          response_time_hours: number | null
+          service_category: string
+          specialties: string[] | null
+          total_reviews: number | null
+          updated_at: string | null
+          user_id: string
+          years_experience: number | null
+        }
+        Insert: {
+          bio?: string | null
+          certifications?: string[] | null
+          created_at?: string | null
+          id?: string
+          is_available?: boolean | null
+          portfolio_images?: string[] | null
+          price_per_event: number
+          rating?: number | null
+          response_time_hours?: number | null
+          service_category: string
+          specialties?: string[] | null
+          total_reviews?: number | null
+          updated_at?: string | null
+          user_id: string
+          years_experience?: number | null
+        }
+        Update: {
+          bio?: string | null
+          certifications?: string[] | null
+          created_at?: string | null
+          id?: string
+          is_available?: boolean | null
+          portfolio_images?: string[] | null
+          price_per_event?: number
+          rating?: number | null
+          response_time_hours?: number | null
+          service_category?: string
+          specialties?: string[] | null
+          total_reviews?: number | null
+          updated_at?: string | null
+          user_id?: string
+          years_experience?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_providers_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      venues: {
+        Row: {
+          amenities: string[] | null
+          capacity: number
+          created_at: string | null
+          description: string | null
+          id: string
+          images: string[] | null
+          is_active: boolean | null
+          location: string
+          name: string
+          owner_id: string
+          price_per_day: number
+          rating: number | null
+          total_reviews: number | null
+          updated_at: string | null
+          venue_type: string
+        }
+        Insert: {
+          amenities?: string[] | null
+          capacity: number
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          images?: string[] | null
+          is_active?: boolean | null
+          location: string
+          name: string
+          owner_id: string
+          price_per_day: number
+          rating?: number | null
+          total_reviews?: number | null
+          updated_at?: string | null
+          venue_type: string
+        }
+        Update: {
+          amenities?: string[] | null
+          capacity?: number
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          images?: string[] | null
+          is_active?: boolean | null
+          location?: string
+          name?: string
+          owner_id?: string
+          price_per_day?: number
+          rating?: number | null
+          total_reviews?: number | null
+          updated_at?: string | null
+          venue_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "venues_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
