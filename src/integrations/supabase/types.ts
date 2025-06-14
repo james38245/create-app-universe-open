@@ -13,6 +13,8 @@ export type Database = {
         Row: {
           booking_type: string
           client_id: string
+          commission_amount: number | null
+          commission_percentage: number | null
           created_at: string | null
           end_time: string | null
           event_date: string
@@ -21,17 +23,24 @@ export type Database = {
           id: string
           payment_method: string | null
           payment_status: string | null
+          payout_date: string | null
+          payout_status: string | null
+          refund_deadline: string | null
+          seller_amount: number | null
           service_provider_id: string | null
           special_requirements: string | null
           start_time: string | null
           status: string | null
           total_amount: number
+          transaction_fee: number | null
           updated_at: string | null
           venue_id: string | null
         }
         Insert: {
           booking_type: string
           client_id: string
+          commission_amount?: number | null
+          commission_percentage?: number | null
           created_at?: string | null
           end_time?: string | null
           event_date: string
@@ -40,17 +49,24 @@ export type Database = {
           id?: string
           payment_method?: string | null
           payment_status?: string | null
+          payout_date?: string | null
+          payout_status?: string | null
+          refund_deadline?: string | null
+          seller_amount?: number | null
           service_provider_id?: string | null
           special_requirements?: string | null
           start_time?: string | null
           status?: string | null
           total_amount: number
+          transaction_fee?: number | null
           updated_at?: string | null
           venue_id?: string | null
         }
         Update: {
           booking_type?: string
           client_id?: string
+          commission_amount?: number | null
+          commission_percentage?: number | null
           created_at?: string | null
           end_time?: string | null
           event_date?: string
@@ -59,11 +75,16 @@ export type Database = {
           id?: string
           payment_method?: string | null
           payment_status?: string | null
+          payout_date?: string | null
+          payout_status?: string | null
+          refund_deadline?: string | null
+          seller_amount?: number | null
           service_provider_id?: string | null
           special_requirements?: string | null
           start_time?: string | null
           status?: string | null
           total_amount?: number
+          transaction_fee?: number | null
           updated_at?: string | null
           venue_id?: string | null
         }
@@ -150,6 +171,9 @@ export type Database = {
           email: string
           full_name: string | null
           id: string
+          payment_account_name: string | null
+          payment_account_number: string | null
+          payment_account_type: string | null
           phone: string | null
           updated_at: string | null
           user_type: string | null
@@ -160,6 +184,9 @@ export type Database = {
           email: string
           full_name?: string | null
           id: string
+          payment_account_name?: string | null
+          payment_account_number?: string | null
+          payment_account_type?: string | null
           phone?: string | null
           updated_at?: string | null
           user_type?: string | null
@@ -170,6 +197,9 @@ export type Database = {
           email?: string
           full_name?: string | null
           id?: string
+          payment_account_name?: string | null
+          payment_account_number?: string | null
+          payment_account_type?: string | null
           phone?: string | null
           updated_at?: string | null
           user_type?: string | null
@@ -306,6 +336,47 @@ export type Database = {
           },
         ]
       }
+      transactions: {
+        Row: {
+          amount: number
+          booking_id: string
+          created_at: string | null
+          id: string
+          mpesa_transaction_id: string | null
+          processed_at: string | null
+          status: string | null
+          transaction_type: string
+        }
+        Insert: {
+          amount: number
+          booking_id: string
+          created_at?: string | null
+          id?: string
+          mpesa_transaction_id?: string | null
+          processed_at?: string | null
+          status?: string | null
+          transaction_type: string
+        }
+        Update: {
+          amount?: number
+          booking_id?: string
+          created_at?: string | null
+          id?: string
+          mpesa_transaction_id?: string | null
+          processed_at?: string | null
+          status?: string | null
+          transaction_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "transactions_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       venues: {
         Row: {
           amenities: string[] | null
@@ -379,8 +450,20 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      calculate_payment_breakdown: {
+        Args: {
+          booking_amount: number
+          commission_rate?: number
+          transaction_fee_rate?: number
+        }
+        Returns: Json
+      }
       is_admin: {
         Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
+      process_automatic_payout: {
+        Args: { booking_uuid: string }
         Returns: boolean
       }
     }

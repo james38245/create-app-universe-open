@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -14,6 +13,8 @@ import ImageUpload from './ImageUpload';
 import VenueFormFields from './VenueFormFields';
 import AvailabilityCalendar from './AvailabilityCalendar';
 import BookingTermsSettings from './BookingTermsSettings';
+import PaymentBreakdown from '../payment/PaymentBreakdown';
+import PaymentAccountSettings from '../payment/PaymentAccountSettings';
 
 const venueSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
@@ -80,6 +81,7 @@ const AddVenueForm: React.FC<AddVenueFormProps> = ({ onSuccess, onCancel }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [uploadedImages, setUploadedImages] = useState<string[]>([]);
   const [blockedDates, setBlockedDates] = useState<string[]>([]);
+  const [userProfile, setUserProfile] = useState<any>(null);
 
   const form = useForm<VenueFormData>({
     resolver: zodResolver(venueSchema),
@@ -123,6 +125,20 @@ const AddVenueForm: React.FC<AddVenueFormProps> = ({ onSuccess, onCancel }) => {
       blocked_dates: []
     }
   });
+
+  React.useEffect(() => {
+    const fetchUserProfile = async () => {
+      if (user) {
+        const { data } = await supabase
+          .from('profiles')
+          .select('payment_account_type, payment_account_number, payment_account_name')
+          .eq('id', user.id)
+          .single();
+        setUserProfile(data);
+      }
+    };
+    fetchUserProfile();
+  }, [user]);
 
   const onSubmit = async (data: VenueFormData) => {
     if (!user) return;
@@ -172,55 +188,84 @@ const AddVenueForm: React.FC<AddVenueFormProps> = ({ onSuccess, onCancel }) => {
     }
   };
 
+  const watchedPricing = form.watch(['pricing_unit', 'price_per_day', 'price_per_hour']);
+  const currentPrice = watchedPricing[0] === 'day' ? watchedPricing[1] : watchedPricing[2];
+
   return (
-    <Card className="max-w-4xl mx-auto">
-      <CardHeader>
-        <CardTitle>Add New Venue</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            <VenueFormFields form={form} />
-            
-            <ImageUpload
-              uploadedImages={uploadedImages}
-              setUploadedImages={setUploadedImages}
-              onImagesChange={(images) => form.setValue('images', images)}
-              bucketName="venue-images"
-              label="Venue Images"
-              inputId="image-upload"
-              error={form.formState.errors.images?.message}
-            />
+    <div className="max-w-6xl mx-auto space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle>Add New Venue</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+              <VenueFormFields form={form} />
+              
+              <ImageUpload
+                uploadedImages={uploadedImages}
+                setUploadedImages={setUploadedImages}
+                onImagesChange={(images) => form.setValue('images', images)}
+                bucketName="venue-images"
+                label="Venue Images"
+                inputId="image-upload"
+                error={form.formState.errors.images?.message}
+              />
 
-            <BookingTermsSettings form={form} />
+              <BookingTermsSettings form={form} />
 
-            <AvailabilityCalendar
-              blockedDates={blockedDates}
-              setBlockedDates={setBlockedDates}
-              onDatesChange={(dates) => form.setValue('blocked_dates', dates)}
-            />
+              <AvailabilityCalendar
+                blockedDates={blockedDates}
+                setBlockedDates={setBlockedDates}
+                onDatesChange={(dates) => form.setValue('blocked_dates', dates)}
+              />
 
-            <div className="flex gap-4">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={onCancel}
-                className="flex-1"
-              >
-                Cancel
-              </Button>
-              <Button
-                type="submit"
-                disabled={isSubmitting}
-                className="flex-1"
-              >
-                {isSubmitting ? 'Adding...' : 'Add Venue'}
-              </Button>
-            </div>
-          </form>
-        </Form>
-      </CardContent>
-    </Card>
+              <div className="flex gap-4">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={onCancel}
+                  className="flex-1"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="flex-1"
+                >
+                  {isSubmitting ? 'Adding...' : 'Add Venue'}
+                </Button>
+              </div>
+            </form>
+          </Form>
+        </CardContent>
+      </Card>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {currentPrice && (
+          <PaymentBreakdown
+            totalAmount={currentPrice}
+            showSellerView={true}
+          />
+        )}
+
+        <PaymentAccountSettings
+          initialData={userProfile}
+          onSave={() => {
+            // Refetch user profile after save
+            if (user) {
+              supabase
+                .from('profiles')
+                .select('payment_account_type, payment_account_number, payment_account_name')
+                .eq('id', user.id)
+                .single()
+                .then(({ data }) => setUserProfile(data));
+            }
+          }}
+        />
+      </div>
+    </div>
   );
 };
 

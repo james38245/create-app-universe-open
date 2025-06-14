@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -11,8 +10,12 @@ import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Upload, Edit, Save, X, Plus, Star, Calendar, MapPin, FileText, Award } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import PaymentAccountSettings from '@/components/payment/PaymentAccountSettings';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
 
 const ProfilePage = () => {
+  const { user } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
   const [profileData, setProfileData] = useState({
     name: 'John Doe',
@@ -62,6 +65,22 @@ const ProfilePage = () => {
       amount: 300000
     }
   ];
+
+  const [userProfile, setUserProfile] = useState<any>(null);
+
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      if (user) {
+        const { data } = await supabase
+          .from('profiles')
+          .select('payment_account_type, payment_account_number, payment_account_name')
+          .eq('id', user.id)
+          .single();
+        setUserProfile(data);
+      }
+    };
+    fetchUserProfile();
+  }, [user]);
 
   const handleSaveProfile = () => {
     setIsEditing(false);
@@ -125,11 +144,12 @@ const ProfilePage = () => {
         <div className="max-w-4xl mx-auto p-4 md:p-6">
           
           <Tabs defaultValue="profile" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-4">
+            <TabsList className="grid w-full grid-cols-5">
               <TabsTrigger value="profile">Profile</TabsTrigger>
               <TabsTrigger value="bookings">Bookings</TabsTrigger>
               <TabsTrigger value="services">Services</TabsTrigger>
               <TabsTrigger value="documents">Documents</TabsTrigger>
+              <TabsTrigger value="payments">Payments</TabsTrigger>
             </TabsList>
 
             {/* Profile Tab */}
@@ -523,6 +543,50 @@ const ProfilePage = () => {
                       </div>
                     </div>
                   )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            {/* Payments Tab */}
+            <TabsContent value="payments" className="space-y-6">
+              <PaymentAccountSettings
+                initialData={userProfile}
+                onSave={() => {
+                  if (user) {
+                    supabase
+                      .from('profiles')
+                      .select('payment_account_type, payment_account_number, payment_account_name')
+                      .eq('id', user.id)
+                      .single()
+                      .then(({ data }) => setUserProfile(data));
+                  }
+                }}
+              />
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Payment Information</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <h4 className="font-medium text-blue-800 mb-2">How Payments Work</h4>
+                    <div className="space-y-2 text-sm text-blue-700">
+                      <p>• Customers pay the full amount upfront via M-Pesa</p>
+                      <p>• A 10% platform commission and 3% transaction fee are deducted</p>
+                      <p>• Remaining amount is held until the refund period expires</p>
+                      <p>• Funds are automatically transferred to your registered account</p>
+                      <p>• You'll receive payment notifications via SMS and email</p>
+                    </div>
+                  </div>
+
+                  <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                    <h4 className="font-medium text-amber-800 mb-2">Payout Schedule</h4>
+                    <p className="text-sm text-amber-700">
+                      Payouts are processed automatically 24-48 hours after the refund deadline 
+                      expires and payment is confirmed. Ensure your payment details are accurate 
+                      to avoid delays.
+                    </p>
+                  </div>
                 </CardContent>
               </Card>
             </TabsContent>
