@@ -41,12 +41,6 @@ const Navigation = () => {
               <Link to="/providers" className="text-gray-700 hover:text-purple-600 font-medium">
                 Providers
               </Link>
-              <Link to="/faq" className="text-gray-700 hover:text-purple-600 font-medium">
-                FAQ
-              </Link>
-              <Link to="/support" className="text-gray-700 hover:text-purple-600 font-medium">
-                Support
-              </Link>
               {user && (
                 <>
                   <Link to="/listings" className="text-gray-700 hover:text-purple-600 font-medium">
@@ -83,6 +77,14 @@ const Navigation = () => {
                     <DropdownMenuItem onClick={() => navigate('/settings')}>
                       <Settings className="h-4 w-4 mr-2" />
                       Settings
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => navigate('/faq')}>
+                      <HelpCircle className="h-4 w-4 mr-2" />
+                      FAQ
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => navigate('/support')}>
+                      <MessageSquare className="h-4 w-4 mr-2" />
+                      Support
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => navigate('/listings')}>
                       <Building className="h-4 w-4 mr-2" />
@@ -132,20 +134,6 @@ const Navigation = () => {
                 >
                   Providers
                 </Link>
-                <Link 
-                  to="/faq" 
-                  className="text-gray-700 hover:text-purple-600 font-medium"
-                  onClick={() => setIsOpen(false)}
-                >
-                  FAQ
-                </Link>
-                <Link 
-                  to="/support" 
-                  className="text-gray-700 hover:text-purple-600 font-medium"
-                  onClick={() => setIsOpen(false)}
-                >
-                  Support
-                </Link>
                 {user && (
                   <>
                     <Link 
@@ -189,6 +177,20 @@ const Navigation = () => {
                       onClick={() => setIsOpen(false)}
                     >
                       Settings
+                    </Link>
+                    <Link 
+                      to="/faq" 
+                      className="text-gray-700 hover:text-purple-600 font-medium"
+                      onClick={() => setIsOpen(false)}
+                    >
+                      FAQ
+                    </Link>
+                    <Link 
+                      to="/support" 
+                      className="text-gray-700 hover:text-purple-600 font-medium"
+                      onClick={() => setIsOpen(false)}
+                    >
+                      Support
                     </Link>
                     <Button onClick={handleSignOut} variant="outline" className="w-fit">
                       Sign Out
