@@ -15,7 +15,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { toast } from '@/hooks/use-toast';
 
 const paymentAccountSchema = z.object({
-  payment_account_type: z.enum(['mpesa', 'bank', 'till', 'paybill'], {
+  payment_account_type: z.enum(['mpesa', 'till', 'paybill'], {
     required_error: 'Please select a payment method'
   }),
   payment_account_number: z.string().min(1, 'Account number is required'),
@@ -128,7 +128,6 @@ const PaymentAccountSettings: React.FC<PaymentAccountSettingsProps> = ({
                       <SelectItem value="mpesa">M-Pesa (Send Money)</SelectItem>
                       <SelectItem value="till">M-Pesa Till Number</SelectItem>
                       <SelectItem value="paybill">M-Pesa Paybill</SelectItem>
-                      <SelectItem value="bank">Bank Account</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />
@@ -145,7 +144,6 @@ const PaymentAccountSettings: React.FC<PaymentAccountSettingsProps> = ({
                     {form.watch('payment_account_type') === 'mpesa' && 'M-Pesa Number'}
                     {form.watch('payment_account_type') === 'till' && 'Till Number'}
                     {form.watch('payment_account_type') === 'paybill' && 'Paybill Number'}
-                    {form.watch('payment_account_type') === 'bank' && 'Account Number'}
                     {!form.watch('payment_account_type') && 'Account Number'}
                   </FormLabel>
                   <FormControl>
