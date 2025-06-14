@@ -18,6 +18,7 @@ interface BookingTermsSettingsProps {
 const BookingTermsSettings: React.FC<BookingTermsSettingsProps> = ({ form }) => {
   const paymentType = form.watch('booking_terms.payment_type');
   const cancellationTimeUnit = form.watch('booking_terms.cancellation_time_unit');
+  const gracePeriodUnit = form.watch('booking_terms.grace_period_unit');
 
   return (
     <Card>
@@ -444,83 +445,80 @@ const BookingTermsSettings: React.FC<BookingTermsSettingsProps> = ({ form }) => 
             />
           </div>
 
-          <FormField
-            control={form.control}
-            name="booking_terms.grace_period_hours"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Grace Period (Hours)</FormLabel>
-                <FormControl>
-                  <Input 
-                    type="number" 
-                    placeholder="24"
-                    min="0"
-                    max="72"
-                    {...field}
-                    onChange={(e) => field.onChange(parseInt(e.target.value) || 24)}
-                  />
-                </FormControl>
-                <FormDescription>
-                  Hours after due date before late fees apply
-                </FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+          <div className="space-y-2">
+            <FormLabel>Grace Period</FormLabel>
+            <div className="grid grid-cols-3 gap-2">
+              <FormField
+                control={form.control}
+                name="booking_terms.grace_period_value"
+                render={({ field }) => (
+                  <FormItem className="col-span-2">
+                    <FormControl>
+                      <Input 
+                        type="number" 
+                        placeholder="24"
+                        min="0"
+                        {...field}
+                        onChange={(e) => field.onChange(parseInt(e.target.value) || 24)}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="booking_terms.grace_period_unit"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormControl>
+                      <Select onValueChange={field.onChange} defaultValue={field.value || "hours"}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="hours">Hours</SelectItem>
+                          <SelectItem value="days">Days</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+            <FormDescription>
+              Time after due date before late fees apply
+            </FormDescription>
+          </div>
         </div>
 
         {/* Platform Terms & Legal Compliance */}
         <div className="space-y-4">
           <FormLabel className="text-base font-semibold">Platform Terms & Legal Compliance</FormLabel>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <FormField
-              control={form.control}
-              name="booking_terms.platform_commission_percentage"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Platform Commission (%)</FormLabel>
-                  <FormControl>
-                    <Input 
-                      type="number" 
-                      placeholder="10"
-                      min="5"
-                      max="20"
-                      {...field}
-                      onChange={(e) => field.onChange(parseInt(e.target.value) || 10)}
-                    />
-                  </FormControl>
-                  <FormDescription>
-                    Platform commission on successful bookings
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="booking_terms.dispute_resolution_fee"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Dispute Resolution Fee (KSh)</FormLabel>
-                  <FormControl>
-                    <Input 
-                      type="number" 
-                      placeholder="2000"
-                      min="500"
-                      {...field}
-                      onChange={(e) => field.onChange(parseInt(e.target.value) || 2000)}
-                    />
-                  </FormControl>
-                  <FormDescription>
-                    Fee charged for dispute resolution services
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
+          <FormField
+            control={form.control}
+            name="booking_terms.platform_commission_percentage"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Platform Commission (%)</FormLabel>
+                <FormControl>
+                  <Input 
+                    type="number" 
+                    placeholder="10"
+                    value={field.value || 10}
+                    readOnly
+                    className="bg-gray-100 cursor-not-allowed"
+                  />
+                </FormControl>
+                <FormDescription>
+                  Platform commission on successful bookings (set by admin)
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
           {/* Mandatory Seller Agreements */}
           <div className="space-y-3">
