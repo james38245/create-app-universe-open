@@ -1,4 +1,3 @@
-
 import * as z from 'zod';
 
 export const venueSchema = z.object({
@@ -94,3 +93,28 @@ export const defaultVenueFormValues: VenueFormData = {
   },
   blocked_dates: []
 };
+
+export interface ServiceProviderFormData {
+  id?: string;
+  user_id?: string;
+  service_category: string;
+  bio?: string;
+  years_experience?: number;
+  price_per_event?: number;
+  specialties?: string[];
+  certifications?: string[];
+  portfolio_images?: string[];
+  is_available?: boolean;
+  response_time_hours?: number;
+  location?: string;
+  coordinates?: {
+    lat?: number;
+    lng?: number;
+  } | null;
+  phone?: string;
+  website?: string;
+  social_links?: any;
+  booking_terms?: any;
+  blocked_dates?: string[];
+  images?: string[];
+}
