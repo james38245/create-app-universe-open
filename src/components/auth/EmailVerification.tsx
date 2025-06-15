@@ -40,7 +40,7 @@ const EmailVerification: React.FC<EmailVerificationProps> = ({
   // Check URL parameters for email confirmation
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get('email_confirmed') === 'true') {
+    if (urlParams.get('type') === 'signup' || urlParams.get('email_confirmed') === 'true') {
       setIsVerified(true);
       toast({
         title: "Email Verified!",

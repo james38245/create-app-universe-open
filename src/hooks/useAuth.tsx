@@ -49,22 +49,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       }
     });
 
-    // Send custom verification email
-    if (!error && data.user && !data.user.email_confirmed_at) {
-      try {
-        await supabase.functions.invoke('send-verification-email', {
-          body: {
-            email,
-            name: userData?.full_name || 'User',
-            confirmationUrl: `${window.location.origin}/auth?email_confirmed=true`
-          }
-        });
-      } catch (emailError) {
-        console.error('Error sending custom verification email:', emailError);
-        // Don't throw error here as the main signup succeeded
-      }
-    }
-
     return { data, error };
   };
 
@@ -95,19 +79,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const resendConfirmation = async (email: string) => {
-    // Send custom verification email
-    try {
-      const { error } = await supabase.functions.invoke('send-verification-email', {
-        body: {
-          email,
-          name: 'User',
-          confirmationUrl: `${window.location.origin}/auth?email_confirmed=true`
-        }
-      });
-      return { error };
-    } catch (error) {
-      return { error };
-    }
+    const { error } = await supabase.auth.resend({
+      type: 'signup',
+      email,
+      options: {
+        emailRedirectTo: `${window.location.origin}/auth`
+      }
+    });
+    return { error };
   };
 
   const value = {
