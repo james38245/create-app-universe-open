@@ -1,31 +1,51 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { toast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { useProfile } from '@/hooks/useProfile';
 import ProfileHeader from '@/components/profile/ProfileHeader';
 import ProfileForm from '@/components/profile/ProfileForm';
 import BookingHistory from '@/components/profile/BookingHistory';
 import ServiceProviderProfile from '@/components/profile/ServiceProviderProfile';
 import DocumentsSection from '@/components/profile/DocumentsSection';
 import PaymentsSection from '@/components/profile/PaymentsSection';
+import { Navigate } from 'react-router-dom';
 
 const ProfilePage = () => {
   const { user } = useAuth();
+  const { profileData, loading, updateProfile } = useProfile();
   const [isEditing, setIsEditing] = useState(false);
-  const [profileData, setProfileData] = useState({
-    name: 'John Doe',
-    email: 'john.doe@example.com',
-    phone: '+254 700 123 456',
-    location: 'Nairobi, Kenya',
-    bio: 'Professional event planner with 8+ years of experience in organizing corporate events, weddings, and social gatherings.',
-    profileImage: '/placeholder.svg',
-    isServiceProvider: true
-  });
 
-  const [serviceProviderData, setServiceProviderData] = useState({
+  // Redirect to auth if not logged in
+  if (!user) {
+    return <Navigate to="/auth" replace />;
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+          <p>Loading profile...</p>
+        </div>
+      </div>
+    );
+  }
+
+  const handleSaveProfile = async (data: any) => {
+    const success = await updateProfile(data);
+    if (success) {
+      setIsEditing(false);
+    }
+  };
+
+  const handleImageUpdate = async (imageUrl: string) => {
+    await updateProfile({ avatar_url: imageUrl });
+  };
+
+  // Mock data for service provider and booking history
+  const serviceProviderData = {
     businessName: 'Elite Events Planning',
     services: ['Wedding Planning', 'Corporate Events', 'Birthday Parties'],
     experience: '8 years',
@@ -34,9 +54,8 @@ const ProfilePage = () => {
     pricing: 'KSh 50,000 - 200,000 per event',
     cvUploaded: true,
     cvFileName: 'john_doe_cv.pdf'
-  });
+  };
 
-  // Mock booking history
   const bookingHistory = [
     {
       id: '1',
@@ -53,90 +72,8 @@ const ProfilePage = () => {
       date: '2024-01-20',
       status: 'upcoming',
       amount: 45000
-    },
-    {
-      id: '3',
-      type: 'venue',
-      name: 'KICC Amphitheatre',
-      date: '2023-12-10',
-      status: 'completed',
-      amount: 300000
     }
   ];
-
-  const [userProfile, setUserProfile] = useState<any>(null);
-
-  useEffect(() => {
-    const fetchUserProfile = async () => {
-      if (user) {
-        const { data } = await supabase
-          .from('profiles')
-          .select('payment_account_type, payment_account_number, payment_account_name')
-          .eq('id', user.id)
-          .single();
-        setUserProfile(data);
-      }
-    };
-    fetchUserProfile();
-  }, [user]);
-
-  const handleSaveProfile = () => {
-    setIsEditing(false);
-    toast({
-      title: "Profile updated successfully!",
-      description: "Your profile information has been saved.",
-    });
-  };
-
-  const handleFileUpload = (type: 'profile' | 'cv' | 'portfolio') => {
-    if (type === 'cv') {
-      setServiceProviderData(prev => ({
-        ...prev,
-        cvUploaded: true,
-        cvFileName: 'updated_cv.pdf'
-      }));
-    }
-    
-    toast({
-      title: "File uploaded successfully!",
-      description: `Your ${type} has been updated.`,
-    });
-  };
-
-  const handleBecomeProvider = () => {
-    setProfileData(prev => ({ ...prev, isServiceProvider: true }));
-    toast({
-      title: "Welcome to our provider network!",
-      description: "You can now start offering your services on our platform.",
-    });
-  };
-
-  const handleAddService = () => {
-    const newService = 'New Service';
-    setServiceProviderData(prev => ({
-      ...prev,
-      services: [...prev.services, newService]
-    }));
-  };
-
-  const handleAddCertification = () => {
-    const newCert = 'New Certification';
-    setServiceProviderData(prev => ({
-      ...prev,
-      certifications: [...prev.certifications, newCert]
-    }));
-  };
-
-  const handlePaymentAccountSave = () => {
-    if (user) {
-      supabase
-        .from('profiles')
-        .select('payment_account_type, payment_account_number, payment_account_name')
-        .eq('id', user.id)
-        .single()
-        .then(({ data }) => setUserProfile(data));
-    }
-  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -160,13 +97,12 @@ const ProfilePage = () => {
                     profileData={profileData}
                     isEditing={isEditing}
                     onEditToggle={() => setIsEditing(!isEditing)}
-                    onFileUpload={handleFileUpload}
+                    onImageUpdate={handleImageUpdate}
                   />
 
                   <ProfileForm
                     profileData={profileData}
                     isEditing={isEditing}
-                    onProfileChange={setProfileData}
                     onSave={handleSaveProfile}
                   />
                 </CardContent>
@@ -183,10 +119,10 @@ const ProfilePage = () => {
               <ServiceProviderProfile
                 profileData={profileData}
                 serviceProviderData={serviceProviderData}
-                onBecomeProvider={handleBecomeProvider}
-                onServiceProviderChange={setServiceProviderData}
-                onAddService={handleAddService}
-                onFileUpload={handleFileUpload}
+                onBecomeProvider={() => {}}
+                onServiceProviderChange={() => {}}
+                onAddService={() => {}}
+                onFileUpload={() => {}}
               />
             </TabsContent>
 
@@ -195,17 +131,17 @@ const ProfilePage = () => {
               <DocumentsSection
                 profileData={profileData}
                 serviceProviderData={serviceProviderData}
-                onFileUpload={handleFileUpload}
-                onAddCertification={handleAddCertification}
-                onServiceProviderChange={setServiceProviderData}
+                onFileUpload={() => {}}
+                onAddCertification={() => {}}
+                onServiceProviderChange={() => {}}
               />
             </TabsContent>
 
             {/* Payments Tab */}
             <TabsContent value="payments" className="space-y-6">
               <PaymentsSection
-                userProfile={userProfile}
-                onPaymentAccountSave={handlePaymentAccountSave}
+                userProfile={profileData}
+                onPaymentAccountSave={() => {}}
               />
             </TabsContent>
           </Tabs>

@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -8,33 +8,61 @@ import { Save } from 'lucide-react';
 
 interface ProfileFormProps {
   profileData: {
-    name: string;
+    full_name: string;
     email: string;
     phone: string;
     location: string;
     bio: string;
-  };
+  } | null;
   isEditing: boolean;
-  onProfileChange: (data: any) => void;
-  onSave: () => void;
+  onSave: (data: any) => void;
 }
 
 const ProfileForm: React.FC<ProfileFormProps> = ({
   profileData,
   isEditing,
-  onProfileChange,
   onSave
 }) => {
+  const [formData, setFormData] = useState({
+    full_name: '',
+    email: '',
+    phone: '',
+    location: '',
+    bio: ''
+  });
+
+  useEffect(() => {
+    if (profileData) {
+      setFormData({
+        full_name: profileData.full_name || '',
+        email: profileData.email || '',
+        phone: profileData.phone || '',
+        location: profileData.location || '',
+        bio: profileData.bio || ''
+      });
+    }
+  }, [profileData]);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    onSave(formData);
+  };
+
+  const handleChange = (field: string, value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
   return (
-    <>
+    <form onSubmit={handleSubmit} className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label htmlFor="name">Full Name</Label>
+          <Label htmlFor="full_name">Full Name</Label>
           <Input
-            id="name"
-            value={profileData.name}
-            onChange={(e) => onProfileChange({...profileData, name: e.target.value})}
+            id="full_name"
+            value={formData.full_name}
+            onChange={(e) => handleChange('full_name', e.target.value)}
             disabled={!isEditing}
+            placeholder="Enter your full name"
           />
         </div>
         
@@ -43,9 +71,10 @@ const ProfileForm: React.FC<ProfileFormProps> = ({
           <Input
             id="email"
             type="email"
-            value={profileData.email}
-            onChange={(e) => onProfileChange({...profileData, email: e.target.value})}
+            value={formData.email}
+            onChange={(e) => handleChange('email', e.target.value)}
             disabled={!isEditing}
+            placeholder="Enter your email"
           />
         </div>
         
@@ -53,9 +82,10 @@ const ProfileForm: React.FC<ProfileFormProps> = ({
           <Label htmlFor="phone">Phone</Label>
           <Input
             id="phone"
-            value={profileData.phone}
-            onChange={(e) => onProfileChange({...profileData, phone: e.target.value})}
+            value={formData.phone}
+            onChange={(e) => handleChange('phone', e.target.value)}
             disabled={!isEditing}
+            placeholder="Enter your phone number"
           />
         </div>
         
@@ -63,9 +93,10 @@ const ProfileForm: React.FC<ProfileFormProps> = ({
           <Label htmlFor="location">Location</Label>
           <Input
             id="location"
-            value={profileData.location}
-            onChange={(e) => onProfileChange({...profileData, location: e.target.value})}
+            value={formData.location}
+            onChange={(e) => handleChange('location', e.target.value)}
             disabled={!isEditing}
+            placeholder="Enter your location"
           />
         </div>
       </div>
@@ -74,22 +105,23 @@ const ProfileForm: React.FC<ProfileFormProps> = ({
         <Label htmlFor="bio">Bio</Label>
         <Textarea
           id="bio"
-          value={profileData.bio}
-          onChange={(e) => onProfileChange({...profileData, bio: e.target.value})}
+          value={formData.bio}
+          onChange={(e) => handleChange('bio', e.target.value)}
           disabled={!isEditing}
           rows={4}
+          placeholder="Tell us about yourself..."
         />
       </div>
 
       {isEditing && (
         <div className="flex justify-end">
-          <Button onClick={onSave} className="flex items-center gap-2">
+          <Button type="submit" className="flex items-center gap-2">
             <Save className="h-4 w-4" />
             Save Changes
           </Button>
         </div>
       )}
-    </>
+    </form>
   );
 };
 

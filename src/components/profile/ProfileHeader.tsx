@@ -1,44 +1,33 @@
 
 import React from 'react';
-import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { Upload, Edit, X } from 'lucide-react';
+import { Edit, X } from 'lucide-react';
+import ProfileImageUpload from './ProfileImageUpload';
 
 interface ProfileHeaderProps {
   profileData: {
-    name: string;
-    profileImage: string;
-  };
+    full_name: string;
+    avatar_url: string;
+  } | null;
   isEditing: boolean;
   onEditToggle: () => void;
-  onFileUpload: (type: 'profile') => void;
+  onImageUpdate: (imageUrl: string) => void;
 }
 
 const ProfileHeader: React.FC<ProfileHeaderProps> = ({
   profileData,
   isEditing,
   onEditToggle,
-  onFileUpload
+  onImageUpdate
 }) => {
   return (
     <div className="flex items-center justify-between mb-6">
-      <div className="flex items-center gap-6">
-        <Avatar className="h-24 w-24">
-          <AvatarImage src={profileData.profileImage} alt={profileData.name} />
-          <AvatarFallback className="text-2xl">{profileData.name.charAt(0)}</AvatarFallback>
-        </Avatar>
-        
-        {isEditing && (
-          <Button 
-            variant="outline" 
-            onClick={() => onFileUpload('profile')}
-            className="flex items-center gap-2"
-          >
-            <Upload className="h-4 w-4" />
-            Upload Photo
-          </Button>
-        )}
-      </div>
+      <ProfileImageUpload
+        profileImage={profileData?.avatar_url || '/placeholder.svg'}
+        userName={profileData?.full_name || 'User'}
+        isEditing={isEditing}
+        onImageUpdate={onImageUpdate}
+      />
 
       <Button
         variant={isEditing ? "destructive" : "outline"}

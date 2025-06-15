@@ -218,10 +218,12 @@ export type Database = {
       profiles: {
         Row: {
           avatar_url: string | null
+          bio: string | null
           created_at: string | null
           email: string
           full_name: string | null
           id: string
+          location: string | null
           payment_account_name: string | null
           payment_account_number: string | null
           payment_account_type: string | null
@@ -231,10 +233,12 @@ export type Database = {
         }
         Insert: {
           avatar_url?: string | null
+          bio?: string | null
           created_at?: string | null
           email: string
           full_name?: string | null
           id: string
+          location?: string | null
           payment_account_name?: string | null
           payment_account_number?: string | null
           payment_account_type?: string | null
@@ -244,10 +248,12 @@ export type Database = {
         }
         Update: {
           avatar_url?: string | null
+          bio?: string | null
           created_at?: string | null
           email?: string
           full_name?: string | null
           id?: string
+          location?: string | null
           payment_account_name?: string | null
           payment_account_number?: string | null
           payment_account_type?: string | null
