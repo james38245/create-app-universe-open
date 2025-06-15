@@ -17,7 +17,7 @@ const MessagesPage = () => {
     isLoading, 
     loadConversations, 
     loadMessages, 
-    sendMessage as sendMessageHandler, 
+    sendMessage: sendMessageHandler, 
     startConversation 
   } = useMessaging();
   

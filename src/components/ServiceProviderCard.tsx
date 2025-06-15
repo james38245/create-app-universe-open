@@ -40,7 +40,7 @@ const ServiceProviderCard: React.FC<ServiceProviderCardProps> = ({ provider, lay
   };
 
   const handleBookNow = () => {
-    navigate(`/provider/${provider.id}`);
+    navigate(`/booking/provider/${provider.id}`);
   };
 
   if (layout === 'list') {

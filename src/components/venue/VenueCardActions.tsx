@@ -29,7 +29,7 @@ const VenueCardActions: React.FC<VenueCardActionsProps> = ({ venue, layout = 'gr
   };
 
   const handleBookNow = () => {
-    navigate(`/venue/${venue.id}`);
+    navigate(`/booking/venue/${venue.id}`);
   };
 
   if (layout === 'list') {
