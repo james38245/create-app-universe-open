@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -10,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { toast } from 'sonner';
-import { Edit, Trash2 } from 'lucide-react';
+import { Edit, Trash2, RefreshCw } from 'lucide-react';
 import {
   Table,
   TableBody,
@@ -20,10 +21,12 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import PaymentBreakdown from '../payment/PaymentBreakdown';
+import RefundDialog from '../booking/RefundDialog';
 
 const BookingManagement = () => {
   const [editingBooking, setEditingBooking] = useState<any>(null);
   const [viewingPayment, setViewingPayment] = useState<any>(null);
+  const [refundingBooking, setRefundingBooking] = useState<any>(null);
   const queryClient = useQueryClient();
 
   // Fetch bookings
@@ -95,6 +98,7 @@ const BookingManagement = () => {
               <TableHead>Commission</TableHead>
               <TableHead>Seller Gets</TableHead>
               <TableHead>Status</TableHead>
+              <TableHead>Payment</TableHead>
               <TableHead>Payout</TableHead>
               <TableHead>Actions</TableHead>
             </TableRow>
@@ -124,17 +128,26 @@ const BookingManagement = () => {
                     KSh {sellerAmount.toLocaleString()}
                   </TableCell>
                   <TableCell>
-                    <Badge variant={booking.status === 'confirmed' ? "default" : "secondary"}>
+                    <Badge variant={booking.status === 'confirmed' ? "default" : booking.status === 'cancelled' ? "destructive" : "secondary"}>
                       {booking.status}
                     </Badge>
                   </TableCell>
                   <TableCell>
-                    <Badge variant={booking.payout_status === 'processed' ? "default" : "secondary"}>
+                    <Badge variant={
+                      booking.payment_status === 'paid' ? "default" : 
+                      booking.payment_status === 'refunded' ? "destructive" : 
+                      "secondary"
+                    }>
+                      {booking.payment_status || 'pending'}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant={booking.payout_status === 'processed' ? "default" : booking.payout_status === 'cancelled' ? "destructive" : "secondary"}>
                       {booking.payout_status || 'pending'}
                     </Badge>
                   </TableCell>
                   <TableCell>
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 flex-wrap">
                       <Dialog>
                         <DialogTrigger asChild>
                           <Button variant="outline" size="sm" onClick={() => setViewingPayment(booking)}>
@@ -154,6 +167,19 @@ const BookingManagement = () => {
                           )}
                         </DialogContent>
                       </Dialog>
+
+                      {booking.payment_status === 'paid' && booking.status !== 'cancelled' && (
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          onClick={() => setRefundingBooking(booking)}
+                          className="text-red-600 hover:text-red-700"
+                        >
+                          <RefreshCw className="h-4 w-4 mr-1" />
+                          Refund
+                        </Button>
+                      )}
+
                       <Dialog>
                         <DialogTrigger asChild>
                           <Button variant="outline" size="sm" onClick={() => setEditingBooking(booking)}>
@@ -243,6 +269,15 @@ const BookingManagement = () => {
             })}
           </TableBody>
         </Table>
+
+        {refundingBooking && (
+          <RefundDialog
+            booking={refundingBooking}
+            isOpen={!!refundingBooking}
+            onClose={() => setRefundingBooking(null)}
+            isAdmin={true}
+          />
+        )}
       </CardContent>
     </Card>
   );

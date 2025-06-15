@@ -12,6 +12,8 @@ export type Database = {
       bookings: {
         Row: {
           booking_type: string
+          cancellation_reason: string | null
+          cancelled_by: string | null
           client_id: string
           commission_amount: number | null
           commission_percentage: number | null
@@ -25,7 +27,12 @@ export type Database = {
           payment_status: string | null
           payout_date: string | null
           payout_status: string | null
+          refund_amount: number | null
+          refund_approved_at: string | null
           refund_deadline: string | null
+          refund_processed_at: string | null
+          refund_reason: string | null
+          refund_requested_at: string | null
           seller_amount: number | null
           service_provider_id: string | null
           special_requirements: string | null
@@ -38,6 +45,8 @@ export type Database = {
         }
         Insert: {
           booking_type: string
+          cancellation_reason?: string | null
+          cancelled_by?: string | null
           client_id: string
           commission_amount?: number | null
           commission_percentage?: number | null
@@ -51,7 +60,12 @@ export type Database = {
           payment_status?: string | null
           payout_date?: string | null
           payout_status?: string | null
+          refund_amount?: number | null
+          refund_approved_at?: string | null
           refund_deadline?: string | null
+          refund_processed_at?: string | null
+          refund_reason?: string | null
+          refund_requested_at?: string | null
           seller_amount?: number | null
           service_provider_id?: string | null
           special_requirements?: string | null
@@ -64,6 +78,8 @@ export type Database = {
         }
         Update: {
           booking_type?: string
+          cancellation_reason?: string | null
+          cancelled_by?: string | null
           client_id?: string
           commission_amount?: number | null
           commission_percentage?: number | null
@@ -77,7 +93,12 @@ export type Database = {
           payment_status?: string | null
           payout_date?: string | null
           payout_status?: string | null
+          refund_amount?: number | null
+          refund_approved_at?: string | null
           refund_deadline?: string | null
+          refund_processed_at?: string | null
+          refund_reason?: string | null
+          refund_requested_at?: string | null
           seller_amount?: number | null
           service_provider_id?: string | null
           special_requirements?: string | null
@@ -343,7 +364,9 @@ export type Database = {
           created_at: string | null
           id: string
           mpesa_transaction_id: string | null
+          original_transaction_id: string | null
           processed_at: string | null
+          refund_amount: number | null
           status: string | null
           transaction_type: string
         }
@@ -353,7 +376,9 @@ export type Database = {
           created_at?: string | null
           id?: string
           mpesa_transaction_id?: string | null
+          original_transaction_id?: string | null
           processed_at?: string | null
+          refund_amount?: number | null
           status?: string | null
           transaction_type: string
         }
@@ -363,7 +388,9 @@ export type Database = {
           created_at?: string | null
           id?: string
           mpesa_transaction_id?: string | null
+          original_transaction_id?: string | null
           processed_at?: string | null
+          refund_amount?: number | null
           status?: string | null
           transaction_type?: string
         }
@@ -373,6 +400,13 @@ export type Database = {
             columns: ["booking_id"]
             isOneToOne: false
             referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transactions_original_transaction_id_fkey"
+            columns: ["original_transaction_id"]
+            isOneToOne: false
+            referencedRelation: "transactions"
             referencedColumns: ["id"]
           },
         ]
@@ -458,12 +492,24 @@ export type Database = {
         }
         Returns: Json
       }
+      calculate_refund_amount: {
+        Args: { booking_amount: number; transaction_fee_rate?: number }
+        Returns: Json
+      }
       is_admin: {
         Args: Record<PropertyKey, never>
         Returns: boolean
       }
       process_automatic_payout: {
         Args: { booking_uuid: string }
+        Returns: boolean
+      }
+      process_refund: {
+        Args: {
+          booking_uuid: string
+          refund_reason?: string
+          cancelled_by_user_id?: string
+        }
         Returns: boolean
       }
     }
