@@ -31,11 +31,13 @@ interface PaymentAccountSettingsProps {
     payment_account_name?: string;
   };
   onSave?: () => void;
+  hideActions?: boolean;
 }
 
 const PaymentAccountSettings: React.FC<PaymentAccountSettingsProps> = ({ 
   initialData, 
-  onSave 
+  onSave,
+  hideActions = false
 }) => {
   const { user } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -177,9 +179,11 @@ const PaymentAccountSettings: React.FC<PaymentAccountSettingsProps> = ({
               </p>
             </div>
 
-            <Button type="submit" disabled={isSubmitting} className="w-full">
-              {isSubmitting ? 'Saving...' : 'Save Payment Details'}
-            </Button>
+            {!hideActions && (
+              <Button type="submit" disabled={isSubmitting} className="w-full">
+                {isSubmitting ? 'Saving...' : 'Save Payment Details'}
+              </Button>
+            )}
           </form>
         </Form>
       </CardContent>

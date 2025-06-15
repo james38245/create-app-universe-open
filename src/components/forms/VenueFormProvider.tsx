@@ -57,6 +57,16 @@ const VenueFormProvider: React.FC<VenueFormProviderProps> = ({
 
   const handleSubmit = async (data: VenueFormData) => {
     try {
+      // Check if payment account is set up
+      if (!userProfile?.payment_account_type || !userProfile?.payment_account_number || !userProfile?.payment_account_name) {
+        toast({
+          title: 'Payment Account Required',
+          description: 'Please complete your payment account settings before adding a venue.',
+          variant: 'destructive',
+        });
+        return;
+      }
+
       // Sanitize form data for security
       const sanitizedData = sanitizeFormData(data);
 
@@ -104,12 +114,15 @@ const VenueFormProvider: React.FC<VenueFormProviderProps> = ({
           blockedDates={blockedDates}
           setBlockedDates={setBlockedDates}
           onCancel={onCancel}
+          userProfile={userProfile}
+          setUserProfile={setUserProfile}
         />
         
         <VenuePaymentSection
           form={form}
           userProfile={userProfile}
           setUserProfile={setUserProfile}
+          hideActions={true}
         />
       </form>
     </Form>

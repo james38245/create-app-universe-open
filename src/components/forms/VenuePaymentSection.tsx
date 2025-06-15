@@ -11,12 +11,14 @@ interface VenuePaymentSectionProps {
   form: UseFormReturn<VenueFormData>;
   userProfile: any;
   setUserProfile: (profile: any) => void;
+  hideActions?: boolean;
 }
 
 const VenuePaymentSection: React.FC<VenuePaymentSectionProps> = ({
   form,
   userProfile,
-  setUserProfile
+  setUserProfile,
+  hideActions = false
 }) => {
   const { user } = useAuth();
   
@@ -46,6 +48,7 @@ const VenuePaymentSection: React.FC<VenuePaymentSectionProps> = ({
       <PaymentAccountSettings
         initialData={userProfile}
         onSave={handlePaymentAccountSave}
+        hideActions={hideActions}
       />
     </div>
   );
