@@ -1,3 +1,4 @@
+
 import React, { useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -112,7 +113,7 @@ const BookingForm: React.FC<BookingFormProps> = ({
           booking_type: type,
           venue_id: type === 'venue' ? selectedPackage : null,
           service_provider_id: type === 'service' ? selectedPackage : null,
-          event_date: selectedDates.start,
+          event_date: selectedDates.start?.toISOString(),
           event_type: formData.eventType,
           guest_count: formData.guestCount ? parseInt(formData.guestCount) : null,
           special_requirements: formData.specialRequests,
