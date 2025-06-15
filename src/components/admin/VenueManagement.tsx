@@ -52,6 +52,7 @@ const VenueManagement = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-venues'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-pending-listings'] });
       toast.success('Venue updated successfully');
       setEditingVenue(null);
     },
@@ -88,7 +89,7 @@ const VenueManagement = () => {
       toast.error('Failed to update venue status');
     } else {
       queryClient.invalidateQueries({ queryKey: ['admin-venues'] });
-      toast.success('Venue status updated successfully');
+      toast.success(`Venue ${!currentStatus ? 'activated' : 'deactivated'} successfully`);
     }
   };
 
@@ -130,7 +131,7 @@ const VenueManagement = () => {
                   </TableCell>
                   <TableCell>
                     <Badge variant={venue.is_active ? "default" : "secondary"}>
-                      {venue.is_active ? "Active" : "Inactive"}
+                      {venue.is_active ? "Live" : "Draft"}
                     </Badge>
                   </TableCell>
                   <TableCell>
@@ -188,13 +189,18 @@ const VenueManagement = () => {
                           )}
                         </DialogContent>
                       </Dialog>
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => toggleVenueStatus(venue.id, venue.is_active)}
-                      >
-                        {venue.is_active ? <XCircle className="h-4 w-4" /> : <CheckCircle className="h-4 w-4" />}
-                      </Button>
+                      
+                      {venue.verification_status === 'verified' && (
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => toggleVenueStatus(venue.id, venue.is_active)}
+                          className={venue.is_active ? "text-red-600" : "text-green-600"}
+                        >
+                          {venue.is_active ? <XCircle className="h-4 w-4" /> : <CheckCircle className="h-4 w-4" />}
+                        </Button>
+                      )}
+                      
                       <AlertDialog>
                         <AlertDialogTrigger asChild>
                           <Button variant="outline" size="sm">

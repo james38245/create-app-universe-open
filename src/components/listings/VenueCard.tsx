@@ -5,7 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Eye, Edit, Trash2, Send, MapPin, Users, DollarSign } from 'lucide-react';
+import { Eye, Edit, Trash2, MapPin, Users, DollarSign } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import ValidationStatusBadge from './ValidationStatusBadge';
 
@@ -17,11 +17,11 @@ interface VenueCardProps {
 const VenueCard = ({ venue, onDelete }: VenueCardProps) => {
   const queryClient = useQueryClient();
 
-  const postVenueMutation = useMutation({
+  const deleteVenueMutation = useMutation({
     mutationFn: async (venueId: string) => {
       const { error } = await supabase
         .from('venues')
-        .update({ is_active: true })
+        .delete()
         .eq('id', venueId);
       
       if (error) throw error;
@@ -29,20 +29,19 @@ const VenueCard = ({ venue, onDelete }: VenueCardProps) => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['my-venues'] });
       toast({
-        title: "Success", 
-        description: "Venue posted successfully and is now visible to clients"
+        title: "Success",
+        description: "Venue deleted successfully"
       });
+      onDelete(venue.id);
     },
     onError: () => {
       toast({
         title: "Error",
-        description: "Failed to post venue",
+        description: "Failed to delete venue",
         variant: "destructive"
       });
     }
   });
-
-  const canPost = venue.verification_status === 'verified' && venue.security_validated;
 
   return (
     <Card>
@@ -79,13 +78,19 @@ const VenueCard = ({ venue, onDelete }: VenueCardProps) => {
 
           {venue.verification_status === 'pending' && (
             <div className="text-xs text-muted-foreground bg-yellow-50 p-2 rounded">
-              📋 Under security review - estimated completion within 24 hours
+              📋 Under admin review - estimated completion within 24 hours
             </div>
           )}
 
           {venue.verification_status === 'rejected' && venue.validation_notes && (
             <div className="text-xs text-red-600 bg-red-50 p-2 rounded">
               ❌ Issues to resolve: {venue.validation_notes}
+            </div>
+          )}
+
+          {venue.verification_status === 'verified' && !venue.is_active && (
+            <div className="text-xs text-green-600 bg-green-50 p-2 rounded">
+              ✅ Approved by admin - Waiting to go live
             </div>
           )}
 
@@ -117,22 +122,12 @@ const VenueCard = ({ venue, onDelete }: VenueCardProps) => {
           <Button 
             variant="outline" 
             size="sm"
-            onClick={() => onDelete(venue.id)}
+            onClick={() => deleteVenueMutation.mutate(venue.id)}
+            disabled={deleteVenueMutation.isPending}
           >
             <Trash2 className="h-4 w-4 mr-1" />
             Delete
           </Button>
-          {!venue.is_active && canPost && (
-            <Button 
-              size="sm"
-              onClick={() => postVenueMutation.mutate(venue.id)}
-              disabled={postVenueMutation.isPending}
-              className="bg-green-600 hover:bg-green-700"
-            >
-              <Send className="h-4 w-4 mr-1" />
-              Go Live
-            </Button>
-          )}
         </div>
       </CardContent>
     </Card>

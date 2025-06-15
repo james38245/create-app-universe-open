@@ -5,7 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Eye, Edit, Trash2, Send, Clock, DollarSign } from 'lucide-react';
+import { Eye, Edit, Trash2, Clock, DollarSign } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import ValidationStatusBadge from './ValidationStatusBadge';
 
@@ -17,11 +17,11 @@ interface ServiceProviderCardProps {
 const ServiceProviderCard = ({ provider, onDelete }: ServiceProviderCardProps) => {
   const queryClient = useQueryClient();
 
-  const postProviderMutation = useMutation({
+  const deleteProviderMutation = useMutation({
     mutationFn: async (providerId: string) => {
       const { error } = await supabase
         .from('service_providers')
-        .update({ is_available: true })
+        .delete()
         .eq('id', providerId);
       
       if (error) throw error;
@@ -29,20 +29,19 @@ const ServiceProviderCard = ({ provider, onDelete }: ServiceProviderCardProps) =
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['my-service-providers'] });
       toast({
-        title: "Success", 
-        description: "Service posted successfully and is now visible to clients"
+        title: "Success",
+        description: "Service provider profile deleted successfully"
       });
+      onDelete(provider.id);
     },
     onError: () => {
       toast({
         title: "Error",
-        description: "Failed to post service",
+        description: "Failed to delete service provider profile",
         variant: "destructive"
       });
     }
   });
-
-  const canPost = provider.verification_status === 'verified' && provider.security_validated;
 
   return (
     <Card>
@@ -78,13 +77,19 @@ const ServiceProviderCard = ({ provider, onDelete }: ServiceProviderCardProps) =
 
           {provider.verification_status === 'pending' && (
             <div className="text-xs text-muted-foreground bg-yellow-50 p-2 rounded">
-              📋 Under security review - estimated completion within 24 hours
+              📋 Under admin review - estimated completion within 24 hours
             </div>
           )}
 
           {provider.verification_status === 'rejected' && provider.validation_notes && (
             <div className="text-xs text-red-600 bg-red-50 p-2 rounded">
               ❌ Issues to resolve: {provider.validation_notes}
+            </div>
+          )}
+
+          {provider.verification_status === 'verified' && !provider.is_available && (
+            <div className="text-xs text-green-600 bg-green-50 p-2 rounded">
+              ✅ Approved by admin - Waiting to go live
             </div>
           )}
 
@@ -116,22 +121,12 @@ const ServiceProviderCard = ({ provider, onDelete }: ServiceProviderCardProps) =
           <Button 
             variant="outline" 
             size="sm"
-            onClick={() => onDelete(provider.id)}
+            onClick={() => deleteProviderMutation.mutate(provider.id)}
+            disabled={deleteProviderMutation.isPending}
           >
             <Trash2 className="h-4 w-4 mr-1" />
             Delete
           </Button>
-          {!provider.is_available && canPost && (
-            <Button 
-              size="sm"
-              onClick={() => postProviderMutation.mutate(provider.id)}
-              disabled={postProviderMutation.isPending}
-              className="bg-green-600 hover:bg-green-700"
-            >
-              <Send className="h-4 w-4 mr-1" />
-              Go Live
-            </Button>
-          )}
         </div>
       </CardContent>
     </Card>

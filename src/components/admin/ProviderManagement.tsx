@@ -55,6 +55,7 @@ const ProviderManagement = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-providers'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-pending-listings'] });
       toast.success('Provider updated successfully');
       setEditingProvider(null);
     },
@@ -91,7 +92,7 @@ const ProviderManagement = () => {
       toast.error('Failed to update provider status');
     } else {
       queryClient.invalidateQueries({ queryKey: ['admin-providers'] });
-      toast.success('Provider status updated successfully');
+      toast.success(`Provider ${!currentStatus ? 'activated' : 'deactivated'} successfully`);
     }
   };
 
@@ -133,7 +134,7 @@ const ProviderManagement = () => {
                   </TableCell>
                   <TableCell>
                     <Badge variant={provider.is_available ? "default" : "secondary"}>
-                      {provider.is_available ? "Available" : "Busy"}
+                      {provider.is_available ? "Available" : "Draft"}
                     </Badge>
                   </TableCell>
                   <TableCell>
@@ -183,13 +184,18 @@ const ProviderManagement = () => {
                           )}
                         </DialogContent>
                       </Dialog>
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => toggleProviderStatus(provider.id, provider.is_available)}
-                      >
-                        {provider.is_available ? <XCircle className="h-4 w-4" /> : <CheckCircle className="h-4 w-4" />}
-                      </Button>
+                      
+                      {provider.verification_status === 'verified' && (
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => toggleProviderStatus(provider.id, provider.is_available)}
+                          className={provider.is_available ? "text-red-600" : "text-green-600"}
+                        >
+                          {provider.is_available ? <XCircle className="h-4 w-4" /> : <CheckCircle className="h-4 w-4" />}
+                        </Button>
+                      )}
+                      
                       <AlertDialog>
                         <AlertDialogTrigger asChild>
                           <Button variant="outline" size="sm">

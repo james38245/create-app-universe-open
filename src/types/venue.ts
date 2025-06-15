@@ -1,125 +1,87 @@
+import { z } from 'zod';
 
-import * as z from 'zod';
+export interface VenueFormData {
+  id?: string;
+  name: string;
+  description: string;
+  location: string;
+  venue_type: string;
+  capacity: number;
+  amenities: string[];
+  images: string[];
+  price_per_day: number;
+  price_per_hour: number;
+  pricing_unit: 'day' | 'hour';
+  owner_id?: string;
+  blocked_dates: string[];
+  booking_terms: any;
+  coordinates: { lat: number; lng: number } | null;
+  is_active?: boolean;
+  verification_status?: 'pending' | 'under_review' | 'verified' | 'rejected';
+  verification_score?: number;
+  validation_notes?: string;
+  security_validated?: boolean;
+}
 
-export const venueSchema = z.object({
-  name: z.string().min(2, 'Name must be at least 2 characters'),
-  description: z.string().min(10, 'Description must be at least 10 characters'),
-  location: z.string().min(2, 'Location is required'),
-  coordinates: z.object({
-    lat: z.number(),
-    lng: z.number()
-  }).optional().nullable(),
-  capacity: z.number().min(1, 'Capacity must be at least 1'),
-  pricing_unit: z.enum(['day', 'hour']),
-  price_per_day: z.number().min(1, 'Price must be greater than 0').optional(),
-  price_per_hour: z.number().min(1, 'Price must be greater than 0').optional(),
-  venue_type: z.string().min(1, 'Venue type is required'),
-  amenities: z.array(z.string()).optional(),
-  images: z.array(z.string()).min(2, 'At least 2 images are required'),
-  is_active: z.boolean().default(true),
-  booking_terms: z.object({
-    payment_type: z.enum(['deposit_only', 'full_payment', 'installments']).default('deposit_only'),
-    deposit_percentage: z.number().min(0).max(100),
-    cancellation_time_value: z.number().min(1),
-    cancellation_time_unit: z.enum(['hours', 'days']).default('hours'),
-    refund_percentage: z.number().min(0).max(100),
-    transaction_fee_deduction: z.number().min(0).max(10),
-    processing_fee_amount: z.number().min(0),
-    payment_due_days: z.number().min(1),
-    advance_booking_days: z.number().min(1),
-    minimum_booking_duration: z.number().min(1),
-    minimum_booking_unit: z.enum(['hours', 'days']).default('hours'),
-    installment_count: z.number().optional(),
-    installment_interval_days: z.number().optional(),
-    late_payment_daily_rate: z.number().min(0).max(10),
-    maximum_late_fee_percentage: z.number().min(0).max(50),
-    grace_period_value: z.number().min(0),
-    grace_period_unit: z.enum(['hours', 'days']).default('hours'),
-    platform_commission_percentage: z.number().min(5).max(20),
-    agree_to_platform_terms: z.boolean(),
-    agree_to_legal_compliance: z.boolean(),
-    agree_to_service_delivery: z.boolean(),
-    special_terms: z.string().optional(),
-    pricing_unit: z.enum(['day', 'hour']).default('day')
-  }).optional(),
-  blocked_dates: z.array(z.string()).optional()
-}).refine((data) => {
-  if (data.pricing_unit === 'day') {
-    return data.price_per_day && data.price_per_day > 0;
-  } else {
-    return data.price_per_hour && data.price_per_hour > 0;
-  }
-}, {
-  message: "Price must be provided for the selected pricing unit",
-  path: ["price_per_day"]
-});
-
-export type VenueFormData = z.infer<typeof venueSchema>;
+export interface ServiceProviderFormData {
+  id?: string;
+  user_id?: string;
+  bio?: string;
+  certifications?: string[];
+  coordinates?: { 
+    lat?: number; 
+    lng?: number; 
+  } | null;
+  experience_years?: number;
+  hourly_rate?: number;
+  images?: string[];
+  location?: string;
+  phone?: string;
+  portfolio_images?: string[];
+  service_area?: string[];
+  service_type?: string;
+  social_links?: any;
+  specialties?: string[];
+  pricing_unit?: 'event' | 'hour';
+  price_per_event?: number;
+  price_per_hour?: number;
+  blocked_dates?: string[];
+  booking_terms?: any;
+}
 
 export const defaultVenueFormValues: VenueFormData = {
   name: '',
   description: '',
   location: '',
-  coordinates: null,
-  capacity: 50,
-  pricing_unit: 'day',
-  price_per_day: 10000,
-  price_per_hour: 2000,
   venue_type: '',
+  capacity: 0,
   amenities: [],
   images: [],
-  is_active: true,
-  booking_terms: {
-    payment_type: 'deposit_only',
-    deposit_percentage: 30,
-    cancellation_time_value: 7,
-    cancellation_time_unit: 'days',
-    refund_percentage: 100,
-    transaction_fee_deduction: 3,
-    processing_fee_amount: 500,
-    payment_due_days: 7,
-    advance_booking_days: 2,
-    minimum_booking_duration: 4,
-    minimum_booking_unit: 'hours',
-    installment_count: 2,
-    installment_interval_days: 30,
-    late_payment_daily_rate: 2,
-    maximum_late_fee_percentage: 25,
-    grace_period_value: 24,
-    grace_period_unit: 'hours',
-    platform_commission_percentage: 10,
-    agree_to_platform_terms: false,
-    agree_to_legal_compliance: false,
-    agree_to_service_delivery: false,
-    special_terms: '',
-    pricing_unit: 'day'
-  },
-  blocked_dates: []
+  price_per_day: 0,
+  price_per_hour: 0,
+  pricing_unit: 'day',
+  blocked_dates: [],
+  booking_terms: null,
+  coordinates: null,
 };
 
-export interface ServiceProviderFormData {
-  id?: string;
-  user_id?: string;
-  service_category: string;
-  bio?: string;
-  years_experience?: number;
-  price_per_event?: number;
-  price_per_hour?: number;
-  pricing_unit?: 'event' | 'hour';
-  specialties?: string[];
-  certifications?: string[];
-  portfolio_images?: string[];
-  is_available?: boolean;
-  response_time_hours?: number;
-  location?: string;
-  coordinates?: {
-    lat?: number;
-    lng?: number;
-  } | null;
-  phone?: string;
-  website?: string;
-  social_links?: any;
-  booking_terms?: any;
-  blocked_dates?: string[];
-  images?: string[];
-}
+export const venueSchema = z.object({
+  name: z.string().min(3, { message: 'Venue name must be at least 3 characters.' }),
+  description: z.string().min(10, { message: 'Description must be at least 10 characters.' }),
+  location: z.string().min(3, { message: 'Location must be at least 3 characters.' }),
+  venue_type: z.string().min(3, { message: 'Venue type must be at least 3 characters.' }),
+  capacity: z.number().min(1, { message: 'Capacity must be at least 1 person.' }),
+  amenities: z.array(z.string()).optional(),
+  images: z.array(z.string()).optional(),
+  price_per_day: z.number().optional(),
+  price_per_hour: z.number().optional(),
+  pricing_unit: z.enum(['day', 'hour']).optional(),
+  blocked_dates: z.array(z.string()).optional(),
+  booking_terms: z.any().optional(),
+  coordinates: z.object({ lat: z.number(), lng: z.number() }).nullable().optional(),
+  is_active: z.boolean().optional(),
+  verification_status: z.string().optional(),
+  verification_score: z.number().optional(),
+  validation_notes: z.string().optional(),
+  security_validated: z.boolean().optional(),
+});
