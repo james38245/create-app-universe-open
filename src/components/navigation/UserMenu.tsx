@@ -22,24 +22,30 @@ import {
   LogOut
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
-import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
 const UserMenu = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, loading, signOut } = useAuth();
   const { toast } = useToast();
+
+  // Always use user from global context.
+  // Show spinner if loading.
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center w-10 h-10">
+        <div className="animate-spin rounded-full border-2 border-gray-300 border-t-purple-500 h-7 w-7" />
+      </div>
+    );
+  }
 
   const handleSignOut = async () => {
     try {
-      const { error } = await supabase.auth.signOut();
-      if (error) throw error;
-      
+      await signOut();
       toast({
         title: "Signed out successfully",
         description: "You have been logged out of your account.",
       });
-      
       navigate('/auth');
     } catch (error) {
       toast({
@@ -101,7 +107,7 @@ const UserMenu = () => {
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" className="relative h-10 w-10 rounded-full ring-2 ring-purple-100 hover:ring-purple-200 transition-all">
             <Avatar className="h-9 w-9">
-              <AvatarImage src="/placeholder.svg" alt="Profile" />
+              <AvatarImage src={user.user_metadata?.avatar_url || "/placeholder.svg"} alt="Profile" />
               <AvatarFallback className="bg-gradient-to-br from-purple-500 to-blue-500 text-white">
                 {user.email?.charAt(0).toUpperCase() || 'U'}
               </AvatarFallback>
@@ -158,6 +164,7 @@ const UserMenu = () => {
     );
   }
 
+  // Not authenticated state
   return (
     <div className="flex items-center space-x-2">
       <Link to="/auth">
@@ -175,3 +182,4 @@ const UserMenu = () => {
 };
 
 export default UserMenu;
+
