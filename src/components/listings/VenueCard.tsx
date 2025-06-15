@@ -65,17 +65,6 @@ const VenueCard = ({ venue, onDelete }: VenueCardProps) => {
           )}
         </div>
         <div className="flex gap-2 flex-wrap">
-          {!venue.is_active && (
-            <Button 
-              size="sm"
-              onClick={() => postVenueMutation.mutate(venue.id)}
-              disabled={postVenueMutation.isPending}
-              className="bg-green-600 hover:bg-green-700"
-            >
-              <Send className="h-4 w-4 mr-1" />
-              Post
-            </Button>
-          )}
           <Button variant="outline" size="sm">
             <Eye className="h-4 w-4 mr-1" />
             View
@@ -92,6 +81,17 @@ const VenueCard = ({ venue, onDelete }: VenueCardProps) => {
             <Trash2 className="h-4 w-4 mr-1" />
             Delete
           </Button>
+          {!venue.is_active && (
+            <Button 
+              size="sm"
+              onClick={() => postVenueMutation.mutate(venue.id)}
+              disabled={postVenueMutation.isPending}
+              className="bg-green-600 hover:bg-green-700"
+            >
+              <Send className="h-4 w-4 mr-1" />
+              Post
+            </Button>
+          )}
         </div>
       </CardContent>
     </Card>

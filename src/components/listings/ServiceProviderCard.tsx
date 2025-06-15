@@ -78,17 +78,6 @@ const ServiceProviderCard = ({ provider, onDelete }: ServiceProviderCardProps) =
           )}
         </div>
         <div className="flex gap-2 flex-wrap">
-          {!provider.is_available && (
-            <Button 
-              size="sm"
-              onClick={() => postProviderMutation.mutate(provider.id)}
-              disabled={postProviderMutation.isPending}
-              className="bg-green-600 hover:bg-green-700"
-            >
-              <Send className="h-4 w-4 mr-1" />
-              Post
-            </Button>
-          )}
           <Button variant="outline" size="sm">
             <Eye className="h-4 w-4 mr-1" />
             View
@@ -105,6 +94,17 @@ const ServiceProviderCard = ({ provider, onDelete }: ServiceProviderCardProps) =
             <Trash2 className="h-4 w-4 mr-1" />
             Delete
           </Button>
+          {!provider.is_available && (
+            <Button 
+              size="sm"
+              onClick={() => postProviderMutation.mutate(provider.id)}
+              disabled={postProviderMutation.isPending}
+              className="bg-green-600 hover:bg-green-700"
+            >
+              <Send className="h-4 w-4 mr-1" />
+              Post
+            </Button>
+          )}
         </div>
       </CardContent>
     </Card>
