@@ -9,19 +9,12 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { toast } from '@/hooks/use-toast';
-import { Shield, UserPlus, UserMinus, Key, Settings, Edit, RefreshCw } from 'lucide-react';
+import { Shield, UserPlus, UserMinus, Key, Edit, RefreshCw } from 'lucide-react';
 import { useAdminData } from '@/contexts/AdminDataContext';
 import MFADialog from './MFADialog';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
+import AdminPrivilegesTable from './AdminPrivilegesTable';
+import AdminPrivilegesHeader from './AdminPrivilegesHeader';
 
 const AdminPrivileges = () => {
   const [newAdminEmail, setNewAdminEmail] = useState('');
@@ -56,7 +49,7 @@ const AdminPrivileges = () => {
       if (error) throw error;
       return data;
     },
-    refetchInterval: 30000, // Backup polling every 30 seconds
+    refetchInterval: 30000,
   });
 
   // Grant admin privileges with MFA
@@ -81,14 +74,15 @@ const AdminPrivileges = () => {
           .eq('email', email);
         if (error) throw error;
       } else {
-        // Create new admin user profile
+        // Create new admin user profile - fix the TypeScript error by providing required id
         const { error } = await supabase
           .from('profiles')
-          .insert([{
+          .insert({
+            id: crypto.randomUUID(),
             email: email,
             user_type: role,
             full_name: email.split('@')[0]
-          }]);
+          });
         if (error) throw error;
       }
     },
@@ -201,199 +195,30 @@ const AdminPrivileges = () => {
 
   return (
     <div className="space-y-6">
-      {/* Real-time Status */}
-      <Card>
-        <CardContent className="p-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className={`w-3 h-3 rounded-full ${isRealTimeConnected ? 'bg-green-500' : 'bg-red-500'}`} />
-              <span className="text-sm">
-                {isRealTimeConnected ? 'Real-time Connected' : 'Real-time Disconnected'}
-              </span>
-            </div>
-            <div className="flex items-center gap-2">
-              {lastUpdate && (
-                <span className="text-xs text-muted-foreground">
-                  Last update: {lastUpdate.toLocaleTimeString()}
-                </span>
-              )}
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={triggerRefresh}
-                className="flex items-center gap-2"
-              >
-                <RefreshCw className="h-4 w-4" />
-                Refresh
-              </Button>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      <AdminPrivilegesHeader 
+        isRealTimeConnected={isRealTimeConnected}
+        lastUpdate={lastUpdate}
+        triggerRefresh={triggerRefresh}
+        masterAdminEmail={masterAdminEmail}
+        isGrantingAccess={isGrantingAccess}
+        setIsGrantingAccess={setIsGrantingAccess}
+        newAdminEmail={newAdminEmail}
+        setNewAdminEmail={setNewAdminEmail}
+        newAdminRole={newAdminRole}
+        setNewAdminRole={setNewAdminRole}
+        handleGrantAccess={handleGrantAccess}
+      />
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Shield className="h-5 w-5" />
-            Administrator Privileges Management
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-            <div className="flex items-center gap-2 mb-2">
-              <Key className="h-5 w-5 text-blue-600" />
-              <span className="font-semibold text-blue-800">Master Administrator</span>
-            </div>
-            <p className="text-blue-700">
-              Email: {masterAdminEmail} (Full System Access)
-            </p>
-          </div>
-
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-lg font-semibold">Current Administrators</h3>
-            <Dialog open={isGrantingAccess} onOpenChange={setIsGrantingAccess}>
-              <DialogTrigger asChild>
-                <Button className="flex items-center gap-2">
-                  <UserPlus className="h-4 w-4" />
-                  Grant Admin Access
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Grant Administrator Privileges</DialogTitle>
-                </DialogHeader>
-                <div className="space-y-4">
-                  <div>
-                    <Label htmlFor="admin_email">User Email</Label>
-                    <Input
-                      id="admin_email"
-                      type="email"
-                      value={newAdminEmail}
-                      onChange={(e) => setNewAdminEmail(e.target.value)}
-                      placeholder="Enter user email"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="admin_role">Admin Role</Label>
-                    <Select value={newAdminRole} onValueChange={setNewAdminRole}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="admin">Admin</SelectItem>
-                        <SelectItem value="super_admin">Super Admin</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="p-3 bg-amber-50 border border-amber-200 rounded-md">
-                    <p className="text-amber-800 text-sm">
-                      ⚠️ This action requires MFA verification. Only grant access to trusted individuals.
-                    </p>
-                  </div>
-                  <Button onClick={handleGrantAccess} className="w-full">
-                    Proceed with MFA
-                  </Button>
-                </div>
-              </DialogContent>
-            </Dialog>
-          </div>
-
-          {isLoading ? (
-            <div className="text-center py-8">Loading admin users...</div>
-          ) : error ? (
-            <div className="text-center py-8 text-red-600">Error loading admin users</div>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Role</TableHead>
-                  <TableHead>Granted Date</TableHead>
-                  <TableHead>Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {adminUsers?.map((admin) => (
-                  <TableRow key={admin.id}>
-                    <TableCell>{admin.full_name || 'N/A'}</TableCell>
-                    <TableCell>{admin.email}</TableCell>
-                    <TableCell>
-                      <Badge variant={admin.email === masterAdminEmail ? "default" : "secondary"}>
-                        {admin.email === masterAdminEmail ? "Master Admin" : admin.user_type}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      {new Date(admin.created_at).toLocaleDateString()}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex gap-2">
-                        {admin.email !== masterAdminEmail && (
-                          <>
-                            <Dialog>
-                              <DialogTrigger asChild>
-                                <Button 
-                                  variant="outline" 
-                                  size="sm"
-                                  onClick={() => setEditingAdmin(admin)}
-                                >
-                                  <Edit className="h-4 w-4" />
-                                </Button>
-                              </DialogTrigger>
-                              <DialogContent>
-                                <DialogHeader>
-                                  <DialogTitle>Edit Administrator</DialogTitle>
-                                </DialogHeader>
-                                {editingAdmin && (
-                                  <div className="space-y-4">
-                                    <div>
-                                      <Label>Full Name</Label>
-                                      <Input
-                                        value={editingAdmin.full_name || ''}
-                                        onChange={(e) => setEditingAdmin({...editingAdmin, full_name: e.target.value})}
-                                      />
-                                    </div>
-                                    <div>
-                                      <Label>User Type</Label>
-                                      <Select
-                                        value={editingAdmin.user_type}
-                                        onValueChange={(value) => setEditingAdmin({...editingAdmin, user_type: value})}
-                                      >
-                                        <SelectTrigger>
-                                          <SelectValue />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                          <SelectItem value="admin">Admin</SelectItem>
-                                          <SelectItem value="super_admin">Super Admin</SelectItem>
-                                        </SelectContent>
-                                      </Select>
-                                    </div>
-                                    <Button onClick={handleUpdateAdmin} className="w-full">
-                                      Update with MFA
-                                    </Button>
-                                  </div>
-                                )}
-                              </DialogContent>
-                            </Dialog>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleRevokeAccess(admin)}
-                              className="text-red-600"
-                            >
-                              <UserMinus className="h-4 w-4" />
-                            </Button>
-                          </>
-                        )}
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          )}
-        </CardContent>
-      </Card>
+      <AdminPrivilegesTable
+        adminUsers={adminUsers}
+        isLoading={isLoading}
+        error={error}
+        masterAdminEmail={masterAdminEmail}
+        setEditingAdmin={setEditingAdmin}
+        editingAdmin={editingAdmin}
+        handleUpdateAdmin={handleUpdateAdmin}
+        handleRevokeAccess={handleRevokeAccess}
+      />
 
       <MFADialog
         isOpen={mfaAction.isOpen}
