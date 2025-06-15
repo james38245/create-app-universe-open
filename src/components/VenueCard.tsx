@@ -3,7 +3,7 @@ import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Star, MapPin, Users, Phone, MessageSquare, Eye } from 'lucide-react';
+import { Star, MapPin, Users, Phone, MessageSquare, Eye, Calendar } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 
 interface VenueCardProps {
@@ -41,6 +41,10 @@ const VenueCard: React.FC<VenueCardProps> = ({ venue, layout = 'grid' }) => {
 
   const handleCall = () => {
     window.location.href = `tel:+254700000000`;
+  };
+
+  const handleBookNow = () => {
+    navigate(`/venue/${venue.id}`);
   };
 
   if (layout === 'list') {
@@ -105,8 +109,16 @@ const VenueCard: React.FC<VenueCardProps> = ({ venue, layout = 'grid' }) => {
                   </p>
                   
                   <div className="flex flex-col gap-2">
+                    <Button 
+                      onClick={handleBookNow}
+                      className="w-full bg-purple-600 hover:bg-purple-700"
+                    >
+                      <Calendar className="h-4 w-4 mr-2" />
+                      Book Now
+                    </Button>
+                    
                     <Link to={`/venue/${venue.id}`}>
-                      <Button className="w-full bg-purple-600 hover:bg-purple-700">
+                      <Button variant="outline" className="w-full">
                         <Eye className="h-4 w-4 mr-2" />
                         View Details
                       </Button>
@@ -200,8 +212,16 @@ const VenueCard: React.FC<VenueCardProps> = ({ venue, layout = 'grid' }) => {
         </div>
         
         <div className="space-y-2">
+          <Button 
+            onClick={handleBookNow}
+            className="w-full bg-purple-600 hover:bg-purple-700"
+          >
+            <Calendar className="h-4 w-4 mr-2" />
+            Book Now
+          </Button>
+          
           <Link to={`/venue/${venue.id}`}>
-            <Button className="w-full bg-purple-600 hover:bg-purple-700">
+            <Button variant="outline" className="w-full">
               <Eye className="h-4 w-4 mr-2" />
               View Details
             </Button>

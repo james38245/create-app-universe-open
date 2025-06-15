@@ -1,48 +1,30 @@
 
 import React from 'react';
 import { UseFormReturn } from 'react-hook-form';
+import { Card, CardContent } from '@/components/ui/card';
 import ServiceProviderFormFields from './ServiceProviderFormFields';
-import ImageUpload from './ImageUpload';
-import BookingTermsSettings from './BookingTermsSettings';
-import AvailabilityCalendar from './AvailabilityCalendar';
+import { ServiceProviderFormData } from './ServiceProviderFormProvider';
 
 interface ServiceProviderFormContentProps {
-  form: UseFormReturn<any>;
-  uploadedImages: string[];
-  setUploadedImages: (images: string[]) => void;
-  blockedDates: string[];
-  setBlockedDates: (dates: string[]) => void;
+  form: UseFormReturn<ServiceProviderFormData>;
 }
 
-const ServiceProviderFormContent: React.FC<ServiceProviderFormContentProps> = ({
-  form,
-  uploadedImages,
-  setUploadedImages,
-  blockedDates,
-  setBlockedDates
-}) => {
+const ServiceProviderFormContent: React.FC<ServiceProviderFormContentProps> = ({ form }) => {
+  const getErrorMessage = (error: any): string => {
+    if (typeof error === 'string') return error;
+    if (error?.message) return error.message;
+    return '';
+  };
+
   return (
-    <>
-      <ServiceProviderFormFields form={form} />
-      
-      <ImageUpload
-        uploadedImages={uploadedImages}
-        setUploadedImages={setUploadedImages}
-        onImagesChange={(images) => form.setValue('portfolio_images', images)}
-        bucketName="portfolio-images"
-        label="Portfolio Images"
-        inputId="portfolio-upload"
-        error={form.formState.errors.portfolio_images?.message}
-      />
-
-      <BookingTermsSettings form={form} />
-
-      <AvailabilityCalendar
-        blockedDates={blockedDates}
-        setBlockedDates={setBlockedDates}
-        onDatesChange={(dates) => form.setValue('blocked_dates', dates)}
-      />
-    </>
+    <Card>
+      <CardContent className="p-6">
+        <ServiceProviderFormFields 
+          form={form}
+          getErrorMessage={getErrorMessage}
+        />
+      </CardContent>
+    </Card>
   );
 };
 
