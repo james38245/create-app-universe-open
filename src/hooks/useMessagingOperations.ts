@@ -17,6 +17,8 @@ export const useMessagingOperations = (user: any) => {
     if (!user) return;
 
     try {
+      console.log('Loading conversations for user:', user.id);
+      
       const { data: userMessages, error: messagesError } = await supabase
         .from('messages')
         .select(`
@@ -31,6 +33,8 @@ export const useMessagingOperations = (user: any) => {
         console.error('Error loading messages:', messagesError);
         return;
       }
+
+      console.log('Loaded messages:', userMessages);
 
       const conversationMap = new Map();
       
@@ -51,6 +55,7 @@ export const useMessagingOperations = (user: any) => {
         conversation.unread = await calculateUnreadCount(conversation.userId, user.id);
       }
 
+      console.log('Final conversations list:', conversationsList);
       setConversations(conversationsList);
     } catch (error) {
       console.error('Error loading conversations:', error);
@@ -75,10 +80,13 @@ export const useMessagingOperations = (user: any) => {
         return;
       }
 
+      console.log('Loaded messages data:', messagesData);
+
       const formattedMessages: Message[] = messagesData?.map(msg => 
         formatMessageFromDB(msg, user.id)
       ) || [];
 
+      console.log('Formatted messages:', formattedMessages);
       setMessages(formattedMessages);
 
       await markMessagesAsRead(conversationId, user.id);
@@ -89,10 +97,13 @@ export const useMessagingOperations = (user: any) => {
   };
 
   const sendMessage = async (content: string, recipientId: string) => {
-    if (!user || !recipientId) return;
+    if (!user || !recipientId) {
+      console.error('Missing user or recipientId:', { user: user?.id, recipientId });
+      return;
+    }
 
     try {
-      console.log('Sending message to:', recipientId, 'from:', user.id);
+      console.log('Sending message to:', recipientId, 'from:', user.id, 'content:', content);
       
       // Verify recipient exists in profiles table
       const { data: recipientProfile, error: profileError } = await supabase
@@ -122,6 +133,8 @@ export const useMessagingOperations = (user: any) => {
         throw error;
       }
 
+      console.log('Message sent successfully:', data);
+
       const newMessage = formatMessageFromDB(data, user.id);
       setMessages(prev => [...prev, newMessage]);
       loadConversations();
@@ -136,9 +149,12 @@ export const useMessagingOperations = (user: any) => {
       throw new Error('Invalid user ID for conversation');
     }
 
+    console.log('Starting conversation with:', { userId, userName, userRole, phoneNumber });
+
     const existingConversation = conversations.find(conv => conv.userId === userId);
     
     if (existingConversation) {
+      console.log('Found existing conversation:', existingConversation);
       return existingConversation.id;
     }
 
@@ -154,6 +170,8 @@ export const useMessagingOperations = (user: any) => {
       throw new Error('Cannot start conversation: user not found');
     }
 
+    console.log('Found user profile:', userProfile);
+
     const newConversation: Conversation = {
       id: userId,
       name: userProfile.full_name || userName,
@@ -167,6 +185,7 @@ export const useMessagingOperations = (user: any) => {
       phoneNumber: userProfile.phone || phoneNumber || '+254700000000'
     };
 
+    console.log('Created new conversation:', newConversation);
     setConversations(prev => [newConversation, ...prev]);
     return userId;
   };
