@@ -6,13 +6,12 @@ import { z } from 'zod';
 import { ServiceProviderFormData } from '@/types/venue';
 
 const serviceProviderSchema = z.object({
-  service_category: z.string().min(2, { message: 'Service category is required.' }),
-  bio: z.string().min(50, { message: 'Bio must be at least 50 characters.' }),
-  years_experience: z.number().min(0, { message: 'Years of experience is required.' }),
-  price_per_event: z.number().min(5000, { message: 'Price per event must be at least KSh 5,000.' }),
+  bio: z.string().min(50, { message: 'Bio must be at least 50 characters.' }).optional(),
+  experience_years: z.number().min(0, { message: 'Years of experience is required.' }).optional(),
+  price_per_event: z.number().min(5000, { message: 'Price per event must be at least KSh 5,000.' }).optional(),
   price_per_hour: z.number().optional(),
-  pricing_unit: z.enum(['event', 'hour']).default('event'),
-  portfolio_images: z.array(z.string()).min(2, { message: 'At least 2 portfolio images are required.' }),
+  pricing_unit: z.enum(['event', 'hour']).default('event').optional(),
+  portfolio_images: z.array(z.string()).optional(),
   specialties: z.array(z.string()).optional(),
   certifications: z.array(z.string()).optional(),
   location: z.string().optional(),
@@ -22,6 +21,7 @@ const serviceProviderSchema = z.object({
     lat: z.number().optional(), 
     lng: z.number().optional() 
   }).nullable().optional(),
+  service_type: z.string().optional(),
 });
 
 type ServiceProviderFormContextType = {
@@ -59,9 +59,8 @@ export const ServiceProviderFormProvider: React.FC<ServiceProviderFormProviderPr
   const [isSubmitting, setIsSubmitting] = React.useState(false);
 
   const defaultValues: ServiceProviderFormData = {
-    service_category: editingProvider?.service_category || '',
     bio: editingProvider?.bio || '',
-    years_experience: editingProvider?.years_experience || 0,
+    experience_years: editingProvider?.experience_years || 0,
     price_per_event: editingProvider?.price_per_event || 0,
     price_per_hour: editingProvider?.price_per_hour || 0,
     pricing_unit: editingProvider?.pricing_unit || 'event',
@@ -72,6 +71,7 @@ export const ServiceProviderFormProvider: React.FC<ServiceProviderFormProviderPr
     blocked_dates: editingProvider?.blocked_dates || [],
     booking_terms: editingProvider?.booking_terms || null,
     coordinates: editingProvider?.coordinates || null,
+    service_type: editingProvider?.service_type || '',
   };
 
   const form = useForm<ServiceProviderFormData>({
