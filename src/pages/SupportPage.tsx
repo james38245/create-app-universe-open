@@ -1,66 +1,23 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { 
   Phone, 
-  MessageSquare, 
   Mail, 
   Clock, 
   HelpCircle,
   CheckCircle,
-  Send,
-  MapPin
+  MapPin,
+  Calendar,
+  CreditCard,
+  User,
+  Settings
 } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
 
 const SupportPage = () => {
-  const { toast } = useToast();
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    subject: '',
-    category: '',
-    priority: '',
-    message: ''
-  });
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-
-    // Simulate form submission
-    setTimeout(() => {
-      toast({
-        title: "Support ticket created",
-        description: "We've received your message and will respond within 24 hours.",
-      });
-      setFormData({
-        name: '',
-        email: '',
-        subject: '',
-        category: '',
-        priority: '',
-        message: ''
-      });
-      setIsSubmitting(false);
-    }, 1000);
-  };
-
   const supportChannels = [
-    {
-      icon: MessageSquare,
-      title: 'Live Chat',
-      description: 'Get instant help from our support team',
-      availability: 'Mon-Fri, 9 AM - 6 PM',
-      action: 'Start Chat',
-      color: 'bg-blue-500'
-    },
     {
       icon: Phone,
       title: 'Phone Support',
@@ -73,17 +30,89 @@ const SupportPage = () => {
       icon: Mail,
       title: 'Email Support',
       description: 'Send us detailed questions or feedback',
-      availability: 'support@vendoor.co.ke',
+      availability: 'vendoor505@gmail.com',
       action: 'Send Email',
       color: 'bg-purple-500'
     }
   ];
 
-  const faqTopics = [
-    { title: 'Booking Issues', count: 12, icon: '📅' },
-    { title: 'Payment Problems', count: 8, icon: '💳' },
-    { title: 'Account Questions', count: 6, icon: '👤' },
-    { title: 'Technical Issues', count: 4, icon: '🔧' }
+  const helpArticles = [
+    {
+      title: 'Booking Issues',
+      count: 12,
+      icon: '📅',
+      articles: [
+        {
+          title: 'How to book a venue or service',
+          content: 'Step-by-step guide: 1) Browse venues or service providers, 2) Select your preferred option, 3) Choose date and time, 4) Fill in booking details, 5) Confirm payment method, 6) Complete booking. You\'ll receive a confirmation email immediately.'
+        },
+        {
+          title: 'Modifying or canceling bookings',
+          content: 'To modify a booking: Go to "My Bookings" in your profile, find the booking, and click "Modify". For cancellations: Click "Cancel Booking" - refund eligibility depends on the cancellation policy of the service provider.'
+        },
+        {
+          title: 'Booking confirmation issues',
+          content: 'If you don\'t receive a booking confirmation: 1) Check your spam folder, 2) Verify your email address in profile settings, 3) Contact the service provider directly, 4) Check "My Bookings" section in your profile for booking status.'
+        }
+      ]
+    },
+    {
+      title: 'Payment Problems',
+      count: 8,
+      icon: '💳',
+      articles: [
+        {
+          title: 'Payment methods accepted',
+          content: 'We accept: M-Pesa, Visa, Mastercard, and bank transfers. All payments are processed securely through our payment partners. Your card details are never stored on our servers.'
+        },
+        {
+          title: 'Payment failed or declined',
+          content: 'Common solutions: 1) Check if your card has sufficient funds, 2) Verify card details are correct, 3) Contact your bank for international transactions, 4) Try a different payment method, 5) Clear browser cache and try again.'
+        },
+        {
+          title: 'Refund process and timeline',
+          content: 'Refunds are processed according to the service provider\'s policy. Typically: 1) Request refund through "My Bookings", 2) Service provider reviews within 24-48 hours, 3) Approved refunds take 3-7 business days to reflect in your account.'
+        }
+      ]
+    },
+    {
+      title: 'Account Questions',
+      count: 6,
+      icon: '👤',
+      articles: [
+        {
+          title: 'Creating and verifying your account',
+          content: 'Sign up with email and password. Verify your email by clicking the link sent to your inbox. Complete your profile with accurate information. Service providers need additional verification for listing services.'
+        },
+        {
+          title: 'Password reset and security',
+          content: 'Forgot password? Click "Forgot Password" on login page. Enter your email to receive reset instructions. For security: use strong passwords, enable two-factor authentication if available, and never share login details.'
+        },
+        {
+          title: 'Profile management and settings',
+          content: 'Access profile settings from the user menu. Update personal information, change password, manage notification preferences, view booking history, and upload profile picture. Keep information current for better service.'
+        }
+      ]
+    },
+    {
+      title: 'Technical Issues',
+      count: 4,
+      icon: '🔧',
+      articles: [
+        {
+          title: 'Website loading problems',
+          content: 'Try these solutions: 1) Refresh the page, 2) Clear browser cache and cookies, 3) Try a different browser or incognito mode, 4) Check your internet connection, 5) Disable browser extensions temporarily.'
+        },
+        {
+          title: 'Mobile app functionality',
+          content: 'The website is mobile-optimized for all devices. If you experience issues: ensure you have a stable internet connection, update your mobile browser, clear browser data, or try accessing from a desktop computer.'
+        },
+        {
+          title: 'Search and filtering issues',
+          content: 'To improve search results: 1) Use specific keywords, 2) Try different search terms, 3) Use filters (location, price, date), 4) Check spelling, 5) Browse categories if search doesn\'t work. Clear all filters to see all available options.'
+        }
+      ]
+    }
   ];
 
   return (
@@ -99,12 +128,12 @@ const SupportPage = () => {
               </h1>
             </div>
             <p className="text-gray-600 text-lg max-w-2xl mx-auto">
-              We're here to help! Choose the best way to get in touch with our support team.
+              We're here to help! Get in touch with our support team or browse our help articles.
             </p>
           </div>
 
           {/* Support Channels */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
             {supportChannels.map((channel, index) => {
               const Icon = channel.icon;
               return (
@@ -125,7 +154,7 @@ const SupportPage = () => {
                         if (channel.title === 'Phone Support') {
                           window.location.href = 'tel:+254700000000';
                         } else if (channel.title === 'Email Support') {
-                          window.location.href = 'mailto:support@vendoor.co.ke';
+                          window.location.href = 'mailto:vendoor505@gmail.com';
                         }
                       }}
                     >
@@ -137,104 +166,39 @@ const SupportPage = () => {
             })}
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            {/* Contact Form */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Send className="h-5 w-5" />
-                  Submit a Support Ticket
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <form onSubmit={handleSubmit} className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="text-sm font-medium mb-2 block">Name</label>
-                      <Input
-                        value={formData.name}
-                        onChange={(e) => setFormData(prev => ({...prev, name: e.target.value}))}
-                        placeholder="Your full name"
-                        required
-                      />
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium mb-2 block">Email</label>
-                      <Input
-                        type="email"
-                        value={formData.email}
-                        onChange={(e) => setFormData(prev => ({...prev, email: e.target.value}))}
-                        placeholder="your@email.com"
-                        required
-                      />
-                    </div>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* Help Articles */}
+            <div className="lg:col-span-2 space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Help Articles & FAQs</CardTitle>
+                  <p className="text-sm text-gray-600">Find detailed answers to common questions</p>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-6">
+                    {helpArticles.map((topic, topicIndex) => (
+                      <div key={topicIndex} className="border-b pb-6 last:border-b-0">
+                        <div className="flex items-center gap-3 mb-4">
+                          <span className="text-2xl">{topic.icon}</span>
+                          <h3 className="text-lg font-semibold">{topic.title}</h3>
+                          <Badge variant="outline">{topic.count} articles</Badge>
+                        </div>
+                        <div className="space-y-4 ml-8">
+                          {topic.articles.map((article, articleIndex) => (
+                            <div key={articleIndex} className="bg-gray-50 p-4 rounded-lg">
+                              <h4 className="font-medium text-gray-900 mb-2">{article.title}</h4>
+                              <p className="text-sm text-gray-600 leading-relaxed">{article.content}</p>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
                   </div>
+                </CardContent>
+              </Card>
+            </div>
 
-                  <div>
-                    <label className="text-sm font-medium mb-2 block">Subject</label>
-                    <Input
-                      value={formData.subject}
-                      onChange={(e) => setFormData(prev => ({...prev, subject: e.target.value}))}
-                      placeholder="Brief description of your issue"
-                      required
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="text-sm font-medium mb-2 block">Category</label>
-                      <Select value={formData.category} onValueChange={(value) => setFormData(prev => ({...prev, category: value}))}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select category" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="booking">Booking Issues</SelectItem>
-                          <SelectItem value="payment">Payment Problems</SelectItem>
-                          <SelectItem value="account">Account Questions</SelectItem>
-                          <SelectItem value="technical">Technical Issues</SelectItem>
-                          <SelectItem value="general">General Inquiry</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium mb-2 block">Priority</label>
-                      <Select value={formData.priority} onValueChange={(value) => setFormData(prev => ({...prev, priority: value}))}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select priority" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="low">Low</SelectItem>
-                          <SelectItem value="normal">Normal</SelectItem>
-                          <SelectItem value="high">High</SelectItem>
-                          <SelectItem value="urgent">Urgent</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="text-sm font-medium mb-2 block">Message</label>
-                    <Textarea
-                      value={formData.message}
-                      onChange={(e) => setFormData(prev => ({...prev, message: e.target.value}))}
-                      placeholder="Please describe your issue in detail..."
-                      rows={6}
-                      required
-                    />
-                  </div>
-
-                  <Button 
-                    type="submit" 
-                    className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
-                    disabled={isSubmitting}
-                  >
-                    {isSubmitting ? 'Submitting...' : 'Submit Ticket'}
-                  </Button>
-                </form>
-              </CardContent>
-            </Card>
-
-            {/* Quick Help & FAQ */}
+            {/* Sidebar */}
             <div className="space-y-6">
               {/* Response Times */}
               <Card>
@@ -248,49 +212,20 @@ const SupportPage = () => {
                   <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
                     <div className="flex items-center gap-2">
                       <CheckCircle className="h-4 w-4 text-green-600" />
-                      <span className="text-sm">Live Chat</span>
+                      <span className="text-sm">Phone Support</span>
                     </div>
                     <Badge variant="secondary" className="bg-green-100 text-green-800">
                       Instant
                     </Badge>
                   </div>
-                  <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
-                    <div className="flex items-center gap-2">
-                      <CheckCircle className="h-4 w-4 text-blue-600" />
-                      <span className="text-sm">Email Support</span>
-                    </div>
-                    <Badge variant="secondary" className="bg-blue-100 text-blue-800">
-                      Within 4 hours
-                    </Badge>
-                  </div>
                   <div className="flex items-center justify-between p-3 bg-purple-50 rounded-lg">
                     <div className="flex items-center gap-2">
                       <CheckCircle className="h-4 w-4 text-purple-600" />
-                      <span className="text-sm">Support Tickets</span>
+                      <span className="text-sm">Email Support</span>
                     </div>
                     <Badge variant="secondary" className="bg-purple-100 text-purple-800">
-                      Within 24 hours
+                      Within 4 hours
                     </Badge>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Popular Topics */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Popular Help Topics</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    {faqTopics.map((topic, index) => (
-                      <div key={index} className="flex items-center justify-between p-3 hover:bg-gray-50 rounded-lg cursor-pointer transition-colors">
-                        <div className="flex items-center gap-3">
-                          <span className="text-lg">{topic.icon}</span>
-                          <span className="font-medium">{topic.title}</span>
-                        </div>
-                        <Badge variant="outline">{topic.count} articles</Badge>
-                      </div>
-                    ))}
                   </div>
                 </CardContent>
               </Card>
