@@ -18,7 +18,8 @@ import {
   HelpCircle,
   Phone,
   Shield,
-  LogOut
+  LogOut,
+  CreditCard
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
@@ -104,6 +105,12 @@ const UserMenu = () => {
       description: 'Manage your profile'
     },
     {
+      icon: CreditCard,
+      label: 'Payments',
+      path: '/payments',
+      description: 'View transactions'
+    },
+    {
       icon: Settings,
       label: 'Settings',
       path: '/settings',
@@ -132,14 +139,14 @@ const UserMenu = () => {
   // Add Documents menu item only if user has listings
   const accountMenuItems = hasListings 
     ? [
-        ...baseMenuItems.slice(0, 2), // Profile and Settings
+        ...baseMenuItems.slice(0, 3), // Profile, Payments, and Settings
         {
           icon: FileText,
           label: 'Documents',
           path: '/profile?tab=documents',
           description: 'Certificates & CV'
         },
-        ...baseMenuItems.slice(2) // Rest of the items
+        ...baseMenuItems.slice(3) // Rest of the items
       ]
     : baseMenuItems;
 

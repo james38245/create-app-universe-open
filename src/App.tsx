@@ -21,6 +21,7 @@ import AuthPage from "@/pages/AuthPage";
 import AdminPage from "@/pages/AdminPage";
 import FAQPage from "@/pages/FAQPage";
 import SupportPage from "@/pages/SupportPage";
+import PaymentsPage from "@/pages/PaymentsPage";
 
 const queryClient = new QueryClient();
 
@@ -44,6 +45,7 @@ const App = () => (
               <Route path="/messages" element={<MessagesPage />} />
               <Route path="/listings" element={<ListingsPage />} />
               <Route path="/profile" element={<ProfilePage />} />
+              <Route path="/payments" element={<PaymentsPage />} />
               <Route path="/settings" element={<SettingsPage />} />
               <Route path="/auth" element={<AuthPage />} />
               <Route path="/admin" element={<AdminPage />} />
