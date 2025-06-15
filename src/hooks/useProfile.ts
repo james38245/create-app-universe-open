@@ -35,7 +35,13 @@ export const useProfile = () => {
 
       if (error) throw error;
 
-      setProfileData(data);
+      // Use the latest email from auth.user if available, fallback to profile email
+      const updatedData = {
+        ...data,
+        email: user.email || data.email
+      };
+
+      setProfileData(updatedData);
     } catch (error) {
       console.error('Error fetching profile:', error);
       toast({
@@ -87,6 +93,25 @@ export const useProfile = () => {
   useEffect(() => {
     fetchProfile();
   }, [user]);
+
+  // Listen for auth state changes to refresh profile when email is confirmed
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        if (event === 'USER_UPDATED' && session?.user) {
+          // Refresh profile data when user is updated (e.g., email confirmed)
+          await fetchProfile();
+          
+          toast({
+            title: "Email Updated",
+            description: "Your email has been successfully updated.",
+          });
+        }
+      }
+    );
+
+    return () => subscription.unsubscribe();
+  }, []);
 
   // Listen for profile updates from other components
   useEffect(() => {

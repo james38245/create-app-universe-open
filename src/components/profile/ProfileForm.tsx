@@ -4,7 +4,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
-import { Save } from 'lucide-react';
+import { Save, Mail } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
+import { toast } from '@/hooks/use-toast';
 
 interface ProfileFormProps {
   profileData: {
@@ -23,6 +25,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({
   isEditing,
   onSave
 }) => {
+  const { user } = useAuth();
   const [formData, setFormData] = useState({
     full_name: '',
     email: '',
@@ -30,6 +33,8 @@ const ProfileForm: React.FC<ProfileFormProps> = ({
     location: '',
     bio: ''
   });
+  const [emailChanged, setEmailChanged] = useState(false);
+  const [pendingEmailChange, setPendingEmailChange] = useState(false);
 
   useEffect(() => {
     if (profileData) {
@@ -43,13 +48,61 @@ const ProfileForm: React.FC<ProfileFormProps> = ({
     }
   }, [profileData]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    onSave(formData);
+    
+    // Check if email was changed
+    const originalEmail = profileData?.email || '';
+    const newEmail = formData.email;
+    const isEmailChanged = originalEmail !== newEmail;
+    
+    if (isEmailChanged) {
+      // Handle email change with confirmation
+      await handleEmailChange(newEmail);
+    } else {
+      // Save other profile data normally
+      const dataToSave = { ...formData };
+      delete dataToSave.email; // Don't update email through profile update
+      onSave(dataToSave);
+    }
+  };
+
+  const handleEmailChange = async (newEmail: string) => {
+    try {
+      const { supabase } = await import('@/integrations/supabase/client');
+      
+      const { error } = await supabase.auth.updateUser({
+        email: newEmail
+      });
+
+      if (error) throw error;
+
+      setPendingEmailChange(true);
+      toast({
+        title: "Email Change Initiated",
+        description: "Please check both your old and new email addresses for confirmation links. Your email will be updated once you confirm the change.",
+      });
+
+      // Save other profile data (excluding email)
+      const dataToSave = { ...formData };
+      delete dataToSave.email;
+      onSave(dataToSave);
+      
+    } catch (error: any) {
+      toast({
+        title: "Email Change Failed",
+        description: error.message || "Failed to initiate email change. Please try again.",
+        variant: "destructive"
+      });
+    }
   };
 
   const handleChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+    
+    if (field === 'email') {
+      setEmailChanged(value !== (profileData?.email || ''));
+    }
   };
 
   return (
@@ -68,14 +121,30 @@ const ProfileForm: React.FC<ProfileFormProps> = ({
         
         <div className="space-y-2">
           <Label htmlFor="email">Email</Label>
-          <Input
-            id="email"
-            type="email"
-            value={formData.email}
-            onChange={(e) => handleChange('email', e.target.value)}
-            disabled={!isEditing}
-            placeholder="Enter your email"
-          />
+          <div className="relative">
+            <Input
+              id="email"
+              type="email"
+              value={formData.email}
+              onChange={(e) => handleChange('email', e.target.value)}
+              disabled={!isEditing}
+              placeholder="Enter your email"
+              className={emailChanged ? 'border-amber-500' : ''}
+            />
+            {emailChanged && (
+              <Mail className="absolute right-3 top-3 h-4 w-4 text-amber-500" />
+            )}
+          </div>
+          {emailChanged && isEditing && (
+            <p className="text-sm text-amber-600">
+              Changing your email will require confirmation via email verification.
+            </p>
+          )}
+          {pendingEmailChange && (
+            <p className="text-sm text-blue-600">
+              Email change pending - please check your email for confirmation links.
+            </p>
+          )}
         </div>
         
         <div className="space-y-2">
@@ -117,7 +186,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({
         <div className="flex justify-end">
           <Button type="submit" className="flex items-center gap-2">
             <Save className="h-4 w-4" />
-            Save Changes
+            {emailChanged ? 'Save & Request Email Change' : 'Save Changes'}
           </Button>
         </div>
       )}
