@@ -27,11 +27,20 @@ const AddServiceProviderForm: React.FC<AddServiceProviderFormProps> = ({
     mutationFn: async (data: ServiceProviderFormData) => {
       console.log('Creating service provider with data:', data);
       
+      // Map form data to database schema
       const providerData = {
-        ...data,
         user_id: user?.id,
+        service_category: data.service_type || '', // Map service_type to service_category
+        bio: data.bio || '',
+        years_experience: data.experience_years || 0,
+        price_per_event: data.price_per_event || 0,
+        portfolio_images: data.portfolio_images || [],
+        specialties: data.specialties || [],
+        certifications: data.certifications || [],
+        blocked_dates: data.blocked_dates || [],
+        booking_terms: data.booking_terms || null,
         verification_status: 'pending',
-        is_active: false
+        is_available: false
       };
 
       const { data: provider, error } = await supabase
@@ -52,6 +61,7 @@ const AddServiceProviderForm: React.FC<AddServiceProviderFormProps> = ({
       onSuccess();
     },
     onError: (error: any) => {
+      console.error('Error creating service provider:', error);
       toast({
         title: "Error",
         description: error.message || "Failed to create service provider profile",
@@ -64,8 +74,17 @@ const AddServiceProviderForm: React.FC<AddServiceProviderFormProps> = ({
     mutationFn: async (data: ServiceProviderFormData) => {
       console.log('Updating service provider with data:', data);
       
+      // Map form data to database schema
       const providerData = {
-        ...data,
+        service_category: data.service_type || '',
+        bio: data.bio || '',
+        years_experience: data.experience_years || 0,
+        price_per_event: data.price_per_event || 0,
+        portfolio_images: data.portfolio_images || [],
+        specialties: data.specialties || [],
+        certifications: data.certifications || [],
+        blocked_dates: data.blocked_dates || [],
+        booking_terms: data.booking_terms || null,
         verification_status: 'pending'
       };
 
@@ -88,6 +107,7 @@ const AddServiceProviderForm: React.FC<AddServiceProviderFormProps> = ({
       onSuccess();
     },
     onError: (error: any) => {
+      console.error('Error updating service provider:', error);
       toast({
         title: "Error",
         description: error.message || "Failed to update service provider profile",

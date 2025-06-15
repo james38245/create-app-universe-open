@@ -1,3 +1,4 @@
+
 import { z } from 'zod';
 
 export interface VenueFormData {
@@ -26,27 +27,29 @@ export interface VenueFormData {
 export interface ServiceProviderFormData {
   id?: string;
   user_id?: string;
-  bio?: string;
-  certifications?: string[];
+  bio: string;
+  certifications: string[];
   coordinates?: { 
     lat?: number; 
     lng?: number; 
   } | null;
-  experience_years?: number;
+  experience_years: number;
   hourly_rate?: number;
   images?: string[];
   location?: string;
   phone?: string;
-  portfolio_images?: string[];
+  portfolio_images: string[];
   service_area?: string[];
-  service_type?: string;
+  service_type: string;
   social_links?: any;
-  specialties?: string[];
-  pricing_unit?: 'event' | 'hour';
-  price_per_event?: number;
+  specialties: string[];
+  pricing_unit: 'event' | 'hour';
+  price_per_event: number;
   price_per_hour?: number;
-  blocked_dates?: string[];
+  blocked_dates: string[];
   booking_terms?: any;
+  response_time_hours?: number;
+  is_available?: boolean;
 }
 
 export const defaultVenueFormValues: VenueFormData = {

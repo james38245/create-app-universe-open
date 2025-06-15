@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { UseFormReturn } from 'react-hook-form';
 import { Input } from '@/components/ui/input';
@@ -9,13 +10,13 @@ import LocationInput from './LocationInput';
 import ServiceProviderPricingFields from './ServiceProviderPricingFields';
 
 interface ServiceProviderFormData {
-  service_category: string;
+  service_type: string;
   specialties: string[];
   price_per_event: number;
   price_per_hour: number;
   pricing_unit: 'event' | 'hour';
   bio: string;
-  years_experience: number;
+  experience_years: number;
   certifications: string[];
   response_time_hours: number;
   is_available: boolean;
@@ -61,15 +62,14 @@ const ServiceProviderFormFields: React.FC<ServiceProviderFormFieldsProps> = ({ f
     'MC/Host': ['Wedding MC', 'Corporate Host', 'Event Announcer', 'Bilingual MC']
   };
 
-  const selectedCategory = form.watch('service_category');
-  const selectedPricingUnit = form.watch('pricing_unit');
+  const selectedCategory = form.watch('service_type');
   const availableSpecialties = selectedCategory ? specialtiesByCategory[selectedCategory] || [] : [];
 
   return (
     <>
       <FormField
         control={form.control}
-        name="service_category"
+        name="service_type"
         render={({ field }) => (
           <FormItem>
             <FormLabel>Service Category</FormLabel>
@@ -157,7 +157,7 @@ const ServiceProviderFormFields: React.FC<ServiceProviderFormFieldsProps> = ({ f
             <FormLabel>Bio</FormLabel>
             <FormControl>
               <Textarea 
-                placeholder="Tell clients about your experience, expertise, and what makes your service special"
+                placeholder="Tell clients about your experience, expertise, and what makes your service special (minimum 50 characters)"
                 className="min-h-[120px]"
                 {...field} 
               />
@@ -169,7 +169,7 @@ const ServiceProviderFormFields: React.FC<ServiceProviderFormFieldsProps> = ({ f
 
       <FormField
         control={form.control}
-        name="years_experience"
+        name="experience_years"
         render={({ field }) => (
           <FormItem>
             <FormLabel>Years of Experience</FormLabel>
