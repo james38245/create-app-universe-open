@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Mail, RefreshCw, CheckCircle } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/useAuth';
 
 interface EmailVerificationProps {
   email: string;
@@ -16,9 +17,11 @@ const EmailVerification: React.FC<EmailVerificationProps> = ({
   onVerificationComplete,
   onResendCode
 }) => {
+  const { resendConfirmation } = useAuth();
   const [resendTimer, setResendTimer] = useState(60);
   const [canResend, setCanResend] = useState(false);
   const [isVerified, setIsVerified] = useState(false);
+  const [isResending, setIsResending] = useState(false);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -34,34 +37,42 @@ const EmailVerification: React.FC<EmailVerificationProps> = ({
     return () => clearInterval(timer);
   }, []);
 
-  // Check if user has verified their email
+  // Check URL parameters for email confirmation
   useEffect(() => {
-    const checkVerificationStatus = () => {
-      // In a real implementation, you would check the auth state
-      // For now, we'll simulate checking every few seconds
-      console.log('Checking verification status...');
-    };
-
-    const interval = setInterval(checkVerificationStatus, 3000);
-    return () => clearInterval(interval);
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('email_confirmed') === 'true') {
+      setIsVerified(true);
+      toast({
+        title: "Email Verified!",
+        description: "Your email has been successfully verified.",
+      });
+    }
   }, []);
 
   const handleResend = async () => {
+    if (!canResend || isResending) return;
+    
+    setIsResending(true);
     setResendTimer(60);
     setCanResend(false);
     
     try {
-      await onResendCode();
+      const { error } = await resendConfirmation(email);
+      if (error) throw error;
+      
       toast({
         title: "Verification Email Resent",
         description: "A new verification email has been sent to your email address.",
       });
-    } catch (error) {
+      onResendCode();
+    } catch (error: any) {
       toast({
         title: "Resend Failed",
-        description: "Failed to resend verification email. Please try again.",
+        description: error.message || "Failed to resend verification email. Please try again.",
         variant: "destructive"
       });
+    } finally {
+      setIsResending(false);
     }
   };
 
@@ -129,11 +140,11 @@ const EmailVerification: React.FC<EmailVerificationProps> = ({
             variant="link" 
             size="sm"
             onClick={handleResend}
-            disabled={!canResend}
+            disabled={!canResend || isResending}
             className="flex items-center gap-2"
           >
-            <RefreshCw className="h-4 w-4" />
-            {canResend ? 'Resend Email' : `Resend in ${resendTimer}s`}
+            <RefreshCw className={`h-4 w-4 ${isResending ? 'animate-spin' : ''}`} />
+            {isResending ? 'Sending...' : canResend ? 'Resend Email' : `Resend in ${resendTimer}s`}
           </Button>
         </div>
 
