@@ -31,6 +31,8 @@ const AdminPage = () => {
           localStorage.removeItem('admin_session_token');
           localStorage.removeItem('admin_session_expiry');
           localStorage.removeItem('admin_last_activity');
+          localStorage.removeItem('admin_role');
+          localStorage.removeItem('admin_email');
         }
       }
       setIsLoading(false);
@@ -66,13 +68,15 @@ const AdminPage = () => {
     localStorage.removeItem('admin_session_token');
     localStorage.removeItem('admin_session_expiry');
     localStorage.removeItem('admin_last_activity');
+    localStorage.removeItem('admin_role');
+    localStorage.removeItem('admin_email');
     setIsAuthenticated(false);
   };
 
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center">
-        <div className="text-white text-xl">Verifying access...</div>
+        <div className="text-white text-xl">Verifying admin access...</div>
       </div>
     );
   }
@@ -81,10 +85,18 @@ const AdminPage = () => {
     return <AdminLogin onLogin={handleLogin} />;
   }
 
+  const adminEmail = localStorage.getItem('admin_email');
+  const adminRole = localStorage.getItem('admin_role');
+
   return (
     <div className="min-h-screen bg-background">
-      <div className="flex justify-between items-center p-4 bg-white border-b">
-        <h1 className="text-xl font-bold text-gray-800">System Administrator Panel</h1>
+      <div className="flex justify-between items-center p-4 bg-white border-b shadow-sm">
+        <div>
+          <h1 className="text-xl font-bold text-gray-800">Master Administrator Panel</h1>
+          <p className="text-sm text-gray-600">
+            Logged in as: {adminEmail} ({adminRole === 'master_admin' ? 'Master Admin' : 'Admin'})
+          </p>
+        </div>
         <button
           onClick={handleLogout}
           className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors"

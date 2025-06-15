@@ -9,6 +9,8 @@ import ProviderManagement from '@/components/admin/ProviderManagement';
 import BookingManagement from '@/components/admin/BookingManagement';
 import DocumentManagement from '@/components/admin/DocumentManagement';
 import AdminSettings from '@/components/admin/AdminSettings';
+import AdminPrivileges from '@/components/admin/AdminPrivileges';
+import SystemManagement from '@/components/admin/SystemManagement';
 import { 
   BarChart3, 
   Users, 
@@ -16,7 +18,9 @@ import {
   UserCheck, 
   Calendar, 
   FileText,
-  Settings 
+  Settings,
+  Shield,
+  Database
 } from 'lucide-react';
 
 const AdminDashboard = () => {
@@ -24,6 +28,7 @@ const AdminDashboard = () => {
   const sessionToken = localStorage.getItem('admin_session_token');
   const sessionExpiry = localStorage.getItem('admin_session_expiry');
   const lastActivity = localStorage.getItem('admin_last_activity');
+  const adminEmail = localStorage.getItem('admin_email');
   
   const isValidAdminSession = () => {
     if (!sessionToken || !sessionExpiry || !lastActivity) {
@@ -69,14 +74,14 @@ const AdminDashboard = () => {
       <div className="pt-16 md:pt-0 pb-20 md:pb-0 md:ml-64">
         <div className="max-w-7xl mx-auto p-4 md:p-6">
           <div className="mb-6">
-            <h1 className="text-2xl md:text-3xl font-bold mb-2">System Administrator Dashboard</h1>
+            <h1 className="text-2xl md:text-3xl font-bold mb-2">Master Administrator Dashboard</h1>
             <p className="text-muted-foreground">
-              Complete system management and oversight panel
+              Complete system management and oversight panel - Logged in as: {adminEmail}
             </p>
           </div>
 
           <Tabs defaultValue="overview" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-7">
+            <TabsList className="grid w-full grid-cols-9">
               <TabsTrigger value="overview" className="flex items-center gap-1">
                 <BarChart3 className="h-4 w-4" />
                 <span className="hidden sm:inline">Overview</span>
@@ -100,6 +105,14 @@ const AdminDashboard = () => {
               <TabsTrigger value="documents" className="flex items-center gap-1">
                 <FileText className="h-4 w-4" />
                 <span className="hidden sm:inline">Documents</span>
+              </TabsTrigger>
+              <TabsTrigger value="privileges" className="flex items-center gap-1">
+                <Shield className="h-4 w-4" />
+                <span className="hidden sm:inline">Privileges</span>
+              </TabsTrigger>
+              <TabsTrigger value="system" className="flex items-center gap-1">
+                <Database className="h-4 w-4" />
+                <span className="hidden sm:inline">System</span>
               </TabsTrigger>
               <TabsTrigger value="settings" className="flex items-center gap-1">
                 <Settings className="h-4 w-4" />
@@ -129,6 +142,14 @@ const AdminDashboard = () => {
 
             <TabsContent value="documents">
               <DocumentManagement />
+            </TabsContent>
+
+            <TabsContent value="privileges">
+              <AdminPrivileges />
+            </TabsContent>
+
+            <TabsContent value="system">
+              <SystemManagement />
             </TabsContent>
 
             <TabsContent value="settings">

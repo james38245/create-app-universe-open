@@ -12,18 +12,18 @@ interface AdminLoginProps {
 }
 
 const AdminLogin = ({ onLogin }: AdminLoginProps) => {
-  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [securityCode, setSecurityCode] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [attempts, setAttempts] = useState(0);
 
-  // Secure preset credentials - only known by developer/admin
-  const ADMIN_CREDENTIALS = {
-    username: 'sys_admin_dev',
-    password: 'SecureAdmin2024!@#',
-    securityCode: 'DEV_ACCESS_7891'
+  // Master admin credentials
+  const MASTER_ADMIN = {
+    email: 'wachira18james@gmail.com',
+    password: 'MasterAdmin2024!@#',
+    securityCode: 'MASTER_DEV_ACCESS_2024'
   };
 
   const MAX_ATTEMPTS = 3;
@@ -45,22 +45,24 @@ const AdminLogin = ({ onLogin }: AdminLoginProps) => {
     // Simulate authentication delay
     setTimeout(() => {
       if (
-        username === ADMIN_CREDENTIALS.username &&
-        password === ADMIN_CREDENTIALS.password &&
-        securityCode === ADMIN_CREDENTIALS.securityCode
+        email === MASTER_ADMIN.email &&
+        password === MASTER_ADMIN.password &&
+        securityCode === MASTER_ADMIN.securityCode
       ) {
         // Generate secure session token
         const sessionToken = btoa(new Date().getTime() + '_' + Math.random().toString(36));
-        const sessionExpiry = new Date().getTime() + (4 * 60 * 60 * 1000); // 4 hours
+        const sessionExpiry = new Date().getTime() + (8 * 60 * 60 * 1000); // 8 hours for master admin
         
         localStorage.setItem('admin_session_token', sessionToken);
         localStorage.setItem('admin_session_expiry', sessionExpiry.toString());
         localStorage.setItem('admin_last_activity', new Date().getTime().toString());
+        localStorage.setItem('admin_role', 'master_admin');
+        localStorage.setItem('admin_email', email);
         localStorage.removeItem('admin_failed_attempts');
         localStorage.removeItem('admin_lockout_until');
         
         onLogin();
-        toast.success('Secure access granted');
+        toast.success('Master Admin access granted');
       } else {
         const newAttempts = attempts + 1;
         setAttempts(newAttempts);
@@ -75,7 +77,7 @@ const AdminLogin = ({ onLogin }: AdminLoginProps) => {
         }
         
         // Clear form
-        setUsername('');
+        setEmail('');
         setPassword('');
         setSecurityCode('');
       }
@@ -92,7 +94,7 @@ const AdminLogin = ({ onLogin }: AdminLoginProps) => {
           <div className="mx-auto w-16 h-16 bg-gradient-to-r from-purple-600 to-blue-600 rounded-full flex items-center justify-center mb-4">
             <Shield className="h-8 w-8 text-white" />
           </div>
-          <CardTitle className="text-2xl text-purple-700">System Administrator</CardTitle>
+          <CardTitle className="text-2xl text-purple-700">Master Administrator</CardTitle>
           <p className="text-muted-foreground text-sm">
             Secure Developer Access Portal
           </p>
@@ -100,13 +102,13 @@ const AdminLogin = ({ onLogin }: AdminLoginProps) => {
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="username" className="text-sm font-medium">System Username</Label>
+              <Label htmlFor="email" className="text-sm font-medium">Admin Email</Label>
               <Input
-                id="username"
-                type="text"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                placeholder="Enter system username"
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Enter admin email"
                 required
                 disabled={isLocked}
                 className="bg-slate-50"
@@ -114,14 +116,14 @@ const AdminLogin = ({ onLogin }: AdminLoginProps) => {
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="password" className="text-sm font-medium">Access Password</Label>
+              <Label htmlFor="password" className="text-sm font-medium">Master Password</Label>
               <div className="relative">
                 <Input
                   id="password"
                   type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Enter secure password"
+                  placeholder="Enter master password"
                   required
                   disabled={isLocked}
                   className="bg-slate-50 pr-10"
@@ -137,13 +139,13 @@ const AdminLogin = ({ onLogin }: AdminLoginProps) => {
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="securityCode" className="text-sm font-medium">Developer Security Code</Label>
+              <Label htmlFor="securityCode" className="text-sm font-medium">Master Security Code</Label>
               <Input
                 id="securityCode"
                 type="password"
                 value={securityCode}
                 onChange={(e) => setSecurityCode(e.target.value)}
-                placeholder="Enter security code"
+                placeholder="Enter master security code"
                 required
                 disabled={isLocked}
                 className="bg-slate-50"
@@ -153,7 +155,7 @@ const AdminLogin = ({ onLogin }: AdminLoginProps) => {
             <Button 
               type="submit" 
               className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700" 
-              disabled={loading || !username || !password || !securityCode || isLocked}
+              disabled={loading || !email || !password || !securityCode || isLocked}
             >
               {loading ? (
                 <div className="flex items-center space-x-2">
@@ -163,7 +165,7 @@ const AdminLogin = ({ onLogin }: AdminLoginProps) => {
               ) : (
                 <div className="flex items-center space-x-2">
                   <Lock className="h-4 w-4" />
-                  <span>Access System</span>
+                  <span>Access Master Dashboard</span>
                 </div>
               )}
             </Button>
@@ -178,10 +180,10 @@ const AdminLogin = ({ onLogin }: AdminLoginProps) => {
           )}
           
           <div className="mt-6 p-4 bg-red-50 border border-red-200 rounded-md">
-            <p className="text-xs text-red-800 font-medium mb-2">⚠️ RESTRICTED ACCESS</p>
+            <p className="text-xs text-red-800 font-medium mb-2">⚠️ MASTER ADMIN ACCESS</p>
             <p className="text-xs text-red-700">
-              This system is for authorized developers only. Access credentials are managed by the system administrator. 
-              Unauthorized access attempts are logged and monitored.
+              This is the master administrator portal. Only the system developer has access. 
+              All access attempts are logged and monitored.
             </p>
           </div>
         </CardContent>
