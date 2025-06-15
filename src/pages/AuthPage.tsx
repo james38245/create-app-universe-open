@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -13,11 +13,11 @@ import EmailVerification from '@/components/auth/EmailVerification';
 import { validateKenyanPhone, formatKenyanPhone } from '@/utils/phoneValidation';
 
 const AuthPage = () => {
-  const { signUp, signIn } = useAuth();
+  const { signUp, signIn, user } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [verificationStep, setVerificationStep] = useState<'signup' | 'email' | 'complete'>('signup');
+  const [verificationStep, setVerificationStep] = useState<'auth' | 'email' | 'complete'>('auth');
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -27,6 +27,13 @@ const AuthPage = () => {
     userType: 'client'
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  // Redirect authenticated users
+  useEffect(() => {
+    if (user && user.email_confirmed_at) {
+      navigate('/profile');
+    }
+  }, [user, navigate]);
 
   // Enhanced validation functions
   const validateEmail = (email: string) => {
@@ -71,7 +78,7 @@ const AuthPage = () => {
     // Password validation
     if (!formData.password) {
       newErrors.password = 'Password is required';
-    } else {
+    } else if (type === 'signup') {
       const passwordValidation = validatePassword(formData.password);
       if (!passwordValidation.isValid) {
         const missingRequirements = [];
@@ -140,7 +147,19 @@ const AuthPage = () => {
         });
       } else {
         const { error } = await signIn(formData.email, formData.password);
-        if (error) throw error;
+        if (error) {
+          if (error.code === 'email_not_confirmed') {
+            // Show email verification step for unverified users trying to sign in
+            setVerificationStep('email');
+            toast({
+              title: "Email Verification Required",
+              description: error.message,
+              variant: "destructive"
+            });
+            return;
+          }
+          throw error;
+        }
         
         toast({
           title: "Welcome back!",
@@ -157,6 +176,7 @@ const AuthPage = () => {
         errorMessage = "Invalid email or password.";
       } else if (error.message?.includes('Email not confirmed')) {
         errorMessage = "Please verify your email before signing in.";
+        setVerificationStep('email');
       }
       
       toast({
@@ -177,17 +197,14 @@ const AuthPage = () => {
   };
 
   const handleVerificationComplete = () => {
-    setVerificationStep('complete');
+    setVerificationStep('auth');
     toast({
       title: "Email Verified!",
       description: "Your email has been verified successfully. You can now sign in.",
     });
-    navigate('/auth');
   };
 
   const handleResendCode = async () => {
-    // For now, this would trigger a resend of the verification email
-    // In a real implementation, you'd call your backend to resend
     toast({
       title: "Verification Email Resent",
       description: "Please check your email for a new verification link.",

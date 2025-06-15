@@ -73,6 +73,20 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       email,
       password
     });
+
+    // Check if user email is verified
+    if (!error && data.user && !data.user.email_confirmed_at) {
+      // Sign out the user immediately if email is not verified
+      await supabase.auth.signOut();
+      return { 
+        data: null, 
+        error: { 
+          message: 'Please verify your email before signing in. Check your inbox for a verification link.',
+          code: 'email_not_confirmed'
+        } 
+      };
+    }
+
     return { data, error };
   };
 
@@ -81,14 +95,19 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const resendConfirmation = async (email: string) => {
-    const { error } = await supabase.auth.resend({
-      type: 'signup',
-      email,
-      options: {
-        emailRedirectTo: `${window.location.origin}/auth`
-      }
-    });
-    return { error };
+    // Send custom verification email
+    try {
+      const { error } = await supabase.functions.invoke('send-verification-email', {
+        body: {
+          email,
+          name: 'User',
+          confirmationUrl: `${window.location.origin}/auth?email_confirmed=true`
+        }
+      });
+      return { error };
+    } catch (error) {
+      return { error };
+    }
   };
 
   const value = {
