@@ -10,6 +10,15 @@ import { toast } from '@/hooks/use-toast';
 import LocationInput from '@/components/forms/LocationInput';
 import { useForm } from 'react-hook-form';
 
+interface ProfileFormData {
+  full_name: string;
+  email: string;
+  phone: string;
+  location: string;
+  bio: string;
+  coordinates?: { lat: number; lng: number } | null;
+}
+
 interface ProfileFormProps {
   profileData: {
     full_name: string;
@@ -28,12 +37,13 @@ const ProfileForm: React.FC<ProfileFormProps> = ({
   onSave
 }) => {
   const { user } = useAuth();
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<ProfileFormData>({
     full_name: '',
     email: '',
     phone: '',
     location: '',
-    bio: ''
+    bio: '',
+    coordinates: null
   });
   const [emailChanged, setEmailChanged] = useState(false);
   const [pendingEmailChange, setPendingEmailChange] = useState(false);
@@ -47,12 +57,13 @@ const ProfileForm: React.FC<ProfileFormProps> = ({
 
   useEffect(() => {
     if (profileData) {
-      const newFormData = {
+      const newFormData: ProfileFormData = {
         full_name: profileData.full_name || '',
         email: profileData.email || '',
         phone: profileData.phone || '',
         location: profileData.location || '',
-        bio: profileData.bio || ''
+        bio: profileData.bio || '',
+        coordinates: null
       };
       setFormData(newFormData);
       form.setValue('location', profileData.location || '');
@@ -124,7 +135,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({
     }
   };
 
-  const handleChange = (field: string, value: string) => {
+  const handleChange = (field: keyof ProfileFormData, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
     
     if (field === 'email') {
@@ -138,6 +149,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({
 
   const handleLocationChange = (location: string) => {
     setFormData(prev => ({ ...prev, location }));
+    form.setValue('location', location);
   };
 
   return (
@@ -194,19 +206,23 @@ const ProfileForm: React.FC<ProfileFormProps> = ({
         </div>
         
         <div className="space-y-2">
-          <LocationInput
-            form={form}
-            fieldName="location"
-            label="Location"
-            placeholder="Enter location or use GPS"
-          />
-          {isEditing && (
-            <Input
-              value={formData.location}
-              onChange={(e) => handleLocationChange(e.target.value)}
-              placeholder="Or type location manually"
-              className="mt-2"
+          {isEditing ? (
+            <LocationInput
+              form={form}
+              fieldName="location"
+              label="Location"
+              placeholder="Enter location or use GPS"
             />
+          ) : (
+            <>
+              <Label htmlFor="location">Location</Label>
+              <Input
+                id="location"
+                value={formData.location}
+                disabled={true}
+                placeholder="Location not set"
+              />
+            </>
           )}
         </div>
       </div>
