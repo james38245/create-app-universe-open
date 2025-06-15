@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -7,13 +6,15 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { Send, Search, Phone, MoreVertical, Check, CheckCheck } from 'lucide-react';
+import { Send, Search, Phone, MoreVertical, Check, CheckCheck, Sparkles } from 'lucide-react';
 import { useMessaging } from '@/hooks/useMessaging';
 import { useToast } from '@/hooks/use-toast';
+import GoodStartFeature from '@/components/messaging/GoodStartFeature';
 
 const MessagesPage = () => {
   const [searchParams] = useSearchParams();
   const [newMessage, setNewMessage] = useState('');
+  const [showGoodStart, setShowGoodStart] = useState(false);
   const { toast } = useToast();
   const {
     conversations,
@@ -24,6 +25,11 @@ const MessagesPage = () => {
     loadMessages,
     startConversation
   } = useMessaging();
+
+  // Check if user is new (no conversations) to show Good Start feature
+  useEffect(() => {
+    setShowGoodStart(conversations.length === 0);
+  }, [conversations]);
 
   // Handle URL parameters for starting conversations
   useEffect(() => {
@@ -69,6 +75,12 @@ const MessagesPage = () => {
     });
   };
 
+  const handleGoodStartConversation = async (sellerId: string, sellerName: string, sellerRole: string) => {
+    const conversationId = await startConversation(sellerId, sellerName, sellerRole);
+    setSelectedChat(conversationId);
+    setShowGoodStart(false);
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <div className="pt-16 md:pt-0 pb-20 md:pb-0 md:ml-64">
@@ -80,7 +92,20 @@ const MessagesPage = () => {
               <CardHeader>
                 <CardTitle className="flex items-center justify-between">
                   Messages
-                  <Badge variant="secondary">{conversations.length}</Badge>
+                  <div className="flex items-center gap-2">
+                    <Badge variant="secondary">{conversations.length}</Badge>
+                    {conversations.length === 0 && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setShowGoodStart(!showGoodStart)}
+                        className="flex items-center gap-1"
+                      >
+                        <Sparkles className="h-4 w-4" />
+                        Good Start
+                      </Button>
+                    )}
+                  </div>
                 </CardTitle>
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -89,50 +114,71 @@ const MessagesPage = () => {
               </CardHeader>
               
               <CardContent className="p-0">
-                <div className="space-y-1">
-                  {conversations.map((conversation) => (
-                    <div
-                      key={conversation.id}
-                      onClick={() => setSelectedChat(conversation.id)}
-                      className={`p-4 cursor-pointer transition-colors hover:bg-muted ${
-                        selectedChat === conversation.id ? 'bg-muted' : ''
-                      } ${conversation.unread > 0 ? 'border-l-4 border-l-primary' : ''}`}
-                    >
-                      <div className="flex items-start gap-3">
-                        <div className="relative">
-                          <Avatar className="h-10 w-10">
-                            <AvatarImage src={conversation.avatar} alt={conversation.name} />
-                            <AvatarFallback>{conversation.name.charAt(0)}</AvatarFallback>
-                          </Avatar>
-                          {conversation.isOnline && (
-                            <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-500 border-2 border-background rounded-full" />
+                {showGoodStart ? (
+                  <div className="p-4">
+                    <GoodStartFeature onStartConversation={handleGoodStartConversation} />
+                  </div>
+                ) : (
+                  <div className="space-y-1">
+                    {conversations.map((conversation) => (
+                      <div
+                        key={conversation.id}
+                        onClick={() => setSelectedChat(conversation.id)}
+                        className={`p-4 cursor-pointer transition-colors hover:bg-muted ${
+                          selectedChat === conversation.id ? 'bg-muted' : ''
+                        } ${conversation.unread > 0 ? 'border-l-4 border-l-primary' : ''}`}
+                      >
+                        <div className="flex items-start gap-3">
+                          <div className="relative">
+                            <Avatar className="h-10 w-10">
+                              <AvatarImage src={conversation.avatar} alt={conversation.name} />
+                              <AvatarFallback>{conversation.name.charAt(0)}</AvatarFallback>
+                            </Avatar>
+                            {conversation.isOnline && (
+                              <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-500 border-2 border-background rounded-full" />
+                            )}
+                          </div>
+                          
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center justify-between mb-1">
+                              <h4 className={`font-medium truncate ${conversation.unread > 0 ? 'font-semibold' : ''}`}>
+                                {conversation.name}
+                              </h4>
+                              <span className={`text-xs ${conversation.unread > 0 ? 'text-primary font-medium' : 'text-muted-foreground'}`}>
+                                {conversation.timestamp}
+                              </span>
+                            </div>
+                            <p className={`text-sm truncate mb-1 ${conversation.unread > 0 ? 'text-foreground font-medium' : 'text-muted-foreground'}`}>
+                              {conversation.lastMessage}
+                            </p>
+                            <p className="text-xs text-muted-foreground">{conversation.role}</p>
+                          </div>
+                          
+                          {conversation.unread > 0 && (
+                            <Badge variant="default" className="text-xs bg-primary">
+                              {conversation.unread}
+                            </Badge>
                           )}
                         </div>
-                        
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center justify-between mb-1">
-                            <h4 className={`font-medium truncate ${conversation.unread > 0 ? 'font-semibold' : ''}`}>
-                              {conversation.name}
-                            </h4>
-                            <span className={`text-xs ${conversation.unread > 0 ? 'text-primary font-medium' : 'text-muted-foreground'}`}>
-                              {conversation.timestamp}
-                            </span>
-                          </div>
-                          <p className={`text-sm truncate mb-1 ${conversation.unread > 0 ? 'text-foreground font-medium' : 'text-muted-foreground'}`}>
-                            {conversation.lastMessage}
-                          </p>
-                          <p className="text-xs text-muted-foreground">{conversation.role}</p>
-                        </div>
-                        
-                        {conversation.unread > 0 && (
-                          <Badge variant="default" className="text-xs bg-primary">
-                            {conversation.unread}
-                          </Badge>
-                        )}
                       </div>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+
+                    {conversations.length === 0 && !showGoodStart && (
+                      <div className="p-8 text-center text-muted-foreground">
+                        <p>No conversations yet</p>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setShowGoodStart(true)}
+                          className="mt-2 flex items-center gap-1"
+                        >
+                          <Sparkles className="h-4 w-4" />
+                          Get Started
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                )}
               </CardContent>
             </Card>
 
@@ -232,7 +278,17 @@ const MessagesPage = () => {
                 <div className="flex-1 flex items-center justify-center">
                   <div className="text-center">
                     <h3 className="text-lg font-semibold mb-2">Select a conversation</h3>
-                    <p className="text-muted-foreground">Choose a conversation to start messaging</p>
+                    <p className="text-muted-foreground mb-4">Choose a conversation to start messaging</p>
+                    {conversations.length === 0 && (
+                      <Button
+                        variant="outline"
+                        onClick={() => setShowGoodStart(true)}
+                        className="flex items-center gap-2"
+                      >
+                        <Sparkles className="h-4 w-4" />
+                        Get Started with Good Start
+                      </Button>
+                    )}
                   </div>
                 </div>
               )}
