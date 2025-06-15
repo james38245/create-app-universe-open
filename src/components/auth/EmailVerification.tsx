@@ -40,7 +40,7 @@ const EmailVerification: React.FC<EmailVerificationProps> = ({
   // Check URL parameters for email confirmation
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get('type') === 'signup' || urlParams.get('email_confirmed') === 'true') {
+    if (urlParams.get('type') === 'signup') {
       setIsVerified(true);
       toast({
         title: "Email Verified!",
@@ -132,6 +132,13 @@ const EmailVerification: React.FC<EmailVerificationProps> = ({
           </div>
         </div>
 
+        <div className="bg-orange-50 border border-orange-200 p-4 rounded-lg">
+          <div className="text-sm text-orange-800">
+            <p className="font-medium mb-1">Not receiving emails?</p>
+            <p>Make sure to check your spam folder. If you still don't see the email, you can resend it below.</p>
+          </div>
+        </div>
+
         <div className="text-center">
           <p className="text-sm text-gray-600 mb-2">
             Didn't receive the email?
@@ -145,16 +152,6 @@ const EmailVerification: React.FC<EmailVerificationProps> = ({
           >
             <RefreshCw className={`h-4 w-4 ${isResending ? 'animate-spin' : ''}`} />
             {isResending ? 'Sending...' : canResend ? 'Resend Email' : `Resend in ${resendTimer}s`}
-          </Button>
-        </div>
-
-        <div className="text-center mt-4">
-          <Button 
-            variant="outline" 
-            onClick={handleContinue}
-            className="w-full"
-          >
-            I'll verify later - Continue to Sign In
           </Button>
         </div>
       </CardContent>
