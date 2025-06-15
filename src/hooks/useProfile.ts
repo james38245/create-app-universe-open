@@ -59,7 +59,13 @@ export const useProfile = () => {
 
       if (error) throw error;
 
+      // Update local state immediately
       setProfileData(prev => prev ? { ...prev, ...updates } : null);
+      
+      // Broadcast the update to other components
+      window.dispatchEvent(new CustomEvent('profileUpdated', { 
+        detail: { ...profileData, ...updates } 
+      }));
       
       toast({
         title: "Profile updated",
@@ -81,6 +87,19 @@ export const useProfile = () => {
   useEffect(() => {
     fetchProfile();
   }, [user]);
+
+  // Listen for profile updates from other components
+  useEffect(() => {
+    const handleProfileUpdate = (event: CustomEvent) => {
+      setProfileData(event.detail);
+    };
+
+    window.addEventListener('profileUpdated', handleProfileUpdate as EventListener);
+    
+    return () => {
+      window.removeEventListener('profileUpdated', handleProfileUpdate as EventListener);
+    };
+  }, []);
 
   return {
     profileData,

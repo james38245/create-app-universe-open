@@ -11,6 +11,7 @@ import { useNavigate } from 'react-router-dom';
 import { Eye, EyeOff, Shield, CheckCircle } from 'lucide-react';
 import EmailVerification from '@/components/auth/EmailVerification';
 import { validateKenyanPhone, formatKenyanPhone } from '@/utils/phoneValidation';
+import { supabase } from '@/integrations/supabase/client';
 
 const AuthPage = () => {
   const { signUp, signIn, user } = useAuth();

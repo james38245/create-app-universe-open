@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
@@ -29,7 +29,20 @@ const UserMenu = () => {
   const navigate = useNavigate();
   const { user, loading, signOut } = useAuth();
   const { toast } = useToast();
-  const { profileData, loading: profileLoading } = useProfile();
+  const { profileData, loading: profileLoading, refreshProfile } = useProfile();
+
+  // Listen for profile updates and refresh when needed
+  useEffect(() => {
+    const handleProfileUpdate = () => {
+      refreshProfile();
+    };
+
+    window.addEventListener('profileUpdated', handleProfileUpdate);
+    
+    return () => {
+      window.removeEventListener('profileUpdated', handleProfileUpdate);
+    };
+  }, [refreshProfile]);
 
   // Show spinner if auth or profile data is loading
   if (loading || profileLoading) {
