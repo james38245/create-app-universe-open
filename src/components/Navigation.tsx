@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -27,7 +26,8 @@ import {
   HelpCircle,
   Phone,
   Shield,
-  LogOut
+  LogOut,
+  ArrowLeft
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
@@ -59,6 +59,12 @@ const Navigation = () => {
       });
     }
   };
+
+  const handleBackNavigation = () => {
+    navigate(-1);
+  };
+
+  const showBackButton = location.pathname !== '/' && location.pathname !== '/auth';
 
   const navItems = [
     { 
@@ -161,8 +167,18 @@ const Navigation = () => {
       <nav className="hidden md:flex bg-white shadow-lg border-b fixed top-0 left-0 right-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
           <div className="flex justify-between h-16">
-            {/* Logo */}
-            <div className="flex items-center">
+            {/* Logo and Back Button */}
+            <div className="flex items-center space-x-4">
+              {showBackButton && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleBackNavigation}
+                  className="flex items-center gap-2 text-gray-600 hover:text-purple-600"
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                </Button>
+              )}
               <Link to="/" className="flex items-center space-x-2">
                 <div className="w-8 h-8 bg-gradient-to-br from-purple-600 to-blue-600 rounded-lg flex items-center justify-center">
                   <span className="text-white font-bold text-sm">V</span>
@@ -283,15 +299,27 @@ const Navigation = () => {
       <nav className="md:hidden bg-white shadow-lg border-b fixed top-0 left-0 right-0 z-50">
         <div className="px-4 sm:px-6">
           <div className="flex justify-between items-center h-16">
-            {/* Logo */}
-            <Link to="/" className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-gradient-to-br from-purple-600 to-blue-600 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-sm">V</span>
-              </div>
-              <span className="text-xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
-                Vendoor
-              </span>
-            </Link>
+            {/* Back Button and Logo */}
+            <div className="flex items-center space-x-2">
+              {showBackButton && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleBackNavigation}
+                  className="p-2"
+                >
+                  <ArrowLeft className="h-5 w-5 text-gray-600" />
+                </Button>
+              )}
+              <Link to="/" className="flex items-center space-x-2">
+                <div className="w-8 h-8 bg-gradient-to-br from-purple-600 to-blue-600 rounded-lg flex items-center justify-center">
+                  <span className="text-white font-bold text-sm">V</span>
+                </div>
+                <span className="text-xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
+                  Vendoor
+                </span>
+              </Link>
+            </div>
 
             {/* Mobile menu button */}
             <Button
@@ -311,14 +339,29 @@ const Navigation = () => {
             <div className="flex flex-col h-full">
               {/* Header */}
               <div className="flex items-center justify-between p-4 border-b">
-                <Link to="/" className="flex items-center space-x-2" onClick={() => setIsMobileMenuOpen(false)}>
-                  <div className="w-8 h-8 bg-gradient-to-br from-purple-600 to-blue-600 rounded-lg flex items-center justify-center">
-                    <span className="text-white font-bold text-sm">V</span>
-                  </div>
-                  <span className="text-xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
-                    Vendoor
-                  </span>
-                </Link>
+                <div className="flex items-center space-x-2">
+                  {showBackButton && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        handleBackNavigation();
+                        setIsMobileMenuOpen(false);
+                      }}
+                      className="p-2"
+                    >
+                      <ArrowLeft className="h-5 w-5 text-gray-600" />
+                    </Button>
+                  )}
+                  <Link to="/" className="flex items-center space-x-2" onClick={() => setIsMobileMenuOpen(false)}>
+                    <div className="w-8 h-8 bg-gradient-to-br from-purple-600 to-blue-600 rounded-lg flex items-center justify-center">
+                      <span className="text-white font-bold text-sm">V</span>
+                    </div>
+                    <span className="text-xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
+                      Vendoor
+                    </span>
+                  </Link>
+                </div>
                 <Button
                   variant="ghost"
                   size="sm"
