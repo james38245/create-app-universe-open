@@ -3,7 +3,6 @@ import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, Legend } from 'recharts';
 import { Users, Building, UserCheck, Calendar, DollarSign } from 'lucide-react';
 
 const SystemStatsOverview = () => {
@@ -27,31 +26,6 @@ const SystemStatsOverview = () => {
         bookings: bookingsRes.count || 0,
         revenue: totalRevenue
       };
-    }
-  });
-
-  const { data: venueDistribution } = useQuery({
-    queryKey: ['venue-distribution'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('venues')
-        .select('venue_type')
-        .eq('is_active', true);
-      
-      if (error) throw error;
-
-      const distribution = data.reduce((acc: Record<string, number>, venue) => {
-        acc[venue.venue_type] = (acc[venue.venue_type] || 0) + 1;
-        return acc;
-      }, {});
-
-      const colors = ['#8884d8', '#82ca9d', '#ffc658', '#ff7300', '#00ff00', '#ff0080'];
-      
-      return Object.entries(distribution).map(([type, count], index) => ({
-        name: type,
-        value: count,
-        color: colors[index % colors.length]
-      }));
     }
   });
 
@@ -111,37 +85,6 @@ const SystemStatsOverview = () => {
           </CardContent>
         </Card>
       </div>
-
-      {/* Venue Distribution Chart */}
-      {venueDistribution && venueDistribution.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Venue Type Distribution</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <PieChart>
-                <Pie
-                  data={venueDistribution}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={false}
-                  label={({ name, value, percent }) => `${name}: ${value} (${(percent * 100).toFixed(0)}%)`}
-                  outerRadius={80}
-                  fill="#8884d8"
-                  dataKey="value"
-                >
-                  {venueDistribution.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
-                </Pie>
-                <Tooltip />
-                <Legend />
-              </PieChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-      )}
     </div>
   );
 };

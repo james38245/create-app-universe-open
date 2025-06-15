@@ -11,6 +11,7 @@ import DocumentManagement from '@/components/admin/DocumentManagement';
 import AdminSettings from '@/components/admin/AdminSettings';
 import AdminPrivileges from '@/components/admin/AdminPrivileges';
 import SystemManagement from '@/components/admin/SystemManagement';
+import DashboardHeader from '@/components/admin/DashboardHeader';
 import { 
   BarChart3, 
   Users, 
@@ -28,7 +29,6 @@ const AdminDashboard = () => {
   const sessionToken = localStorage.getItem('admin_session_token');
   const sessionExpiry = localStorage.getItem('admin_session_expiry');
   const lastActivity = localStorage.getItem('admin_last_activity');
-  const adminEmail = localStorage.getItem('admin_email');
   
   const isValidAdminSession = () => {
     if (!sessionToken || !sessionExpiry || !lastActivity) {
@@ -70,55 +70,52 @@ const AdminDashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50">
       <div className="pt-16 md:pt-0 pb-20 md:pb-0 md:ml-64">
         <div className="max-w-7xl mx-auto p-4 md:p-6">
-          <div className="mb-6">
-            <h1 className="text-2xl md:text-3xl font-bold mb-2">Master Administrator Dashboard</h1>
-            <p className="text-muted-foreground">
-              Complete system management and oversight panel - Logged in as: {adminEmail}
-            </p>
-          </div>
+          <DashboardHeader />
 
-          <Tabs defaultValue="overview" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-9">
-              <TabsTrigger value="overview" className="flex items-center gap-1">
-                <BarChart3 className="h-4 w-4" />
-                <span className="hidden sm:inline">Overview</span>
-              </TabsTrigger>
-              <TabsTrigger value="users" className="flex items-center gap-1">
-                <Users className="h-4 w-4" />
-                <span className="hidden sm:inline">Users</span>
-              </TabsTrigger>
-              <TabsTrigger value="venues" className="flex items-center gap-1">
-                <Building className="h-4 w-4" />
-                <span className="hidden sm:inline">Venues</span>
-              </TabsTrigger>
-              <TabsTrigger value="providers" className="flex items-center gap-1">
-                <UserCheck className="h-4 w-4" />
-                <span className="hidden sm:inline">Providers</span>
-              </TabsTrigger>
-              <TabsTrigger value="bookings" className="flex items-center gap-1">
-                <Calendar className="h-4 w-4" />
-                <span className="hidden sm:inline">Bookings</span>
-              </TabsTrigger>
-              <TabsTrigger value="documents" className="flex items-center gap-1">
-                <FileText className="h-4 w-4" />
-                <span className="hidden sm:inline">Documents</span>
-              </TabsTrigger>
-              <TabsTrigger value="privileges" className="flex items-center gap-1">
-                <Shield className="h-4 w-4" />
-                <span className="hidden sm:inline">Privileges</span>
-              </TabsTrigger>
-              <TabsTrigger value="system" className="flex items-center gap-1">
-                <Database className="h-4 w-4" />
-                <span className="hidden sm:inline">System</span>
-              </TabsTrigger>
-              <TabsTrigger value="settings" className="flex items-center gap-1">
-                <Settings className="h-4 w-4" />
-                <span className="hidden sm:inline">Settings</span>
-              </TabsTrigger>
-            </TabsList>
+          <Tabs defaultValue="overview" className="space-y-6 mt-8">
+            <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-2">
+              <TabsList className="grid w-full grid-cols-9 bg-gray-50 rounded-xl">
+                <TabsTrigger value="overview" className="flex items-center gap-1 data-[state=active]:bg-white data-[state=active]:shadow-sm">
+                  <BarChart3 className="h-4 w-4" />
+                  <span className="hidden sm:inline">Overview</span>
+                </TabsTrigger>
+                <TabsTrigger value="users" className="flex items-center gap-1 data-[state=active]:bg-white data-[state=active]:shadow-sm">
+                  <Users className="h-4 w-4" />
+                  <span className="hidden sm:inline">Users</span>
+                </TabsTrigger>
+                <TabsTrigger value="venues" className="flex items-center gap-1 data-[state=active]:bg-white data-[state=active]:shadow-sm">
+                  <Building className="h-4 w-4" />
+                  <span className="hidden sm:inline">Venues</span>
+                </TabsTrigger>
+                <TabsTrigger value="providers" className="flex items-center gap-1 data-[state=active]:bg-white data-[state=active]:shadow-sm">
+                  <UserCheck className="h-4 w-4" />
+                  <span className="hidden sm:inline">Providers</span>
+                </TabsTrigger>
+                <TabsTrigger value="bookings" className="flex items-center gap-1 data-[state=active]:bg-white data-[state=active]:shadow-sm">
+                  <Calendar className="h-4 w-4" />
+                  <span className="hidden sm:inline">Bookings</span>
+                </TabsTrigger>
+                <TabsTrigger value="documents" className="flex items-center gap-1 data-[state=active]:bg-white data-[state=active]:shadow-sm">
+                  <FileText className="h-4 w-4" />
+                  <span className="hidden sm:inline">Documents</span>
+                </TabsTrigger>
+                <TabsTrigger value="privileges" className="flex items-center gap-1 data-[state=active]:bg-white data-[state=active]:shadow-sm">
+                  <Shield className="h-4 w-4" />
+                  <span className="hidden sm:inline">Privileges</span>
+                </TabsTrigger>
+                <TabsTrigger value="system" className="flex items-center gap-1 data-[state=active]:bg-white data-[state=active]:shadow-sm">
+                  <Database className="h-4 w-4" />
+                  <span className="hidden sm:inline">System</span>
+                </TabsTrigger>
+                <TabsTrigger value="settings" className="flex items-center gap-1 data-[state=active]:bg-white data-[state=active]:shadow-sm">
+                  <Settings className="h-4 w-4" />
+                  <span className="hidden sm:inline">Settings</span>
+                </TabsTrigger>
+              </TabsList>
+            </div>
 
             <TabsContent value="overview">
               <AdminOverview />
