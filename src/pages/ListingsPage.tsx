@@ -1,6 +1,7 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { useLocation } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -12,9 +13,30 @@ import ServicesTab from '@/components/listings/ServicesTab';
 
 const ListingsPage = () => {
   const { user } = useAuth();
+  const location = useLocation();
   const [activeTab, setActiveTab] = useState('venues');
   const [showAddVenueForm, setShowAddVenueForm] = useState(false);
   const [showAddServiceForm, setShowAddServiceForm] = useState(false);
+  const [editingVenue, setEditingVenue] = useState(null);
+  const [editingProvider, setEditingProvider] = useState(null);
+
+  // Check for edit data in location state
+  useEffect(() => {
+    if (location.state?.editVenue) {
+      setEditingVenue(location.state.editVenue);
+      setShowAddVenueForm(true);
+      setActiveTab('venues');
+      // Clear the state to prevent issues on refresh
+      window.history.replaceState({}, document.title);
+    }
+    if (location.state?.editProvider) {
+      setEditingProvider(location.state.editProvider);
+      setShowAddServiceForm(true);
+      setActiveTab('services');
+      // Clear the state to prevent issues on refresh
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state]);
 
   const { data: venues, isLoading: venuesLoading } = useQuery({
     queryKey: ['my-venues', user?.id],
@@ -46,6 +68,26 @@ const ListingsPage = () => {
     enabled: !!user
   });
 
+  const handleVenueFormSuccess = () => {
+    setShowAddVenueForm(false);
+    setEditingVenue(null);
+  };
+
+  const handleVenueFormCancel = () => {
+    setShowAddVenueForm(false);
+    setEditingVenue(null);
+  };
+
+  const handleServiceFormSuccess = () => {
+    setShowAddServiceForm(false);
+    setEditingProvider(null);
+  };
+
+  const handleServiceFormCancel = () => {
+    setShowAddServiceForm(false);
+    setEditingProvider(null);
+  };
+
   if (!user) {
     return (
       <div className="min-h-screen bg-background">
@@ -66,8 +108,9 @@ const ListingsPage = () => {
         <div className="pt-16 md:pt-0 pb-20 md:pb-0 md:ml-64">
           <div className="max-w-7xl mx-auto p-4 md:p-6">
             <AddVenueForm 
-              onSuccess={() => setShowAddVenueForm(false)}
-              onCancel={() => setShowAddVenueForm(false)}
+              onSuccess={handleVenueFormSuccess}
+              onCancel={handleVenueFormCancel}
+              editingVenue={editingVenue}
             />
           </div>
         </div>
@@ -81,8 +124,9 @@ const ListingsPage = () => {
         <div className="pt-16 md:pt-0 pb-20 md:pb-0 md:ml-64">
           <div className="max-w-7xl mx-auto p-4 md:p-6">
             <AddServiceProviderForm 
-              onSuccess={() => setShowAddServiceForm(false)}
-              onCancel={() => setShowAddServiceForm(false)}
+              onSuccess={handleServiceFormSuccess}
+              onCancel={handleServiceFormCancel}
+              editingProvider={editingProvider}
             />
           </div>
         </div>

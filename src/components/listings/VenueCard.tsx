@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -16,6 +17,7 @@ interface VenueCardProps {
 
 const VenueCard = ({ venue, onDelete }: VenueCardProps) => {
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
 
   const deleteVenueMutation = useMutation({
     mutationFn: async (venueId: string) => {
@@ -42,6 +44,20 @@ const VenueCard = ({ venue, onDelete }: VenueCardProps) => {
       });
     }
   });
+
+  const handleView = () => {
+    navigate(`/venue/${venue.id}`);
+  };
+
+  const handleEdit = () => {
+    navigate('/listings', { state: { editVenue: venue } });
+  };
+
+  const handleDelete = () => {
+    if (window.confirm('Are you sure you want to delete this venue? This action cannot be undone.')) {
+      deleteVenueMutation.mutate(venue.id);
+    }
+  };
 
   return (
     <Card>
@@ -111,18 +127,18 @@ const VenueCard = ({ venue, onDelete }: VenueCardProps) => {
         </div>
 
         <div className="flex gap-2 flex-wrap">
-          <Button variant="outline" size="sm">
+          <Button variant="outline" size="sm" onClick={handleView}>
             <Eye className="h-4 w-4 mr-1" />
             View
           </Button>
-          <Button variant="outline" size="sm">
+          <Button variant="outline" size="sm" onClick={handleEdit}>
             <Edit className="h-4 w-4 mr-1" />
             Edit
           </Button>
           <Button 
             variant="outline" 
             size="sm"
-            onClick={() => deleteVenueMutation.mutate(venue.id)}
+            onClick={handleDelete}
             disabled={deleteVenueMutation.isPending}
           >
             <Trash2 className="h-4 w-4 mr-1" />

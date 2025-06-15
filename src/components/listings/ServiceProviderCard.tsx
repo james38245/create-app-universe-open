@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -16,6 +17,7 @@ interface ServiceProviderCardProps {
 
 const ServiceProviderCard = ({ provider, onDelete }: ServiceProviderCardProps) => {
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
 
   const deleteProviderMutation = useMutation({
     mutationFn: async (providerId: string) => {
@@ -42,6 +44,20 @@ const ServiceProviderCard = ({ provider, onDelete }: ServiceProviderCardProps) =
       });
     }
   });
+
+  const handleView = () => {
+    navigate(`/provider/${provider.id}`);
+  };
+
+  const handleEdit = () => {
+    navigate('/listings', { state: { editProvider: provider } });
+  };
+
+  const handleDelete = () => {
+    if (window.confirm('Are you sure you want to delete this service provider profile? This action cannot be undone.')) {
+      deleteProviderMutation.mutate(provider.id);
+    }
+  };
 
   return (
     <Card>
@@ -110,18 +126,18 @@ const ServiceProviderCard = ({ provider, onDelete }: ServiceProviderCardProps) =
         </div>
 
         <div className="flex gap-2 flex-wrap">
-          <Button variant="outline" size="sm">
+          <Button variant="outline" size="sm" onClick={handleView}>
             <Eye className="h-4 w-4 mr-1" />
             View
           </Button>
-          <Button variant="outline" size="sm">
+          <Button variant="outline" size="sm" onClick={handleEdit}>
             <Edit className="h-4 w-4 mr-1" />
             Edit
           </Button>
           <Button 
             variant="outline" 
             size="sm"
-            onClick={() => deleteProviderMutation.mutate(provider.id)}
+            onClick={handleDelete}
             disabled={deleteProviderMutation.isPending}
           >
             <Trash2 className="h-4 w-4 mr-1" />
