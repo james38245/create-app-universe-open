@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -9,23 +8,23 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
-import { Eye, EyeOff, Phone, Mail, Shield, CheckCircle } from 'lucide-react';
+import { Eye, EyeOff, Shield, CheckCircle } from 'lucide-react';
+import EmailVerification from '@/components/auth/EmailVerification';
+import { validateKenyanPhone, formatKenyanPhone } from '@/utils/phoneValidation';
 
 const AuthPage = () => {
   const { signUp, signIn } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [verificationStep, setVerificationStep] = useState<'signup' | 'email' | 'phone' | 'complete'>('signup');
+  const [verificationStep, setVerificationStep] = useState<'signup' | 'email' | 'complete'>('signup');
   const [formData, setFormData] = useState({
     email: '',
     password: '',
     confirmPassword: '',
     fullName: '',
     phone: '',
-    userType: 'client',
-    emailVerificationCode: '',
-    phoneVerificationCode: ''
+    userType: 'client'
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -36,7 +35,6 @@ const AuthPage = () => {
   };
 
   const validatePassword = (password: string) => {
-    // Production-level password validation
     const minLength = password.length >= 8;
     const hasUpperCase = /[A-Z]/.test(password);
     const hasLowerCase = /[a-z]/.test(password);
@@ -55,28 +53,9 @@ const AuthPage = () => {
     };
   };
 
-  const validatePhone = (phone: string) => {
-    // Enhanced phone validation for Kenyan numbers
-    const cleanPhone = phone.replace(/\s+/g, '');
-    const kenyanPhoneRegex = /^(\+254|254|0)?([17]\d{8})$/;
-    return kenyanPhoneRegex.test(cleanPhone);
-  };
-
   const validateName = (name: string) => {
     const nameRegex = /^[a-zA-Z\s]{2,50}$/;
     return nameRegex.test(name.trim());
-  };
-
-  const formatPhoneNumber = (phone: string) => {
-    const cleanPhone = phone.replace(/\D/g, '');
-    if (cleanPhone.startsWith('0')) {
-      return '+254' + cleanPhone.substring(1);
-    } else if (cleanPhone.startsWith('254')) {
-      return '+' + cleanPhone;
-    } else if (cleanPhone.startsWith('+254')) {
-      return cleanPhone;
-    }
-    return '+254' + cleanPhone;
   };
 
   const validateForm = (type: 'signin' | 'signup') => {
@@ -124,7 +103,7 @@ const AuthPage = () => {
       // Mandatory phone validation
       if (!formData.phone) {
         newErrors.phone = 'Phone number is required';
-      } else if (!validatePhone(formData.phone)) {
+      } else if (!validateKenyanPhone(formData.phone)) {
         newErrors.phone = 'Please enter a valid Kenyan phone number (e.g., +254712345678, 0712345678)';
       }
 
@@ -144,7 +123,7 @@ const AuthPage = () => {
     setLoading(true);
     try {
       if (type === 'signup') {
-        const formattedPhone = formatPhoneNumber(formData.phone);
+        const formattedPhone = formatKenyanPhone(formData.phone);
         
         const { error } = await signUp(formData.email, formData.password, {
           full_name: formData.fullName.trim(),
@@ -157,7 +136,7 @@ const AuthPage = () => {
         setVerificationStep('email');
         toast({
           title: "Registration Successful!",
-          description: "Please check your email and phone for verification codes.",
+          description: "Please check your email for a verification link to complete your registration.",
         });
       } else {
         const { error } = await signIn(formData.email, formData.password);
@@ -197,6 +176,24 @@ const AuthPage = () => {
     }
   };
 
+  const handleVerificationComplete = () => {
+    setVerificationStep('complete');
+    toast({
+      title: "Email Verified!",
+      description: "Your email has been verified successfully. You can now sign in.",
+    });
+    navigate('/auth');
+  };
+
+  const handleResendCode = async () => {
+    // For now, this would trigger a resend of the verification email
+    // In a real implementation, you'd call your backend to resend
+    toast({
+      title: "Verification Email Resent",
+      description: "Please check your email for a new verification link.",
+    });
+  };
+
   const renderPasswordRequirements = () => {
     const validation = validatePassword(formData.password);
     return (
@@ -228,71 +225,15 @@ const AuthPage = () => {
     );
   };
 
-  if (verificationStep === 'email' || verificationStep === 'phone') {
+  // Show email verification component
+  if (verificationStep === 'email') {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-md w-full">
-          <Card>
-            <CardHeader className="text-center">
-              <div className="mx-auto w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mb-4">
-                {verificationStep === 'email' ? <Mail className="h-6 w-6 text-blue-600" /> : <Phone className="h-6 w-6 text-blue-600" />}
-              </div>
-              <CardTitle>
-                {verificationStep === 'email' ? 'Verify Your Email' : 'Verify Your Phone'}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="text-center text-gray-600">
-                <p>
-                  {verificationStep === 'email' 
-                    ? 'We sent a verification code to your email address. Please check your inbox and enter the code below.'
-                    : 'We sent a verification code to your phone number via SMS. Please enter the code below.'
-                  }
-                </p>
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="verification-code">Verification Code</Label>
-                <Input
-                  id="verification-code"
-                  value={verificationStep === 'email' ? formData.emailVerificationCode : formData.phoneVerificationCode}
-                  onChange={(e) => handleInputChange(
-                    verificationStep === 'email' ? 'emailVerificationCode' : 'phoneVerificationCode', 
-                    e.target.value
-                  )}
-                  placeholder="Enter 6-digit code"
-                  maxLength={6}
-                  className="text-center text-lg tracking-widest"
-                />
-              </div>
-
-              <Button 
-                onClick={() => {
-                  if (verificationStep === 'email') {
-                    setVerificationStep('phone');
-                  } else {
-                    setVerificationStep('complete');
-                    toast({
-                      title: "Verification Complete!",
-                      description: "Your account has been verified successfully.",
-                    });
-                    navigate('/profile');
-                  }
-                }}
-                className="w-full"
-                disabled={loading}
-              >
-                {loading ? 'Verifying...' : 'Verify Code'}
-              </Button>
-
-              <div className="text-center">
-                <Button variant="link" size="sm">
-                  Resend Code
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+        <EmailVerification
+          email={formData.email}
+          onVerificationComplete={handleVerificationComplete}
+          onResendCode={handleResendCode}
+        />
       </div>
     );
   }
