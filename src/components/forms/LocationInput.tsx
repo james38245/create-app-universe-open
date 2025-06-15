@@ -58,12 +58,19 @@ const LocationInput: React.FC<LocationInputProps> = ({
             });
           } else {
             // Fallback to coordinates if reverse geocoding fails
-            form.setValue(fieldName, `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`);
+            const locationString = `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`;
+            form.setValue(fieldName, locationString);
             form.setValue('coordinates', { lat: latitude, lng: longitude });
+            
+            toast({
+              title: "GPS coordinates set",
+              description: "Location set using GPS coordinates"
+            });
           }
         } catch (error) {
           // Fallback to coordinates if API fails
-          form.setValue(fieldName, `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`);
+          const locationString = `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`;
+          form.setValue(fieldName, locationString);
           form.setValue('coordinates', { lat: latitude, lng: longitude });
           
           toast({
@@ -104,6 +111,14 @@ const LocationInput: React.FC<LocationInputProps> = ({
     );
   };
 
+  // Update coordinates when form value changes
+  useEffect(() => {
+    const currentCoords = form.getValues('coordinates');
+    if (currentCoords) {
+      setCoordinates(currentCoords);
+    }
+  }, [form]);
+
   return (
     <FormField
       control={form.control}
@@ -118,8 +133,11 @@ const LocationInput: React.FC<LocationInputProps> = ({
                 {...field}
                 onChange={(e) => {
                   field.onChange(e);
-                  // Clear coordinates when manually typing
-                  if (coordinates) {
+                  // Clear coordinates when manually typing unless it looks like coordinates
+                  const value = e.target.value;
+                  const isCoordinates = /^-?\d+\.?\d*,\s*-?\d+\.?\d*$/.test(value);
+                  
+                  if (!isCoordinates && coordinates) {
                     setCoordinates(null);
                     form.setValue('coordinates', null);
                   }
@@ -133,6 +151,7 @@ const LocationInput: React.FC<LocationInputProps> = ({
               onClick={getCurrentLocation}
               disabled={isLoadingLocation}
               className="shrink-0"
+              title="Get current location"
             >
               {isLoadingLocation ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
@@ -142,9 +161,11 @@ const LocationInput: React.FC<LocationInputProps> = ({
             </Button>
           </div>
           {coordinates && (
-            <p className="text-xs text-muted-foreground">
-              GPS: {coordinates.lat.toFixed(6)}, {coordinates.lng.toFixed(6)}
-            </p>
+            <div className="flex items-center gap-2">
+              <p className="text-xs text-muted-foreground">
+                📍 GPS: {coordinates.lat.toFixed(6)}, {coordinates.lng.toFixed(6)}
+              </p>
+            </div>
           )}
           <FormMessage />
         </FormItem>

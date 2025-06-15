@@ -13,6 +13,7 @@ interface ProfileData {
   bio: string;
   avatar_url: string;
   user_type: string;
+  coordinates?: { lat: number; lng: number };
 }
 
 export const useProfile = () => {
@@ -99,13 +100,22 @@ export const useProfile = () => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         if (event === 'USER_UPDATED' && session?.user) {
-          // Refresh profile data when user is updated (e.g., email confirmed)
-          await fetchProfile();
+          console.log('User updated event detected, refreshing profile...');
           
-          toast({
-            title: "Email Updated",
-            description: "Your email has been successfully updated.",
-          });
+          // Wait a moment for the database to be updated
+          setTimeout(async () => {
+            await fetchProfile();
+            
+            toast({
+              title: "Email Updated",
+              description: "Your email has been successfully updated and your profile has been refreshed.",
+            });
+          }, 1000);
+        }
+        
+        if (event === 'TOKEN_REFRESHED' && session?.user) {
+          // Also refresh on token refresh in case email was updated
+          await fetchProfile();
         }
       }
     );

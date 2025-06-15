@@ -7,6 +7,8 @@ import { Button } from '@/components/ui/button';
 import { Save, Mail } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from '@/hooks/use-toast';
+import LocationInput from '@/components/forms/LocationInput';
+import { useForm } from 'react-hook-form';
 
 interface ProfileFormProps {
   profileData: {
@@ -36,17 +38,26 @@ const ProfileForm: React.FC<ProfileFormProps> = ({
   const [emailChanged, setEmailChanged] = useState(false);
   const [pendingEmailChange, setPendingEmailChange] = useState(false);
 
+  const form = useForm({
+    defaultValues: {
+      location: '',
+      coordinates: null
+    }
+  });
+
   useEffect(() => {
     if (profileData) {
-      setFormData({
+      const newFormData = {
         full_name: profileData.full_name || '',
         email: profileData.email || '',
         phone: profileData.phone || '',
         location: profileData.location || '',
         bio: profileData.bio || ''
-      });
+      };
+      setFormData(newFormData);
+      form.setValue('location', profileData.location || '');
     }
-  }, [profileData]);
+  }, [profileData, form]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -63,6 +74,13 @@ const ProfileForm: React.FC<ProfileFormProps> = ({
       // Save other profile data normally
       const dataToSave = { ...formData };
       delete dataToSave.email; // Don't update email through profile update
+      
+      // Include coordinates if available
+      const coordinates = form.getValues('coordinates');
+      if (coordinates) {
+        dataToSave.coordinates = coordinates;
+      }
+      
       onSave(dataToSave);
     }
   };
@@ -78,14 +96,23 @@ const ProfileForm: React.FC<ProfileFormProps> = ({
       if (error) throw error;
 
       setPendingEmailChange(true);
+      setEmailChanged(false);
+      
       toast({
         title: "Email Change Initiated",
-        description: "Please check both your old and new email addresses for confirmation links. Your email will be updated once you confirm the change.",
+        description: "Please check both your old and new email addresses for confirmation links. Click the confirmation link to complete the email change.",
       });
 
       // Save other profile data (excluding email)
       const dataToSave = { ...formData };
       delete dataToSave.email;
+      
+      // Include coordinates if available
+      const coordinates = form.getValues('coordinates');
+      if (coordinates) {
+        dataToSave.coordinates = coordinates;
+      }
+      
       onSave(dataToSave);
       
     } catch (error: any) {
@@ -102,7 +129,15 @@ const ProfileForm: React.FC<ProfileFormProps> = ({
     
     if (field === 'email') {
       setEmailChanged(value !== (profileData?.email || ''));
+      // Reset pending state when user starts typing a new email
+      if (pendingEmailChange && value !== (profileData?.email || '')) {
+        setPendingEmailChange(false);
+      }
     }
+  };
+
+  const handleLocationChange = (location: string) => {
+    setFormData(prev => ({ ...prev, location }));
   };
 
   return (
@@ -159,14 +194,20 @@ const ProfileForm: React.FC<ProfileFormProps> = ({
         </div>
         
         <div className="space-y-2">
-          <Label htmlFor="location">Location</Label>
-          <Input
-            id="location"
-            value={formData.location}
-            onChange={(e) => handleChange('location', e.target.value)}
-            disabled={!isEditing}
-            placeholder="Enter your location"
+          <LocationInput
+            form={form}
+            fieldName="location"
+            label="Location"
+            placeholder="Enter location or use GPS"
           />
+          {isEditing && (
+            <Input
+              value={formData.location}
+              onChange={(e) => handleLocationChange(e.target.value)}
+              placeholder="Or type location manually"
+              className="mt-2"
+            />
+          )}
         </div>
       </div>
 
