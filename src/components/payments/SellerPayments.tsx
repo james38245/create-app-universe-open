@@ -52,7 +52,18 @@ const SellerPayments = () => {
 
       if (venueError && serviceError) throw venueError || serviceError;
       
-      return [...(venueBookings || []), ...(serviceBookings || [])];
+      // Mark each record with its type for proper handling
+      const venueEarnings = (venueBookings || []).map(booking => ({
+        ...booking,
+        type: 'venue' as const
+      }));
+      
+      const serviceEarnings = (serviceBookings || []).map(booking => ({
+        ...booking,
+        type: 'service' as const
+      }));
+      
+      return [...venueEarnings, ...serviceEarnings];
     },
     enabled: !!user
   });
@@ -72,6 +83,14 @@ const SellerPayments = () => {
       </div>
     );
   }
+
+  const getServiceName = (earning: any) => {
+    if (earning.type === 'venue') {
+      return earning.venues?.name || 'Venue';
+    } else {
+      return earning.service_providers?.service_category || 'Service';
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -148,7 +167,7 @@ const SellerPayments = () => {
               {earnings?.map((earning) => (
                 <TableRow key={earning.id}>
                   <TableCell>
-                    {earning.venues?.name || earning.service_providers?.service_category || 'N/A'}
+                    {getServiceName(earning)}
                   </TableCell>
                   <TableCell>KSh {earning.total_amount?.toLocaleString()}</TableCell>
                   <TableCell className="text-red-600">
