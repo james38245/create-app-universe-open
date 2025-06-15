@@ -8,6 +8,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from '@/hooks/use-toast';
 import { useVerification } from '@/hooks/useVerification';
+import { sanitizeFormData, serviceProviderValidationSchema } from '@/utils/listingValidation';
 import { Form } from '@/components/ui/form';
 import ServiceProviderSecurityAlert from './ServiceProviderSecurityAlert';
 import ServiceProviderFormHeader from './ServiceProviderFormHeader';
@@ -71,10 +72,29 @@ const ServiceProviderFormProvider: React.FC<ServiceProviderFormProviderProps> = 
     mutationFn: async (data: ServiceProviderFormData) => {
       if (!user?.id) throw new Error('User not authenticated');
 
+      // Sanitize form data for security
+      const sanitizedData = sanitizeFormData(data);
+
+      // Validate against security schema
+      const validationResult = serviceProviderValidationSchema.safeParse({
+        service_category: sanitizedData.service_type,
+        specialties: sanitizedData.specialties || [],
+        bio: sanitizedData.bio || '',
+        years_experience: sanitizedData.experience_years || 0,
+        price_per_event: sanitizedData.hourly_rate || 0,
+        portfolio_images: uploadedImages,
+        certifications: sanitizedData.certifications || [],
+        response_time_hours: 24,
+      });
+
+      if (!validationResult.success) {
+        throw new Error(`Validation failed: ${validationResult.error.issues.map(i => i.message).join(', ')}`);
+      }
+
       const serviceProviderData = {
         user_id: user.id,
-        bio: data.bio || '',
-        certifications: data.certifications || [],
+        bio: sanitizedData.bio || '',
+        certifications: sanitizedData.certifications || [],
         blocked_dates: [],
         booking_terms: {
           special_terms: "",
@@ -84,11 +104,11 @@ const ServiceProviderFormProvider: React.FC<ServiceProviderFormProviderProps> = 
           advance_booking_days: 1,
           minimum_booking_hours: 2
         },
-        years_experience: data.experience_years || 1,
-        price_per_event: data.hourly_rate || 1000,
+        years_experience: sanitizedData.experience_years || 1,
+        price_per_event: sanitizedData.hourly_rate || 1000,
         portfolio_images: uploadedImages,
-        service_category: data.service_type || '',
-        specialties: data.specialties || [],
+        service_category: sanitizedData.service_type || '',
+        specialties: sanitizedData.specialties || [],
         verification_status: 'pending',
         is_available: false,
         admin_verified: false,
@@ -105,13 +125,43 @@ const ServiceProviderFormProvider: React.FC<ServiceProviderFormProviderProps> = 
 
       if (error) throw error;
 
+      // Run validation after creation
+      const validationData = {
+        service_category: serviceProviderData.service_category,
+        bio: serviceProviderData.bio,
+        price_per_event: serviceProviderData.price_per_event,
+        years_experience: serviceProviderData.years_experience,
+        portfolio_images: serviceProviderData.portfolio_images,
+        specialties: serviceProviderData.specialties
+      };
+
+      const { error: validationError } = await supabase.rpc('validate_listing_data', {
+        p_entity_type: 'service_provider',
+        p_entity_id: insertedData.id,
+        p_data: validationData
+      });
+
+      if (validationError) {
+        console.error('Validation error:', validationError);
+      }
+
+      // Process verification after validation
+      const { error: verificationError } = await supabase.rpc('process_listing_verification', {
+        p_entity_type: 'service_provider',
+        p_entity_id: insertedData.id
+      });
+
+      if (verificationError) {
+        console.error('Verification processing error:', verificationError);
+      }
+
       return insertedData;
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['my-services'] });
       toast({
         title: 'Success!',
-        description: 'Service provider profile created successfully! Please check your email to complete verification.',
+        description: 'Service provider profile created and submitted for verification! Our team will review your listing within 24 hours.',
       });
       form.reset();
       setUploadedImages([]);
@@ -120,8 +170,8 @@ const ServiceProviderFormProvider: React.FC<ServiceProviderFormProviderProps> = 
     onError: (error: any) => {
       console.error('Error creating service provider:', error);
       toast({
-        title: 'Error',
-        description: error.message || 'Failed to create service provider profile',
+        title: 'Validation Failed',
+        description: error.message || 'Failed to create service provider profile. Please check all required fields and try again.',
         variant: 'destructive',
       });
     },

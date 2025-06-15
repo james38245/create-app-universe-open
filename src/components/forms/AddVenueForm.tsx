@@ -1,17 +1,12 @@
 
 import React, { useState } from 'react';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { ArrowLeft, Shield, CheckCircle } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
-import { useQueryClient } from '@tanstack/react-query';
+import { Card, CardContent } from '@/components/ui/card';
 import VenueFormProvider from './VenueFormProvider';
 import { VenueFormData } from '@/types/venue';
-import { venueValidationSchema, sanitizeFormData, validateImageUrls } from '@/utils/listingValidation';
-import { useVerification } from '@/hooks/useVerification';
-import { Alert, AlertDescription } from '@/components/ui/alert';
 
 interface AddVenueFormProps {
   onSuccess: () => void;
@@ -21,143 +16,109 @@ interface AddVenueFormProps {
 const AddVenueForm: React.FC<AddVenueFormProps> = ({ onSuccess, onCancel }) => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
-  const { initiateVerification, isInitiating } = useVerification();
   const [uploadedImages, setUploadedImages] = useState<string[]>([]);
   const [blockedDates, setBlockedDates] = useState<string[]>([]);
   const [userProfile, setUserProfile] = useState<any>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = async (data: VenueFormData, images: string[], dates: string[]) => {
-    if (!user) return;
-
-    setIsSubmitting(true);
-    
-    try {
-      // Sanitize all input data
-      const sanitizedData = sanitizeFormData(data);
-      
-      // Validate images
-      const validatedImages = validateImageUrls(images);
-      if (validatedImages.length !== images.length) {
-        toast({
-          title: "Security Warning",
-          description: "Some images were rejected for security reasons. Please use approved image hosting services.",
-          variant: "destructive"
-        });
-        return;
-      }
-
-      // Validate form data with enhanced schema
-      const validationResult = venueValidationSchema.safeParse({
-        ...sanitizedData,
-        images: validatedImages
-      });
-
-      if (!validationResult.success) {
-        const errors = validationResult.error.errors.map(err => err.message).join(', ');
-        toast({
-          title: "Validation Failed",
-          description: errors,
-          variant: "destructive"
-        });
-        return;
-      }
+  const createVenueMutation = useMutation({
+    mutationFn: async ({ data, images, blocked }: { data: VenueFormData; images: string[]; blocked: string[] }) => {
+      if (!user?.id) throw new Error('User not authenticated');
 
       const venueData = {
-        name: sanitizedData.name,
-        description: sanitizedData.description,
-        location: sanitizedData.location,
-        coordinates: sanitizedData.coordinates,
-        capacity: sanitizedData.capacity,
-        pricing_unit: sanitizedData.pricing_unit,
-        price_per_day: sanitizedData.pricing_unit === 'day' ? sanitizedData.price_per_day : null,
-        price_per_hour: sanitizedData.pricing_unit === 'hour' ? sanitizedData.price_per_hour : null,
-        venue_type: sanitizedData.venue_type,
-        amenities: sanitizedData.amenities || [],
-        images: validatedImages,
-        is_active: false, // Will be activated after verification
         owner_id: user.id,
-        booking_terms: sanitizedData.booking_terms,
-        blocked_dates: dates,
+        name: data.name,
+        description: data.description,
+        location: data.location,
+        capacity: data.capacity,
+        pricing_unit: data.pricing_unit,
+        price_per_day: data.pricing_unit === 'day' ? data.price_per_day : undefined,
+        price_per_hour: data.pricing_unit === 'hour' ? data.price_per_hour : undefined,
+        venue_type: data.venue_type,
+        amenities: data.amenities || [],
+        images: images,
+        is_active: false, // Keep inactive until verified
+        booking_terms: data.booking_terms,
+        blocked_dates: blocked,
         verification_status: 'pending'
       };
 
-      const { data: venueResult, error } = await supabase
+      const { data: insertedData, error } = await supabase
         .from('venues')
-        .insert(venueData)
-        .select('id, name')
+        .insert([venueData])
+        .select()
         .single();
 
       if (error) throw error;
 
-      // Get user profile for email
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('email, full_name')
-        .eq('id', user.id)
-        .single();
+      // Run validation after creation
+      const validationData = {
+        name: venueData.name,
+        description: venueData.description,
+        location: venueData.location,
+        price_per_day: venueData.price_per_day || venueData.price_per_hour,
+        capacity: venueData.capacity,
+        images: venueData.images,
+        venue_type: venueData.venue_type
+      };
 
-      if (!profile) throw new Error('User profile not found');
-
-      // Initiate verification process
-      await initiateVerification(
-        'venue',
-        venueResult.id,
-        user.id,
-        venueResult.name,
-        profile.email,
-        profile.full_name || profile.email.split('@')[0]
-      );
-
-      toast({
-        title: "Venue Submitted Successfully",
-        description: "Your venue has been submitted and a verification email has been sent. Please check your email to complete the verification process."
+      const { error: validationError } = await supabase.rpc('validate_listing_data', {
+        p_entity_type: 'venue',
+        p_entity_id: insertedData.id,
+        p_data: validationData
       });
 
+      if (validationError) {
+        console.error('Validation error:', validationError);
+      }
+
+      // Process verification after validation
+      const { error: verificationError } = await supabase.rpc('process_listing_verification', {
+        p_entity_type: 'venue',
+        p_entity_id: insertedData.id
+      });
+
+      if (verificationError) {
+        console.error('Verification processing error:', verificationError);
+      }
+
+      return insertedData;
+    },
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['my-venues'] });
-      onSuccess();
-    } catch (error: any) {
-      console.error('Error adding venue:', error);
       toast({
-        title: "Submission Failed",
-        description: error.message || "Failed to submit venue for verification",
-        variant: "destructive"
+        title: 'Success!',
+        description: 'Venue listing created and submitted for verification! Our team will review your listing within 24 hours.',
       });
-    } finally {
-      setIsSubmitting(false);
-    }
+      setUploadedImages([]);
+      setBlockedDates([]);
+      onSuccess();
+    },
+    onError: (error: any) => {
+      console.error('Error creating venue:', error);
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to create venue listing',
+        variant: 'destructive',
+      });
+    },
+  });
+
+  const handleSubmit = async (data: VenueFormData, images: string[], blocked: string[]) => {
+    createVenueMutation.mutate({ data, images, blocked });
   };
 
   return (
-    <div className="max-w-6xl mx-auto space-y-6">
-      <div className="flex items-center gap-4 mb-6">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={onCancel}
-          className="flex items-center gap-2"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Back to Listings
-        </Button>
-      </div>
-      
-      <Alert className="border-blue-200 bg-blue-50">
-        <Shield className="h-4 w-4 text-blue-600" />
-        <AlertDescription className="text-blue-800">
-          <strong>Security & Verification Process:</strong> All venue listings undergo verification to ensure platform security. 
-          After submission, you'll receive a verification email and our team will review your listing before it goes live.
-        </AlertDescription>
-      </Alert>
-      
+    <div className="max-w-4xl mx-auto space-y-6">
       <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <CheckCircle className="h-5 w-5 text-green-600" />
-            Add New Venue - Secure Submission
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
+        <CardContent className="p-6">
+          <div className="mb-6">
+            <h1 className="text-2xl font-bold mb-2">Add New Venue</h1>
+            <p className="text-muted-foreground">
+              Create a comprehensive venue listing with all required information, pricing, and booking terms.
+              Your listing will be reviewed for security and quality before going live.
+            </p>
+          </div>
+          
           <VenueFormProvider
             onSubmit={handleSubmit}
             uploadedImages={uploadedImages}
@@ -167,7 +128,7 @@ const AddVenueForm: React.FC<AddVenueFormProps> = ({ onSuccess, onCancel }) => {
             userProfile={userProfile}
             setUserProfile={setUserProfile}
             onCancel={onCancel}
-            isSubmitting={isSubmitting || isInitiating}
+            isSubmitting={createVenueMutation.isPending}
           />
         </CardContent>
       </Card>

@@ -133,6 +133,36 @@ export type Database = {
           },
         ]
       }
+      listing_requirements: {
+        Row: {
+          created_at: string | null
+          entity_type: string
+          id: string
+          is_mandatory: boolean | null
+          requirement_description: string | null
+          requirement_name: string
+          validation_rule: Json | null
+        }
+        Insert: {
+          created_at?: string | null
+          entity_type: string
+          id?: string
+          is_mandatory?: boolean | null
+          requirement_description?: string | null
+          requirement_name: string
+          validation_rule?: Json | null
+        }
+        Update: {
+          created_at?: string | null
+          entity_type?: string
+          id?: string
+          is_mandatory?: boolean | null
+          requirement_description?: string | null
+          requirement_name?: string
+          validation_rule?: Json | null
+        }
+        Relationships: []
+      }
       messages: {
         Row: {
           booking_id: string | null
@@ -301,17 +331,21 @@ export type Database = {
           created_at: string | null
           id: string
           is_available: boolean | null
+          last_validated_at: string | null
           portfolio_images: string[] | null
           price_per_event: number
           rating: number | null
           response_time_hours: number | null
+          security_validated: boolean | null
           service_category: string
           specialties: string[] | null
           total_reviews: number | null
           updated_at: string | null
           user_id: string
+          validation_notes: string | null
           verification_completed_at: string | null
           verification_requested_at: string | null
+          verification_score: number | null
           verification_status: string | null
           verification_token: string | null
           years_experience: number | null
@@ -327,17 +361,21 @@ export type Database = {
           created_at?: string | null
           id?: string
           is_available?: boolean | null
+          last_validated_at?: string | null
           portfolio_images?: string[] | null
           price_per_event: number
           rating?: number | null
           response_time_hours?: number | null
+          security_validated?: boolean | null
           service_category: string
           specialties?: string[] | null
           total_reviews?: number | null
           updated_at?: string | null
           user_id: string
+          validation_notes?: string | null
           verification_completed_at?: string | null
           verification_requested_at?: string | null
+          verification_score?: number | null
           verification_status?: string | null
           verification_token?: string | null
           years_experience?: number | null
@@ -353,17 +391,21 @@ export type Database = {
           created_at?: string | null
           id?: string
           is_available?: boolean | null
+          last_validated_at?: string | null
           portfolio_images?: string[] | null
           price_per_event?: number
           rating?: number | null
           response_time_hours?: number | null
+          security_validated?: boolean | null
           service_category?: string
           specialties?: string[] | null
           total_reviews?: number | null
           updated_at?: string | null
           user_id?: string
+          validation_notes?: string | null
           verification_completed_at?: string | null
           verification_requested_at?: string | null
+          verification_score?: number | null
           verification_status?: string | null
           verification_token?: string | null
           years_experience?: number | null
@@ -432,6 +474,42 @@ export type Database = {
           },
         ]
       }
+      validation_logs: {
+        Row: {
+          created_at: string | null
+          entity_id: string
+          entity_type: string
+          flagged_issues: string[] | null
+          id: string
+          security_score: number | null
+          validated_by: string | null
+          validation_result: Json
+          validation_type: string
+        }
+        Insert: {
+          created_at?: string | null
+          entity_id: string
+          entity_type: string
+          flagged_issues?: string[] | null
+          id?: string
+          security_score?: number | null
+          validated_by?: string | null
+          validation_result: Json
+          validation_type: string
+        }
+        Update: {
+          created_at?: string | null
+          entity_id?: string
+          entity_type?: string
+          flagged_issues?: string[] | null
+          id?: string
+          security_score?: number | null
+          validated_by?: string | null
+          validation_result?: Json
+          validation_type?: string
+        }
+        Relationships: []
+      }
       venues: {
         Row: {
           admin_verified: boolean | null
@@ -446,16 +524,20 @@ export type Database = {
           id: string
           images: string[] | null
           is_active: boolean | null
+          last_validated_at: string | null
           location: string
           name: string
           owner_id: string
           price_per_day: number
           rating: number | null
+          security_validated: boolean | null
           total_reviews: number | null
           updated_at: string | null
+          validation_notes: string | null
           venue_type: string
           verification_completed_at: string | null
           verification_requested_at: string | null
+          verification_score: number | null
           verification_status: string | null
           verification_token: string | null
         }
@@ -472,16 +554,20 @@ export type Database = {
           id?: string
           images?: string[] | null
           is_active?: boolean | null
+          last_validated_at?: string | null
           location: string
           name: string
           owner_id: string
           price_per_day: number
           rating?: number | null
+          security_validated?: boolean | null
           total_reviews?: number | null
           updated_at?: string | null
+          validation_notes?: string | null
           venue_type: string
           verification_completed_at?: string | null
           verification_requested_at?: string | null
+          verification_score?: number | null
           verification_status?: string | null
           verification_token?: string | null
         }
@@ -498,16 +584,20 @@ export type Database = {
           id?: string
           images?: string[] | null
           is_active?: boolean | null
+          last_validated_at?: string | null
           location?: string
           name?: string
           owner_id?: string
           price_per_day?: number
           rating?: number | null
+          security_validated?: boolean | null
           total_reviews?: number | null
           updated_at?: string | null
+          validation_notes?: string | null
           venue_type?: string
           verification_completed_at?: string | null
           verification_requested_at?: string | null
+          verification_score?: number | null
           verification_status?: string | null
           verification_token?: string | null
         }
@@ -593,6 +683,10 @@ export type Database = {
         Args: { booking_uuid: string }
         Returns: boolean
       }
+      process_listing_verification: {
+        Args: { p_entity_type: string; p_entity_id: string }
+        Returns: boolean
+      }
       process_refund: {
         Args: {
           booking_uuid: string
@@ -600,6 +694,10 @@ export type Database = {
           cancelled_by_user_id?: string
         }
         Returns: boolean
+      }
+      validate_listing_data: {
+        Args: { p_entity_type: string; p_entity_id: string; p_data: Json }
+        Returns: Json
       }
       verify_listing: {
         Args: { p_token: string }

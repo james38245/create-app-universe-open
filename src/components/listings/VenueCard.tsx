@@ -5,8 +5,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Eye, Edit, Trash2, Send, Shield, Clock, CheckCircle } from 'lucide-react';
+import { Eye, Edit, Trash2, Send, MapPin, Users, DollarSign } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import ValidationStatusBadge from './ValidationStatusBadge';
 
 interface VenueCardProps {
   venue: any;
@@ -28,7 +29,7 @@ const VenueCard = ({ venue, onDelete }: VenueCardProps) => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['my-venues'] });
       toast({
-        title: "Success",
+        title: "Success", 
         description: "Venue posted successfully and is now visible to clients"
       });
     },
@@ -41,101 +42,69 @@ const VenueCard = ({ venue, onDelete }: VenueCardProps) => {
     }
   });
 
-  const getVerificationBadge = () => {
-    const status = venue.verification_status || 'pending';
-    
-    switch (status) {
-      case 'verified':
-        return (
-          <Badge variant="default" className="bg-green-600">
-            <CheckCircle className="h-3 w-3 mr-1" />
-            Verified
-          </Badge>
-        );
-      case 'pending':
-        return (
-          <Badge variant="secondary">
-            <Clock className="h-3 w-3 mr-1" />
-            Pending Verification
-          </Badge>
-        );
-      default:
-        return (
-          <Badge variant="outline">
-            <Shield className="h-3 w-3 mr-1" />
-            Draft
-          </Badge>
-        );
-    }
-  };
-
-  const getStatusBadge = () => {
-    if (venue.admin_verified) {
-      return (
-        <Badge variant="default" className="bg-blue-600">
-          Admin Approved
-        </Badge>
-      );
-    }
-    if (venue.verification_status === 'verified') {
-      return (
-        <Badge variant="secondary">
-          Under Review
-        </Badge>
-      );
-    }
-    return (
-      <Badge variant={venue.is_active ? "default" : "secondary"}>
-        {venue.is_active ? "Posted" : "Draft"}
-      </Badge>
-    );
-  };
-
-  const canPost = venue.verification_status === 'verified' && venue.admin_verified && !venue.is_active;
+  const canPost = venue.verification_status === 'verified' && venue.security_validated;
 
   return (
     <Card>
       <CardHeader>
         <div className="flex justify-between items-start">
           <CardTitle className="text-lg">{venue.name}</CardTitle>
-          <div className="flex flex-col gap-1">
-            {getVerificationBadge()}
-            {getStatusBadge()}
+          <div className="flex gap-2 flex-wrap">
+            <ValidationStatusBadge 
+              status={venue.verification_status} 
+              score={venue.verification_score}
+            />
+            <Badge variant={venue.is_active ? "default" : "secondary"}>
+              {venue.is_active ? "Live" : "Draft"}
+            </Badge>
           </div>
         </div>
       </CardHeader>
       <CardContent>
-        <div className="space-y-2 mb-4">
-          <p className="text-sm text-muted-foreground">{venue.location}</p>
-          <p className="text-sm">Capacity: {venue.capacity} guests</p>
-          <p className="text-sm font-semibold">KSh {venue.price_per_day.toLocaleString()}/day</p>
-          <p className="text-sm text-muted-foreground">{venue.venue_type}</p>
-          {venue.amenities && venue.amenities.length > 0 && (
-            <p className="text-xs text-muted-foreground">
-              Amenities: {venue.amenities.slice(0, 3).join(', ')}
-              {venue.amenities.length > 3 && ` +${venue.amenities.length - 3} more`}
-            </p>
-          )}
+        <div className="space-y-3 mb-4">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <MapPin className="h-4 w-4" />
+            {venue.location}
+          </div>
           
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <Users className="h-4 w-4" />
+            Capacity: {venue.capacity} guests
+          </div>
+          
+          <div className="flex items-center gap-2 text-sm font-semibold">
+            <DollarSign className="h-4 w-4" />
+            KSh {venue.price_per_day?.toLocaleString()}/day
+          </div>
+
           {venue.verification_status === 'pending' && (
-            <div className="bg-yellow-50 border border-yellow-200 rounded p-2 mt-3">
-              <p className="text-xs text-yellow-800">
-                <Shield className="h-3 w-3 inline mr-1" />
-                Please check your email to complete verification
-              </p>
+            <div className="text-xs text-muted-foreground bg-yellow-50 p-2 rounded">
+              📋 Under security review - estimated completion within 24 hours
             </div>
           )}
-          
-          {venue.verification_status === 'verified' && !venue.admin_verified && (
-            <div className="bg-blue-50 border border-blue-200 rounded p-2 mt-3">
-              <p className="text-xs text-blue-800">
-                <Clock className="h-3 w-3 inline mr-1" />
-                Under admin review - will be published once approved
-              </p>
+
+          {venue.verification_status === 'rejected' && venue.validation_notes && (
+            <div className="text-xs text-red-600 bg-red-50 p-2 rounded">
+              ❌ Issues to resolve: {venue.validation_notes}
+            </div>
+          )}
+
+          {venue.amenities && venue.amenities.length > 0 && (
+            <div className="flex flex-wrap gap-1">
+              {venue.amenities.slice(0, 3).map((amenity: string, index: number) => (
+                <Badge key={index} variant="outline" className="text-xs">
+                  {amenity}
+                </Badge>
+              ))}
+              {venue.amenities.length > 3 && (
+                <Badge variant="outline" className="text-xs">
+                  +{venue.amenities.length - 3} more
+                </Badge>
+              )}
             </div>
           )}
         </div>
-        
+
         <div className="flex gap-2 flex-wrap">
           <Button variant="outline" size="sm">
             <Eye className="h-4 w-4 mr-1" />
@@ -153,7 +122,7 @@ const VenueCard = ({ venue, onDelete }: VenueCardProps) => {
             <Trash2 className="h-4 w-4 mr-1" />
             Delete
           </Button>
-          {canPost && (
+          {!venue.is_active && canPost && (
             <Button 
               size="sm"
               onClick={() => postVenueMutation.mutate(venue.id)}
@@ -161,7 +130,7 @@ const VenueCard = ({ venue, onDelete }: VenueCardProps) => {
               className="bg-green-600 hover:bg-green-700"
             >
               <Send className="h-4 w-4 mr-1" />
-              Post
+              Go Live
             </Button>
           )}
         </div>

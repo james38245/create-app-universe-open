@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -5,6 +6,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { Form } from '@/components/ui/form';
 import { venueSchema, VenueFormData, defaultVenueFormValues } from '@/types/venue';
+import { sanitizeFormData, venueValidationSchema } from '@/utils/listingValidation';
+import { toast } from '@/hooks/use-toast';
 import VenueFormContent from './VenueFormContent';
 import VenuePaymentSection from './VenuePaymentSection';
 
@@ -53,7 +56,41 @@ const VenueFormProvider: React.FC<VenueFormProviderProps> = ({
   }, [user, setUserProfile]);
 
   const handleSubmit = async (data: VenueFormData) => {
-    await onSubmit(data, uploadedImages, blockedDates);
+    try {
+      // Sanitize form data for security
+      const sanitizedData = sanitizeFormData(data);
+
+      // Validate against security schema
+      const validationResult = venueValidationSchema.safeParse({
+        name: sanitizedData.name,
+        description: sanitizedData.description,
+        location: sanitizedData.location,
+        venue_type: sanitizedData.venue_type,
+        capacity: sanitizedData.capacity,
+        price_per_day: sanitizedData.price_per_day,
+        price_per_hour: sanitizedData.price_per_hour,
+        amenities: sanitizedData.amenities || [],
+        images: uploadedImages,
+        booking_terms: sanitizedData.booking_terms
+      });
+
+      if (!validationResult.success) {
+        toast({
+          title: 'Validation Failed',
+          description: `Please fix the following issues: ${validationResult.error.issues.map(i => i.message).join(', ')}`,
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      await onSubmit(sanitizedData, uploadedImages, blockedDates);
+    } catch (error: any) {
+      toast({
+        title: 'Submission Failed',
+        description: error.message || 'Failed to submit venue listing',
+        variant: 'destructive',
+      });
+    }
   };
 
   return (
