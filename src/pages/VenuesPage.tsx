@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -118,7 +117,7 @@ const VenuesPage = () => {
 
   const [displayedVenues, setDisplayedVenues] = useState(venues);
 
-  const handleSearch = (searchTerm: string, capacity?: number, location?: string) => {
+  const handleSearch = (searchTerm: string, capacity?: number, location?: string, category?: string) => {
     let filtered = venues;
 
     if (searchTerm) {
@@ -137,6 +136,10 @@ const VenuesPage = () => {
       filtered = filtered.filter(venue => 
         venue.location.toLowerCase().includes(location.toLowerCase())
       );
+    }
+
+    if (category) {
+      filtered = filtered.filter(venue => venue.venue_type === category);
     }
 
     setDisplayedVenues(filtered);
@@ -162,6 +165,7 @@ const VenuesPage = () => {
             <SearchBar 
               onSearch={handleSearch}
               placeholder="Search venues by name, location, or amenities..."
+              searchType="venues"
             />
           </div>
 

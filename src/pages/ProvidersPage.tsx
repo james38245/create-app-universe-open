@@ -2,67 +2,75 @@
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Search, Filter, Users } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
+import SearchBar from '@/components/SearchBar';
+import { Users, Grid, List, Filter } from 'lucide-react';
 import ServiceProviderCard from '@/components/ServiceProviderCard';
 
 const ProvidersPage = () => {
-  const [searchQuery, setSearchQuery] = useState('');
-  const [categoryFilter, setCategoryFilter] = useState('all');
-  const [availabilityFilter, setAvailabilityFilter] = useState('all');
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [filteredProviders, setFilteredProviders] = useState<any[]>([]);
 
   const { data: providers, isLoading } = useQuery({
-    queryKey: ['service-providers', searchQuery, categoryFilter, availabilityFilter],
+    queryKey: ['service-providers'],
     queryFn: async () => {
-      let query = supabase
+      const { data, error } = await supabase
         .from('service_providers')
         .select(`
           *,
-          profiles!service_providers_user_id_fkey(full_name, email)
-        `);
-
-      if (availabilityFilter === 'available') {
-        query = query.eq('is_available', true);
-      }
-
-      if (categoryFilter !== 'all') {
-        query = query.eq('service_category', categoryFilter);
-      }
-
-      if (searchQuery) {
-        query = query.or(`service_category.ilike.%${searchQuery}%,profiles.full_name.ilike.%${searchQuery}%`);
-      }
-
-      const { data, error } = await query.order('rating', { ascending: false });
+          profiles!service_providers_user_id_fkey(full_name, email, avatar_url)
+        `)
+        .order('rating', { ascending: false });
       
       if (error) throw error;
       return data;
     }
   });
 
-  const categories = [
-    'Photography',
-    'Catering',
-    'Music & DJ',
-    'Event Planning',
-    'Decoration',
-    'Security',
-    'Transportation',
-    'Entertainment'
-  ];
+  const [displayedProviders, setDisplayedProviders] = useState(providers || []);
 
-  const filteredProviders = providers || [];
+  React.useEffect(() => {
+    if (providers) {
+      setDisplayedProviders(providers);
+    }
+  }, [providers]);
+
+  const handleSearch = (searchTerm: string, capacity?: number, location?: string, category?: string) => {
+    let filtered = providers || [];
+
+    if (searchTerm) {
+      filtered = filtered.filter(provider =>
+        provider.service_category.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        provider.profiles?.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        provider.description?.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+
+    if (location) {
+      filtered = filtered.filter(provider =>
+        provider.location?.toLowerCase().includes(location.toLowerCase())
+      );
+    }
+
+    if (category) {
+      filtered = filtered.filter(provider => provider.service_category === category);
+    }
+
+    setDisplayedProviders(filtered);
+    setFilteredProviders(filtered);
+  };
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50">
         <div className="pt-16 md:pt-0 pb-20 md:pb-0 md:ml-64">
           <div className="max-w-7xl mx-auto p-4 md:p-6">
             <div className="mb-6">
-              <h1 className="text-2xl md:text-3xl font-bold mb-2">Service Providers</h1>
-              <p className="text-muted-foreground">Loading professional service providers...</p>
+              <h1 className="text-3xl md:text-4xl font-bold mb-2 bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
+                Service Providers
+              </h1>
+              <p className="text-gray-600 text-lg">Loading professional service providers...</p>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {[1, 2, 3, 4, 5, 6].map((i) => (
@@ -80,77 +88,90 @@ const ProvidersPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50">
       <div className="pt-16 md:pt-0 pb-20 md:pb-0 md:ml-64">
         <div className="max-w-7xl mx-auto p-4 md:p-6">
           {/* Header */}
-          <div className="mb-6">
-            <h1 className="text-2xl md:text-3xl font-bold mb-2">Service Providers</h1>
-            <p className="text-muted-foreground">
-              Discover professional service providers for your events
+          <div className="mb-8">
+            <h1 className="text-3xl md:text-4xl font-bold mb-2 bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
+              Find Professional Service Providers
+            </h1>
+            <p className="text-gray-600 text-lg">
+              Discover amazing service providers for your next event
             </p>
           </div>
 
-          {/* Search and Filters */}
-          <div className="space-y-4 mb-6">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search service providers..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10"
-              />
-            </div>
-
-            <div className="flex flex-col md:flex-row gap-3">
-              <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-                <SelectTrigger className="w-full md:w-48">
-                  <SelectValue placeholder="All Categories" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Categories</SelectItem>
-                  {categories.map((category) => (
-                    <SelectItem key={category} value={category}>
-                      {category}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-
-              <Select value={availabilityFilter} onValueChange={setAvailabilityFilter}>
-                <SelectTrigger className="w-full md:w-48">
-                  <SelectValue placeholder="All Providers" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Providers</SelectItem>
-                  <SelectItem value="available">Available Only</SelectItem>
-                </SelectContent>
-              </Select>
-
-              <Button variant="outline" className="w-full md:w-auto">
-                <Filter className="h-4 w-4 mr-2" />
-                More Filters
-              </Button>
-            </div>
+          {/* Search Bar */}
+          <div className="mb-8">
+            <SearchBar 
+              onSearch={handleSearch}
+              placeholder="Search service providers by category, name, or location..."
+              searchType="providers"
+            />
           </div>
 
-          {/* Results */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredProviders.map((provider) => (
-              <ServiceProviderCard key={provider.id} provider={provider} />
-            ))}
-          </div>
-
-          {/* Empty State */}
-          {filteredProviders.length === 0 && (
-            <div className="text-center py-12">
-              <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-              <h3 className="text-lg font-semibold mb-2">No providers found</h3>
-              <p className="text-muted-foreground">
-                Try adjusting your search criteria or filters
+          {/* Results Header */}
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
+            <div className="mb-4 md:mb-0">
+              <p className="text-gray-600">
+                {displayedProviders.length} service provider{displayedProviders.length !== 1 ? 's' : ''} found
               </p>
             </div>
+            
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2">
+                <Button
+                  variant={viewMode === 'grid' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setViewMode('grid')}
+                  className={viewMode === 'grid' ? 'bg-purple-600 hover:bg-purple-700' : ''}
+                >
+                  <Grid className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant={viewMode === 'list' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setViewMode('list')}
+                  className={viewMode === 'list' ? 'bg-purple-600 hover:bg-purple-700' : ''}
+                >
+                  <List className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          </div>
+
+          {/* Service Providers Grid/List */}
+          {displayedProviders.length > 0 ? (
+            <div className={viewMode === 'grid' 
+              ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6' 
+              : 'space-y-4'
+            }>
+              {displayedProviders.map((provider) => (
+                <ServiceProviderCard 
+                  key={provider.id} 
+                  provider={provider}
+                />
+              ))}
+            </div>
+          ) : (
+            <Card className="border-2 border-dashed border-gray-300">
+              <CardContent className="text-center py-16">
+                <Users className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-xl font-semibold mb-2 text-gray-900">No service providers found</h3>
+                <p className="text-gray-600 mb-6">
+                  Try adjusting your search criteria or browse all providers
+                </p>
+                <Button 
+                  onClick={() => {
+                    setDisplayedProviders(providers || []);
+                    setFilteredProviders([]);
+                  }}
+                  className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
+                >
+                  Show All Providers
+                </Button>
+              </CardContent>
+            </Card>
           )}
         </div>
       </div>

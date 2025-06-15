@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Search, Users, Filter } from 'lucide-react';
+import { Search, Users, Filter, Briefcase } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import {
   Select,
@@ -13,18 +13,29 @@ import {
 } from '@/components/ui/select';
 
 interface SearchBarProps {
-  onSearch: (searchTerm: string, capacity?: number, location?: string) => void;
+  onSearch: (searchTerm: string, capacity?: number, location?: string, category?: string) => void;
   placeholder?: string;
+  searchType?: 'venues' | 'providers';
 }
 
-const SearchBar: React.FC<SearchBarProps> = ({ onSearch, placeholder = "Search venues..." }) => {
+const SearchBar: React.FC<SearchBarProps> = ({ 
+  onSearch, 
+  placeholder = "Search...",
+  searchType = 'venues'
+}) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [capacity, setCapacity] = useState<string>('');
   const [location, setLocation] = useState<string>('');
+  const [category, setCategory] = useState<string>('');
   const [showFilters, setShowFilters] = useState(false);
 
   const handleSearch = () => {
-    onSearch(searchTerm, capacity ? parseInt(capacity) : undefined, location);
+    onSearch(
+      searchTerm, 
+      capacity ? parseInt(capacity) : undefined, 
+      location,
+      category
+    );
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -32,6 +43,29 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch, placeholder = "Search v
       handleSearch();
     }
   };
+
+  const serviceCategories = [
+    'Photography',
+    'Catering', 
+    'Music & DJ',
+    'Event Planning',
+    'Decoration',
+    'Security',
+    'Transportation',
+    'Entertainment'
+  ];
+
+  const venueCategories = [
+    'hotel',
+    'conference_center',
+    'restaurant',
+    'outdoor',
+    'banquet_hall',
+    'museum',
+    'office'
+  ];
+
+  const categories = searchType === 'providers' ? serviceCategories : venueCategories;
 
   return (
     <div className="w-full space-y-4">
@@ -64,26 +98,47 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch, placeholder = "Search v
       {showFilters && (
         <Card className="border-2 border-gray-100">
           <CardContent className="p-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <label className="text-sm font-medium flex items-center gap-2">
-                  <Users className="h-4 w-4" />
-                  Minimum Capacity
-                </label>
-                <Select value={capacity} onValueChange={setCapacity}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select capacity" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="50">50+ guests</SelectItem>
-                    <SelectItem value="100">100+ guests</SelectItem>
-                    <SelectItem value="200">200+ guests</SelectItem>
-                    <SelectItem value="300">300+ guests</SelectItem>
-                    <SelectItem value="500">500+ guests</SelectItem>
-                    <SelectItem value="1000">1000+ guests</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {searchType === 'venues' ? (
+                <div className="space-y-2">
+                  <label className="text-sm font-medium flex items-center gap-2">
+                    <Users className="h-4 w-4" />
+                    Minimum Capacity
+                  </label>
+                  <Select value={capacity} onValueChange={setCapacity}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select capacity" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="50">50+ guests</SelectItem>
+                      <SelectItem value="100">100+ guests</SelectItem>
+                      <SelectItem value="200">200+ guests</SelectItem>
+                      <SelectItem value="300">300+ guests</SelectItem>
+                      <SelectItem value="500">500+ guests</SelectItem>
+                      <SelectItem value="1000">1000+ guests</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <label className="text-sm font-medium flex items-center gap-2">
+                    <Briefcase className="h-4 w-4" />
+                    Service Category
+                  </label>
+                  <Select value={category} onValueChange={setCategory}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {categories.map((cat) => (
+                        <SelectItem key={cat} value={cat}>
+                          {cat}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
 
               <div className="space-y-2">
                 <label className="text-sm font-medium">Location</label>
@@ -100,6 +155,24 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch, placeholder = "Search v
                   </SelectContent>
                 </Select>
               </div>
+
+              {searchType === 'venues' && (
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Venue Type</label>
+                  <Select value={category} onValueChange={setCategory}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {categories.map((cat) => (
+                        <SelectItem key={cat} value={cat}>
+                          {cat.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
