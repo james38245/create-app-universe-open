@@ -4,7 +4,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useUserSettings } from '@/hooks/useUserSettings';
 import SettingsHeader from '@/components/settings/SettingsHeader';
 import AppearanceSettings from '@/components/settings/AppearanceSettings';
-import NotificationSettings from '@/components/settings/NotificationSettings';
+import NotificationPreferences from '@/components/settings/NotificationPreferences';
 import DisplaySettings from '@/components/settings/DisplaySettings';
 
 const UserSettings = () => {
@@ -46,7 +46,7 @@ const UserSettings = () => {
         </TabsContent>
 
         <TabsContent value="notifications">
-          <NotificationSettings
+          <NotificationPreferences
             settings={settings}
             onSettingChange={handleSettingChange}
           />
