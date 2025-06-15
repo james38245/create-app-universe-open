@@ -1,8 +1,6 @@
 
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import ServiceProviderSecurityAlert from './ServiceProviderSecurityAlert';
-import ServiceProviderFormHeader from './ServiceProviderFormHeader';
 import ServiceProviderFormProvider from './ServiceProviderFormProvider';
 
 interface AddServiceProviderFormProps {
@@ -16,11 +14,8 @@ const AddServiceProviderForm: React.FC<AddServiceProviderFormProps> = ({
 }) => {
   return (
     <div className="max-w-4xl mx-auto space-y-6">
-      <ServiceProviderSecurityAlert />
-      
       <Card>
-        <ServiceProviderFormHeader />
-        <CardContent>
+        <CardContent className="p-6">
           <ServiceProviderFormProvider 
             onSuccess={onSuccess}
             onCancel={onCancel}

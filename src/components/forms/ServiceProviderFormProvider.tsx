@@ -5,10 +5,9 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/hooks/useAuth';
 import { toast } from '@/hooks/use-toast';
 import { useVerification } from '@/hooks/useVerification';
-import { validateServiceProviderData } from '@/utils/listingValidation';
 import ServiceProviderSecurityAlert from './ServiceProviderSecurityAlert';
 import ServiceProviderFormHeader from './ServiceProviderFormHeader';
 import ServiceProviderFormContent from './ServiceProviderFormContent';
@@ -39,12 +38,13 @@ export type ServiceProviderFormData = z.infer<typeof serviceProviderSchema>;
 
 interface ServiceProviderFormProviderProps {
   onSuccess?: () => void;
+  onCancel?: () => void;
 }
 
-const ServiceProviderFormProvider: React.FC<ServiceProviderFormProviderProps> = ({ onSuccess }) => {
+const ServiceProviderFormProvider: React.FC<ServiceProviderFormProviderProps> = ({ onSuccess, onCancel }) => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
-  const { sendVerificationEmail } = useVerification();
+  const { initiateVerification } = useVerification();
   const [uploadedImages, setUploadedImages] = useState<string[]>([]);
 
   const form = useForm<ServiceProviderFormData>({
@@ -70,29 +70,30 @@ const ServiceProviderFormProvider: React.FC<ServiceProviderFormProviderProps> = 
     mutationFn: async (data: ServiceProviderFormData) => {
       if (!user?.id) throw new Error('User not authenticated');
 
-      const validation = validateServiceProviderData(data);
-      if (!validation.isValid) {
-        throw new Error(validation.errors.join(', '));
-      }
-
       const serviceProviderData = {
         user_id: user.id,
         bio: data.bio || '',
         certifications: data.certifications || [],
-        coordinates: data.coordinates,
-        experience_years: data.experience_years || 1,
-        hourly_rate: data.hourly_rate || 1000,
-        images: uploadedImages,
-        location: data.location || '',
-        phone: data.phone || '',
-        portfolio_images: data.portfolio_images || [],
-        service_area: data.service_area || [],
-        service_type: data.service_type || '',
-        social_links: data.social_links || {},
+        blocked_dates: [],
+        booking_terms: {
+          special_terms: "",
+          payment_due_days: 3,
+          deposit_percentage: 50,
+          cancellation_policy: "Full refund if cancelled 48 hours before event",
+          advance_booking_days: 1,
+          minimum_booking_hours: 2
+        },
+        years_experience: data.experience_years || 1,
+        price_per_event: data.hourly_rate || 1000,
+        portfolio_images: uploadedImages,
+        service_category: data.service_type || '',
         specialties: data.specialties || [],
         verification_status: 'pending',
         is_available: false,
         admin_verified: false,
+        rating: 0,
+        total_reviews: 0,
+        response_time_hours: 24
       };
 
       const { data: insertedData, error } = await supabase
@@ -103,11 +104,9 @@ const ServiceProviderFormProvider: React.FC<ServiceProviderFormProviderProps> = 
 
       if (error) throw error;
 
-      await sendVerificationEmail(user.email!, 'service_provider');
-
       return insertedData;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['my-services'] });
       toast({
         title: 'Success!',
@@ -137,11 +136,9 @@ const ServiceProviderFormProvider: React.FC<ServiceProviderFormProviderProps> = 
       <ServiceProviderFormHeader />
       <ServiceProviderFormContent form={form} />
       <ServiceProviderFormActions
-        form={form}
-        onSubmit={onSubmit}
-        isLoading={createServiceProviderMutation.isPending}
-        uploadedImages={uploadedImages}
-        setUploadedImages={setUploadedImages}
+        onCancel={onCancel || (() => {})}
+        isSubmitting={createServiceProviderMutation.isPending}
+        isInitiating={false}
       />
     </div>
   );
