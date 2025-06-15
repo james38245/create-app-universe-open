@@ -1,9 +1,13 @@
 
-import React from 'react';
+import React, { useState } from 'react';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
 import { Card, CardContent } from '@/components/ui/card';
 import { ServiceProviderFormProvider } from './ServiceProviderFormProvider';
 import ServiceProviderFormContent from './ServiceProviderFormContent';
 import { ServiceProviderFormData } from '@/types/venue';
+import { toast } from '@/hooks/use-toast';
 
 interface AddServiceProviderFormProps {
   onSuccess: () => void;
@@ -16,10 +20,88 @@ const AddServiceProviderForm: React.FC<AddServiceProviderFormProps> = ({
   onCancel,
   editingProvider
 }) => {
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
+
+  const createProviderMutation = useMutation({
+    mutationFn: async (data: ServiceProviderFormData) => {
+      console.log('Creating service provider with data:', data);
+      
+      const providerData = {
+        ...data,
+        user_id: user?.id,
+        verification_status: 'pending',
+        is_active: false
+      };
+
+      const { data: provider, error } = await supabase
+        .from('service_providers')
+        .insert([providerData])
+        .select()
+        .single();
+
+      if (error) throw error;
+      return provider;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['my-service-providers'] });
+      toast({
+        title: "Success",
+        description: "Service provider profile submitted for admin review"
+      });
+      onSuccess();
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to create service provider profile",
+        variant: "destructive"
+      });
+    }
+  });
+
+  const updateProviderMutation = useMutation({
+    mutationFn: async (data: ServiceProviderFormData) => {
+      console.log('Updating service provider with data:', data);
+      
+      const providerData = {
+        ...data,
+        verification_status: 'pending'
+      };
+
+      const { data: provider, error } = await supabase
+        .from('service_providers')
+        .update(providerData)
+        .eq('id', editingProvider?.id)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return provider;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['my-service-providers'] });
+      toast({
+        title: "Success",
+        description: "Service provider profile updated and submitted for review"
+      });
+      onSuccess();
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update service provider profile",
+        variant: "destructive"
+      });
+    }
+  });
+
   const handleSubmit = async (data: ServiceProviderFormData) => {
-    console.log('Service provider form submitted:', data);
-    // TODO: Implement actual submission logic
-    onSuccess();
+    if (editingProvider) {
+      await updateProviderMutation.mutateAsync(data);
+    } else {
+      await createProviderMutation.mutateAsync(data);
+    }
   };
 
   return (
