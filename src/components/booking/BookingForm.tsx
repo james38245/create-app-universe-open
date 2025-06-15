@@ -12,7 +12,6 @@ import { format } from 'date-fns';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
-import FlutterwavePayment from '@/components/payment/FlutterwavePayment';
 import PesapalPayment from '@/components/payment/PesapalPayment';
 
 interface BookingFormProps {
