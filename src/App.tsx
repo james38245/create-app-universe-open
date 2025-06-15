@@ -15,6 +15,7 @@ import MessagesPage from "@/pages/MessagesPage";
 import ListingsPage from "@/pages/ListingsPage";
 import ProfilePage from "@/pages/ProfilePage";
 import VenueDetailPage from "@/pages/VenueDetailPage";
+import VenueDetailViewPage from "@/pages/VenueDetailViewPage";
 import SettingsPage from "@/pages/SettingsPage";
 import AuthPage from "@/pages/AuthPage";
 import AdminPage from "@/pages/AdminPage";
@@ -35,7 +36,8 @@ const App = () => (
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/venues" element={<VenuesPage />} />
-              <Route path="/venue/:id" element={<VenueDetailPage />} />
+              <Route path="/venue/:id" element={<VenueDetailViewPage />} />
+              <Route path="/venue/:id/book" element={<VenueDetailPage />} />
               <Route path="/providers" element={<ProvidersPage />} />
               <Route path="/bookings" element={<BookingsPage />} />
               <Route path="/booking/:type/:id" element={<BookingPage />} />

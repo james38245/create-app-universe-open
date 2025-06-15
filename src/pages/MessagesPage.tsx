@@ -14,32 +14,39 @@ const MessagesPage = () => {
   const { 
     conversations, 
     messages, 
-    isLoading, 
-    loadConversations, 
-    loadMessages, 
     sendMessage: sendMessageHandler, 
+    loadMessages, 
     startConversation 
   } = useMessaging();
   
   const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
   const [newMessage, setNewMessage] = useState('');
-
-  useEffect(() => {
-    if (user) {
-      loadConversations();
-    }
-  }, [user, loadConversations]);
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleConversationSelect = async (conversation: Conversation) => {
     setSelectedConversation(conversation);
-    await loadMessages(conversation.id);
+    setIsLoading(true);
+    try {
+      await loadMessages(conversation.id);
+    } catch (error) {
+      console.error('Error loading messages:', error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleSendMessage = async () => {
     if (!newMessage.trim() || !selectedConversation) return;
     
-    await sendMessageHandler(newMessage, selectedConversation.userId);
-    setNewMessage('');
+    setIsLoading(true);
+    try {
+      await sendMessageHandler(newMessage, selectedConversation.userId);
+      setNewMessage('');
+    } catch (error) {
+      console.error('Error sending message:', error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleBackToList = () => {
@@ -91,7 +98,6 @@ const MessagesPage = () => {
               <Card className="h-full">
                 <ConversationsList
                   conversations={conversations}
-                  selectedConversation={selectedConversation}
                   onConversationSelect={handleConversationSelect}
                   isLoading={isLoading}
                 />
