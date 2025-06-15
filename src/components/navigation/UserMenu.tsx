@@ -23,15 +23,16 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
+import { useProfile } from '@/hooks/useProfile';
 
 const UserMenu = () => {
   const navigate = useNavigate();
   const { user, loading, signOut } = useAuth();
   const { toast } = useToast();
+  const { profileData, loading: profileLoading } = useProfile();
 
-  // Always use user from global context.
-  // Show spinner if loading.
-  if (loading) {
+  // Show spinner if auth or profile data is loading
+  if (loading || profileLoading) {
     return (
       <div className="flex items-center justify-center w-10 h-10">
         <div className="animate-spin rounded-full border-2 border-gray-300 border-t-purple-500 h-7 w-7" />
@@ -101,15 +102,21 @@ const UserMenu = () => {
     }
   ];
 
+  // ---- Get profile info for UserMenu, fallback to user ----
+  // Prioritize `profiles` table (profileData), else fallback to user_metadata
+  const displayName = profileData?.full_name || user?.user_metadata?.full_name || user?.email || 'User';
+  const displayAvatar = profileData?.avatar_url || user?.user_metadata?.avatar_url || "/placeholder.svg";
+  const displayEmail = profileData?.email || user?.email;
+
   if (user) {
     return (
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" className="relative h-10 w-10 rounded-full ring-2 ring-purple-100 hover:ring-purple-200 transition-all">
             <Avatar className="h-9 w-9">
-              <AvatarImage src={user.user_metadata?.avatar_url || "/placeholder.svg"} alt="Profile" />
+              <AvatarImage src={displayAvatar} alt="Profile" />
               <AvatarFallback className="bg-gradient-to-br from-purple-500 to-blue-500 text-white">
-                {user.email?.charAt(0).toUpperCase() || 'U'}
+                {displayName.charAt(0).toUpperCase()}
               </AvatarFallback>
             </Avatar>
           </Button>
@@ -118,10 +125,10 @@ const UserMenu = () => {
           <DropdownMenuLabel className="font-normal p-3 bg-gradient-to-r from-purple-50 to-blue-50 rounded-lg mb-2">
             <div className="flex flex-col space-y-1">
               <p className="text-sm font-medium leading-none">
-                {user.user_metadata?.full_name || 'User'}
+                {displayName}
               </p>
               <p className="text-xs leading-none text-muted-foreground">
-                {user.email}
+                {displayEmail}
               </p>
             </div>
           </DropdownMenuLabel>
