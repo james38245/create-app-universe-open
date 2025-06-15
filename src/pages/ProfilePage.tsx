@@ -4,6 +4,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useProfile } from '@/hooks/useProfile';
 import { useAuth } from '@/hooks/useAuth';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 import ProfileHeader from '@/components/profile/ProfileHeader';
 import ProfileForm from '@/components/profile/ProfileForm';
 import DocumentsTab from '@/components/documents/DocumentsTab';
@@ -13,6 +15,24 @@ const ProfilePage = () => {
   const { user } = useAuth();
   const { profileData, loading, updateProfile } = useProfile();
   const [isEditing, setIsEditing] = useState(false);
+
+  // Check if user is a service provider
+  const { data: isServiceProvider } = useQuery({
+    queryKey: ['is-service-provider', user?.id],
+    queryFn: async () => {
+      if (!user) return false;
+      
+      const { data, error } = await supabase
+        .from('service_providers')
+        .select('id')
+        .eq('user_id', user.id)
+        .maybeSingle();
+      
+      if (error) throw error;
+      return !!data;
+    },
+    enabled: !!user
+  });
 
   // Get tab from URL params
   const urlParams = new URLSearchParams(window.location.search);
@@ -65,15 +85,17 @@ const ProfilePage = () => {
             />
             
             <Tabs defaultValue={defaultTab} className="mt-6">
-              <TabsList className="grid w-full grid-cols-2">
+              <TabsList className={`grid w-full ${isServiceProvider ? 'grid-cols-2' : 'grid-cols-1'}`}>
                 <TabsTrigger value="profile" className="flex items-center gap-2">
                   <User className="h-4 w-4" />
                   Profile
                 </TabsTrigger>
-                <TabsTrigger value="documents" className="flex items-center gap-2">
-                  <FileText className="h-4 w-4" />
-                  Documents
-                </TabsTrigger>
+                {isServiceProvider && (
+                  <TabsTrigger value="documents" className="flex items-center gap-2">
+                    <FileText className="h-4 w-4" />
+                    Documents
+                  </TabsTrigger>
+                )}
               </TabsList>
               
               <TabsContent value="profile" className="mt-6">
@@ -84,9 +106,11 @@ const ProfilePage = () => {
                 />
               </TabsContent>
               
-              <TabsContent value="documents" className="mt-6">
-                <DocumentsTab />
-              </TabsContent>
+              {isServiceProvider && (
+                <TabsContent value="documents" className="mt-6">
+                  <DocumentsTab />
+                </TabsContent>
+              )}
             </Tabs>
           </CardContent>
         </Card>
