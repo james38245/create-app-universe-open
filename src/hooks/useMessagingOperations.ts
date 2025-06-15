@@ -21,8 +21,8 @@ export const useMessagingOperations = (user: any) => {
         .from('messages')
         .select(`
           *,
-          sender:profiles!messages_sender_id_fkey(full_name, avatar_url, phone),
-          recipient:profiles!messages_recipient_id_fkey(full_name, avatar_url, phone)
+          sender:profiles!messages_sender_id_fkey(id, full_name, avatar_url, phone),
+          recipient:profiles!messages_recipient_id_fkey(id, full_name, avatar_url, phone)
         `)
         .or(`sender_id.eq.${user.id},recipient_id.eq.${user.id}`)
         .order('created_at', { ascending: false });
@@ -59,9 +59,11 @@ export const useMessagingOperations = (user: any) => {
   };
 
   const loadMessages = async (conversationId: string) => {
-    if (!user) return;
+    if (!user || !conversationId) return;
 
     try {
+      console.log('Loading messages for conversation:', conversationId, 'user:', user.id);
+      
       const { data: messagesData, error } = await supabase
         .from('messages')
         .select('*')
@@ -87,9 +89,23 @@ export const useMessagingOperations = (user: any) => {
   };
 
   const sendMessage = async (content: string, recipientId: string) => {
-    if (!user) return;
+    if (!user || !recipientId) return;
 
     try {
+      console.log('Sending message to:', recipientId, 'from:', user.id);
+      
+      // Verify recipient exists in profiles table
+      const { data: recipientProfile, error: profileError } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('id', recipientId)
+        .single();
+
+      if (profileError || !recipientProfile) {
+        console.error('Recipient not found in profiles:', profileError);
+        throw new Error('Cannot send message: recipient not found');
+      }
+
       const { data, error } = await supabase
         .from('messages')
         .insert({
@@ -103,7 +119,7 @@ export const useMessagingOperations = (user: any) => {
 
       if (error) {
         console.error('Error sending message:', error);
-        return;
+        throw error;
       }
 
       const newMessage = formatMessageFromDB(data, user.id);
@@ -111,27 +127,44 @@ export const useMessagingOperations = (user: any) => {
       loadConversations();
     } catch (error) {
       console.error('Error sending message:', error);
+      throw error;
     }
   };
 
   const startConversation = async (userId: string, userName: string, userRole: string, phoneNumber?: string): Promise<string> => {
+    if (!userId || userId === user?.id) {
+      throw new Error('Invalid user ID for conversation');
+    }
+
     const existingConversation = conversations.find(conv => conv.userId === userId);
     
     if (existingConversation) {
       return existingConversation.id;
     }
 
+    // Verify the user exists in the profiles table
+    const { data: userProfile, error } = await supabase
+      .from('profiles')
+      .select('id, full_name, avatar_url, phone')
+      .eq('id', userId)
+      .single();
+
+    if (error || !userProfile) {
+      console.error('User not found in profiles:', error);
+      throw new Error('Cannot start conversation: user not found');
+    }
+
     const newConversation: Conversation = {
       id: userId,
-      name: userName,
+      name: userProfile.full_name || userName,
       role: userRole,
-      avatar: '/placeholder.svg',
+      avatar: userProfile.avatar_url || '/placeholder.svg',
       lastMessage: 'Start a conversation...',
       timestamp: 'now',
       unread: 0,
       isOnline: Math.random() > 0.5,
       userId,
-      phoneNumber: phoneNumber || '+254700000000'
+      phoneNumber: userProfile.phone || phoneNumber || '+254700000000'
     };
 
     setConversations(prev => [newConversation, ...prev]);

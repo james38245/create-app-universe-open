@@ -33,6 +33,8 @@ export const createConversationFromMessage = (message: any, userId: string): Con
 };
 
 export const calculateUnreadCount = async (conversationId: string, userId: string): Promise<number> => {
+  if (!conversationId || !userId) return 0;
+  
   const { count } = await supabase
     .from('messages')
     .select('*', { count: 'exact', head: true })
@@ -44,6 +46,8 @@ export const calculateUnreadCount = async (conversationId: string, userId: strin
 };
 
 export const markMessagesAsRead = async (conversationId: string, userId: string): Promise<void> => {
+  if (!conversationId || !userId) return;
+  
   await supabase
     .from('messages')
     .update({ is_read: true })
