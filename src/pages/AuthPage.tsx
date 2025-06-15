@@ -27,6 +27,10 @@ const AuthPage = () => {
     userType: 'client'
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [forgotPasswordMode, setForgotPasswordMode] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState('');
+  const [forgotLoading, setForgotLoading] = useState(false);
+  const [forgotError, setForgotError] = useState<string | null>(null);
 
   // Redirect authenticated users only if email verified:
   useEffect(() => {
@@ -242,6 +246,38 @@ const AuthPage = () => {
     );
   };
 
+  const handleForgotPassword = async () => {
+    setForgotLoading(true);
+    setForgotError(null);
+    try {
+      // Validate email
+      if (!forgotEmail) {
+        setForgotError('Please enter your email.');
+        setForgotLoading(false);
+        return;
+      }
+      if (!validateEmail(forgotEmail)) {
+        setForgotError('Please enter a valid email address.');
+        setForgotLoading(false);
+        return;
+      }
+
+      const redirectUrl = `${window.location.origin}/auth?type=password_reset`;
+      const { error } = await supabase.auth.resetPasswordForEmail(forgotEmail, { redirectTo: redirectUrl });
+      if (error) throw error;
+      toast({
+        title: "Password Reset Email Sent",
+        description: `A password reset link has been sent to ${forgotEmail}. Please check your inbox (and spam folder).`,
+      });
+      setForgotPasswordMode(false);
+      setForgotEmail('');
+    } catch (error: any) {
+      setForgotError(error.message || "Failed to send password reset email.");
+    } finally {
+      setForgotLoading(false);
+    }
+  };
+
   // Show email verification component
   if (verificationStep === 'email') {
     return (
@@ -278,52 +314,107 @@ const AuthPage = () => {
               </TabsList>
               
               <TabsContent value="signin" className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="signin-email">Email Address</Label>
-                  <Input
-                    id="signin-email"
-                    type="email"
-                    value={formData.email}
-                    onChange={(e) => handleInputChange('email', e.target.value)}
-                    placeholder="Enter your email"
-                    className={errors.email ? 'border-red-500' : ''}
-                    autoComplete="email"
-                  />
-                  {errors.email && <p className="text-sm text-red-500">{errors.email}</p>}
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="signin-password">Password</Label>
-                  <div className="relative">
-                    <Input
-                      id="signin-password"
-                      type={showPassword ? 'text' : 'password'}
-                      value={formData.password}
-                      onChange={(e) => handleInputChange('password', e.target.value)}
-                      placeholder="Enter your password"
-                      className={errors.password ? 'border-red-500 pr-10' : 'pr-10'}
-                      autoComplete="current-password"
-                    />
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                      onClick={() => setShowPassword(!showPassword)}
+                {!forgotPasswordMode ? (
+                  <>
+                    <div className="space-y-2">
+                      <Label htmlFor="signin-email">Email Address</Label>
+                      <Input
+                        id="signin-email"
+                        type="email"
+                        value={formData.email}
+                        onChange={(e) => handleInputChange('email', e.target.value)}
+                        placeholder="Enter your email"
+                        className={errors.email ? 'border-red-500' : ''}
+                        autoComplete="email"
+                      />
+                      {errors.email && <p className="text-sm text-red-500">{errors.email}</p>}
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="signin-password">Password</Label>
+                      <div className="relative">
+                        <Input
+                          id="signin-password"
+                          type={showPassword ? 'text' : 'password'}
+                          value={formData.password}
+                          onChange={(e) => handleInputChange('password', e.target.value)}
+                          placeholder="Enter your password"
+                          className={errors.password ? 'border-red-500 pr-10' : 'pr-10'}
+                          autoComplete="current-password"
+                        />
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                          onClick={() => setShowPassword(!showPassword)}
+                        >
+                          {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        </Button>
+                      </div>
+                      {errors.password && <p className="text-sm text-red-500">{errors.password}</p>}
+                    </div>
+                    <div className="flex justify-end">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setForgotPasswordMode(true);
+                          setForgotError(null);
+                          setForgotEmail(formData.email);
+                        }}
+                        className="text-xs text-blue-600 hover:underline focus:outline-none"
+                      >
+                        Forgot Password?
+                      </button>
+                    </div>
+                    <Button 
+                      onClick={() => handleSubmit('signin')} 
+                      disabled={loading}
+                      className="w-full"
                     >
-                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      {loading ? 'Signing in...' : 'Sign In'}
                     </Button>
-                  </div>
-                  {errors.password && <p className="text-sm text-red-500">{errors.password}</p>}
-                </div>
-                
-                <Button 
-                  onClick={() => handleSubmit('signin')} 
-                  disabled={loading}
-                  className="w-full"
-                >
-                  {loading ? 'Signing in...' : 'Sign In'}
-                </Button>
+                  </>
+                ) : (
+                  <>
+                    <div className="space-y-2">
+                      <Label htmlFor="forgot-password-email">Enter your email to reset password</Label>
+                      <Input
+                        id="forgot-password-email"
+                        type="email"
+                        value={forgotEmail}
+                        onChange={e => setForgotEmail(e.target.value)}
+                        placeholder="Enter email"
+                        autoFocus
+                        autoComplete="email"
+                      />
+                      {forgotError && (
+                        <p className="text-sm text-red-500">{forgotError}</p>
+                      )}
+                    </div>
+                    <div className="flex flex-col sm:flex-row gap-2 mt-2">
+                      <Button
+                        variant="default"
+                        className="w-full"
+                        onClick={handleForgotPassword}
+                        disabled={forgotLoading}
+                      >
+                        {forgotLoading ? "Sending..." : "Send Reset Link"}
+                      </Button>
+                      <Button
+                        variant="secondary"
+                        className="w-full"
+                        onClick={() => {
+                          setForgotPasswordMode(false);
+                          setForgotError(null);
+                        }}
+                        disabled={forgotLoading}
+                      >
+                        Cancel
+                      </Button>
+                    </div>
+                  </>
+                )}
               </TabsContent>
               
               <TabsContent value="signup" className="space-y-4">
