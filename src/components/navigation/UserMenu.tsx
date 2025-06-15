@@ -15,7 +15,6 @@ import {
   User,
   Settings,
   FileText,
-  CreditCard,
   HelpCircle,
   Phone,
   Shield,
@@ -109,12 +108,6 @@ const UserMenu = () => {
       label: 'Settings',
       path: '/settings',
       description: 'App preferences'
-    },
-    {
-      icon: CreditCard,
-      label: 'Payments',
-      path: '/profile?tab=payments',
-      description: 'Payment methods'
     },
     {
       icon: HelpCircle,
