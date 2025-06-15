@@ -13,6 +13,8 @@ import { toast } from 'sonner';
 import { CheckCircle, XCircle, Eye, FileText, MapPin, DollarSign, Users, Clock } from 'lucide-react';
 import ValidationStatusBadge from '../listings/ValidationStatusBadge';
 
+type VerificationStatus = 'pending' | 'under_review' | 'verified' | 'rejected';
+
 const ListingVerificationPanel = () => {
   const [selectedListing, setSelectedListing] = useState<any>(null);
   const [adminNotes, setAdminNotes] = useState('');
@@ -65,7 +67,7 @@ const ListingVerificationPanel = () => {
       action: 'approve' | 'reject';
       notes?: string;
     }) => {
-      const status = action === 'approve' ? 'verified' : 'rejected';
+      const status: VerificationStatus = action === 'approve' ? 'verified' : 'rejected';
       const tableName = entityType === 'venue' ? 'venues' : 'service_providers';
       
       const { error } = await supabase
@@ -251,7 +253,7 @@ const ListingVerificationPanel = () => {
                     <div className="flex items-center gap-2 mb-2">
                       <h3 className="font-semibold">{venue.name}</h3>
                       <ValidationStatusBadge 
-                        status={venue.verification_status} 
+                        status={venue.verification_status as VerificationStatus} 
                         score={venue.verification_score}
                       />
                     </div>
@@ -329,7 +331,7 @@ const ListingVerificationPanel = () => {
                     <div className="flex items-center gap-2 mb-2">
                       <h3 className="font-semibold">{provider.service_category}</h3>
                       <ValidationStatusBadge 
-                        status={provider.verification_status} 
+                        status={provider.verification_status as VerificationStatus} 
                         score={provider.verification_score}
                       />
                     </div>

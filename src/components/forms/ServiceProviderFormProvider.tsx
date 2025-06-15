@@ -7,20 +7,23 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from '@/hooks/use-toast';
-import { useVerification } from '@/hooks/useVerification';
 import { sanitizeFormData, serviceProviderValidationSchema } from '@/utils/listingValidation';
 import { Form } from '@/components/ui/form';
 import ServiceProviderSecurityAlert from './ServiceProviderSecurityAlert';
 import ServiceProviderFormHeader from './ServiceProviderFormHeader';
 import ServiceProviderFormContent from './ServiceProviderFormContent';
 import ServiceProviderFormActions from './ServiceProviderFormActions';
+import { ServiceProviderFormData } from '@/types/venue';
 
 const serviceProviderSchema = z.object({
   bio: z.string().optional(),
   blocked_dates: z.array(z.string()).optional(),
   booking_terms: z.any().optional(),
   certifications: z.array(z.string()).optional(),
-  coordinates: z.object({ lat: z.number().optional(), lng: z.number().optional() }).optional().nullable(),
+  coordinates: z.object({ 
+    lat: z.number().optional(), 
+    lng: z.number().optional() 
+  }).optional().nullable(),
   experience_years: z.number().optional(),
   hourly_rate: z.number().optional(),
   id: z.string().optional(),
@@ -36,7 +39,7 @@ const serviceProviderSchema = z.object({
   user_id: z.string().optional(),
 });
 
-export type ServiceProviderFormData = z.infer<typeof serviceProviderSchema>;
+export type FormData = z.infer<typeof serviceProviderSchema>;
 
 interface ServiceProviderFormProviderProps {
   onSuccess?: () => void;
@@ -46,10 +49,9 @@ interface ServiceProviderFormProviderProps {
 const ServiceProviderFormProvider: React.FC<ServiceProviderFormProviderProps> = ({ onSuccess, onCancel }) => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
-  const { initiateVerification } = useVerification();
   const [uploadedImages, setUploadedImages] = useState<string[]>([]);
 
-  const form = useForm<ServiceProviderFormData>({
+  const form = useForm<FormData>({
     resolver: zodResolver(serviceProviderSchema),
     defaultValues: {
       bio: '',
@@ -69,7 +71,7 @@ const ServiceProviderFormProvider: React.FC<ServiceProviderFormProviderProps> = 
   });
 
   const createServiceProviderMutation = useMutation({
-    mutationFn: async (data: ServiceProviderFormData) => {
+    mutationFn: async (data: FormData) => {
       if (!user?.id) throw new Error('User not authenticated');
 
       // Sanitize form data for security
@@ -177,7 +179,7 @@ const ServiceProviderFormProvider: React.FC<ServiceProviderFormProviderProps> = 
     },
   });
 
-  const onSubmit = (data: ServiceProviderFormData) => {
+  const onSubmit = (data: FormData) => {
     createServiceProviderMutation.mutate(data);
   };
 

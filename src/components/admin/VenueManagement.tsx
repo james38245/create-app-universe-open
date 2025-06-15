@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -20,6 +21,8 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+
+type VerificationStatus = 'pending' | 'under_review' | 'verified' | 'rejected';
 
 const VenueManagement = () => {
   const [editingVenue, setEditingVenue] = useState<any>(null);
@@ -121,7 +124,7 @@ const VenueManagement = () => {
                   <TableCell>KSh {venue.price_per_day?.toLocaleString()}</TableCell>
                   <TableCell>
                     <ValidationStatusBadge 
-                      status={venue.verification_status} 
+                      status={venue.verification_status as VerificationStatus} 
                       score={venue.verification_score}
                     />
                   </TableCell>

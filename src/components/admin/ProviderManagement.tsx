@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -20,6 +21,8 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+
+type VerificationStatus = 'pending' | 'under_review' | 'verified' | 'rejected';
 
 const ProviderManagement = () => {
   const [editingProvider, setEditingProvider] = useState<any>(null);
@@ -124,7 +127,7 @@ const ProviderManagement = () => {
                   <TableCell>KSh {provider.price_per_event?.toLocaleString()}</TableCell>
                   <TableCell>
                     <ValidationStatusBadge 
-                      status={provider.verification_status} 
+                      status={provider.verification_status as VerificationStatus} 
                       score={provider.verification_score}
                     />
                   </TableCell>
