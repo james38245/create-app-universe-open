@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -10,6 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Star, MapPin, Users, Wifi, Car, Coffee, Camera, Clock } from 'lucide-react';
 import Calendar from '@/components/Calendar';
 import PaymentModal from '@/components/PaymentModal';
+import RefundInfo from '@/components/booking/RefundInfo';
 
 const VenueDetailPage = () => {
   const { id } = useParams();
@@ -129,6 +129,9 @@ const VenueDetailPage = () => {
                   </div>
                 </CardContent>
               </Card>
+
+              {/* Add Refund Information */}
+              <RefundInfo bookingAmount={totalAmount} />
 
               {/* Calendar */}
               <Calendar 
