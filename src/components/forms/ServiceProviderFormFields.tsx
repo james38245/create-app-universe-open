@@ -261,7 +261,7 @@ const ServiceProviderFormFields: React.FC<ServiceProviderFormFieldsProps> = ({ f
         render={({ field }) => (
           <FormItem>
             <FormLabel>Response Time (Hours)</FormLabel>
-            <Select onValueChange={(value) => field.onChange(parseInt(value))} defaultValue={field.value.toString()}>
+            <Select onValueChange={(value) => field.onChange(parseInt(value))} defaultValue={field.value ? field.value.toString() : "24"}>
               <FormControl>
                 <SelectTrigger>
                   <SelectValue placeholder="How quickly do you respond?" />
