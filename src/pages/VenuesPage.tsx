@@ -17,72 +17,102 @@ const VenuesPage = () => {
       name: 'Safari Park Hotel',
       location: 'Nairobi',
       price: 150000,
+      price_per_day: 150000,
       rating: 4.8,
       reviews: 324,
+      total_reviews: 324,
       capacity: 500,
       image: 'https://images.unsplash.com/photo-1566073771259-6a8506099945',
+      images: ['https://images.unsplash.com/photo-1566073771259-6a8506099945'],
       amenities: ['WiFi', 'Parking', 'Catering', 'Photography'],
-      description: 'Luxury hotel venue perfect for weddings and corporate events'
+      description: 'Luxury hotel venue perfect for weddings and corporate events',
+      venue_type: 'hotel',
+      is_active: true
     },
     {
       id: '2',
       name: 'KICC Amphitheatre',
       location: 'Nairobi CBD',
       price: 300000,
+      price_per_day: 300000,
       rating: 4.9,
       reviews: 156,
+      total_reviews: 156,
       capacity: 1000,
       image: 'https://images.unsplash.com/photo-1540575467063-178a50c2df87',
+      images: ['https://images.unsplash.com/photo-1540575467063-178a50c2df87'],
       amenities: ['Sound System', 'Lighting', 'Security', 'Parking'],
-      description: 'Grand amphitheatre for large conferences and events'
+      description: 'Grand amphitheatre for large conferences and events',
+      venue_type: 'conference_center',
+      is_active: true
     },
     {
       id: '3',
       name: 'Villa Rosa Kempinski',
       location: 'Westlands',
       price: 200000,
+      price_per_day: 200000,
       rating: 4.7,
       reviews: 89,
+      total_reviews: 89,
       capacity: 300,
       image: 'https://images.unsplash.com/photo-1578662996442-48f60103fc96',
+      images: ['https://images.unsplash.com/photo-1578662996442-48f60103fc96'],
       amenities: ['Fine Dining', 'Spa', 'Valet', 'Gardens'],
-      description: 'Elegant hotel with beautiful gardens and luxury amenities'
+      description: 'Elegant hotel with beautiful gardens and luxury amenities',
+      venue_type: 'hotel',
+      is_active: true
     },
     {
       id: '4',
       name: 'Nairobi National Museum',
       location: 'Museum Hill',
       price: 120000,
+      price_per_day: 120000,
       rating: 4.6,
       reviews: 67,
+      total_reviews: 67,
       capacity: 200,
       image: 'https://images.unsplash.com/photo-1582407947304-fd86f028f716',
+      images: ['https://images.unsplash.com/photo-1582407947304-fd86f028f716'],
       amenities: ['Cultural Setting', 'Guides', 'Exhibits', 'Gardens'],
-      description: 'Unique cultural venue with historical significance'
+      description: 'Unique cultural venue with historical significance',
+      venue_type: 'museum',
+      is_active: true
     },
     {
       id: '5',
       name: 'The Hub Karen',
       location: 'Karen',
       price: 80000,
+      price_per_day: 80000,
       rating: 4.5,
       reviews: 123,
+      total_reviews: 123,
       capacity: 150,
       image: 'https://images.unsplash.com/photo-1519167758481-83f29c5c6ca0',
+      images: ['https://images.unsplash.com/photo-1519167758481-83f29c5c6ca0'],
       amenities: ['Modern Facilities', 'Tech Setup', 'Catering', 'Parking'],
-      description: 'Modern event space perfect for corporate meetings'
+      description: 'Modern event space perfect for corporate meetings',
+      venue_type: 'office',
+      is_active: true
     },
     {
       id: '6',
       name: 'Carnivore Restaurant',
       location: 'Langata',
       price: 100000,
+      price_per_day: 100000,
       rating: 4.4,
       reviews: 234,
+      total_reviews: 234,
       capacity: 250,
       image: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4',
+      images: ['https://images.unsplash.com/photo-1517248135467-4c7edcad34c4'],
       amenities: ['Unique Dining', 'Entertainment', 'Music', 'Dancing'],
-      description: 'Famous restaurant with entertainment and unique atmosphere'
+      description: 'Famous restaurant with entertainment and unique atmosphere',
+      venue_type: 'restaurant',
+      is_active: true
     }
   ];
 

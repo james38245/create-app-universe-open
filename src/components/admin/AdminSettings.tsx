@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -44,7 +43,7 @@ const AdminSettings = () => {
     itemsPerPage: '20',
     dateFormat: 'MM/DD/YYYY',
     timeFormat: '12h',
-    currency: 'USD',
+    currency: 'KSH',
     
     // System
     autoSave: true,
@@ -86,7 +85,7 @@ const AdminSettings = () => {
         itemsPerPage: '20',
         dateFormat: 'MM/DD/YYYY',
         timeFormat: '12h',
-        currency: 'USD',
+        currency: 'KSH',
         autoSave: true,
         sessionTimeout: '4h',
         backupFrequency: 'daily'
@@ -328,10 +327,7 @@ const AdminSettings = () => {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="USD">USD ($)</SelectItem>
-                      <SelectItem value="EUR">EUR (€)</SelectItem>
-                      <SelectItem value="GBP">GBP (£)</SelectItem>
-                      <SelectItem value="JPY">JPY (¥)</SelectItem>
+                      <SelectItem value="KSH">KSH (KSh)</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>

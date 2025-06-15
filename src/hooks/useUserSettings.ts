@@ -30,7 +30,7 @@ const defaultSettings: Settings = {
   itemsPerPage: '20',
   dateFormat: 'MM/DD/YYYY',
   timeFormat: '12h',
-  currency: 'USD',
+  currency: 'KSH',
   autoSave: true
 };
 

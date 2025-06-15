@@ -80,10 +80,7 @@ const DisplaySettings: React.FC<DisplaySettingsProps> = ({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="USD">USD ($)</SelectItem>
-                <SelectItem value="EUR">EUR (€)</SelectItem>
-                <SelectItem value="GBP">GBP (£)</SelectItem>
-                <SelectItem value="JPY">JPY (¥)</SelectItem>
+                <SelectItem value="KSH">KSH (KSh)</SelectItem>
               </SelectContent>
             </Select>
           </div>
