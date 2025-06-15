@@ -16,12 +16,14 @@ serve(async (req) => {
   try {
     const { amount, phoneNumber, bookingId, customerEmail, customerName, txRef } = await req.json()
     
-    const flutterwaveSecretKey = Deno.env.get('FLUTTERWAVE_SECRET_KEY')
-    if (!flutterwaveSecretKey) {
-      throw new Error('Flutterwave secret key not configured')
+    const pesapalConsumerKey = Deno.env.get('PESAPAL_CONSUMER_KEY')
+    const pesapalConsumerSecret = Deno.env.get('PESAPAL_CONSUMER_SECRET')
+    
+    if (!pesapalConsumerKey || !pesapalConsumerSecret) {
+      throw new Error('Pesapal credentials not configured')
     }
 
-    console.log('Processing M-Pesa payment:', { amount, phoneNumber, bookingId, txRef })
+    console.log('Processing M-Pesa payment via Pesapal:', { amount, phoneNumber, bookingId, txRef })
 
     // Initialize Supabase client
     const supabase = createClient(
@@ -29,43 +31,63 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    // Prepare M-Pesa payment payload for Flutterwave
+    // Get Pesapal access token
+    const tokenResponse = await fetch('https://cybqa.pesapal.com/pesapalv3/api/Auth/RequestToken', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify({
+        consumer_key: pesapalConsumerKey,
+        consumer_secret: pesapalConsumerSecret
+      })
+    })
+
+    const tokenData = await tokenResponse.json()
+    
+    if (!tokenData.token) {
+      throw new Error('Failed to get Pesapal access token')
+    }
+
+    // Prepare M-Pesa payment payload for Pesapal
     const paymentPayload = {
-      tx_ref: txRef,
-      amount: amount,
+      id: txRef,
       currency: "KES",
-      country: "KE",
-      payment_options: "mobilemoneykenya",
-      customer: {
-        email: customerEmail,
-        name: customerName,
-        phonenumber: phoneNumber
-      },
-      customizations: {
-        title: "Venue/Service Booking Payment",
-        description: `Payment for booking ${bookingId}`,
-        logo: "https://yourapp.com/logo.png"
-      },
-      redirect_url: "https://yourapp.com/payment/callback",
-      meta: {
-        booking_id: bookingId
+      amount: amount,
+      description: `Payment for booking ${bookingId}`,
+      callback_url: "https://yourapp.com/payment/callback",
+      notification_id: txRef,
+      billing_address: {
+        email_address: customerEmail,
+        phone_number: phoneNumber,
+        country_code: "KE",
+        first_name: customerName.split(' ')[0] || customerName,
+        last_name: customerName.split(' ')[1] || '',
+        line_1: "Nairobi",
+        line_2: "",
+        city: "Nairobi",
+        state: "Nairobi",
+        postal_code: "00100",
+        zip_code: "00100"
       }
     }
 
-    // Make payment request to Flutterwave
-    const flutterwaveResponse = await fetch('https://api.flutterwave.com/v3/payments', {
+    // Submit order to Pesapal
+    const orderResponse = await fetch('https://cybqa.pesapal.com/pesapalv3/api/Transactions/SubmitOrderRequest', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${flutterwaveSecretKey}`,
-        'Content-Type': 'application/json'
+        'Authorization': `Bearer ${tokenData.token}`,
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
       },
       body: JSON.stringify(paymentPayload)
     })
 
-    const paymentResult = await flutterwaveResponse.json()
-    console.log('Flutterwave response:', paymentResult)
+    const orderResult = await orderResponse.json()
+    console.log('Pesapal order response:', orderResult)
 
-    if (paymentResult.status === 'success') {
+    if (orderResult.status === '200' && orderResult.order_tracking_id) {
       // Calculate payment breakdown
       const commissionAmount = amount * 0.10 // 10% commission
       const transactionFee = amount * 0.03 // 3% transaction fee
@@ -78,8 +100,8 @@ serve(async (req) => {
           booking_id: bookingId,
           transaction_type: 'payment',
           amount: amount,
-          status: 'processed',
-          mpesa_transaction_id: paymentResult.data.flw_ref
+          status: 'pending',
+          mpesa_transaction_id: orderResult.order_tracking_id
         })
 
       if (transactionError) {
@@ -90,7 +112,7 @@ serve(async (req) => {
       const { error: bookingError } = await supabase
         .from('bookings')
         .update({
-          payment_status: 'paid',
+          payment_status: 'pending',
           payment_method: 'mpesa',
           commission_amount: commissionAmount,
           transaction_fee: transactionFee,
@@ -106,8 +128,12 @@ serve(async (req) => {
       return new Response(
         JSON.stringify({
           success: true,
-          message: 'Payment processed successfully',
-          data: paymentResult.data
+          message: 'Payment initiated successfully',
+          data: {
+            order_tracking_id: orderResult.order_tracking_id,
+            merchant_reference: orderResult.merchant_reference,
+            redirect_url: orderResult.redirect_url
+          }
         }),
         { 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -115,7 +141,7 @@ serve(async (req) => {
         }
       )
     } else {
-      throw new Error(paymentResult.message || 'Payment failed')
+      throw new Error(orderResult.description || 'Payment initiation failed')
     }
 
   } catch (error) {

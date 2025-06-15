@@ -10,7 +10,7 @@ import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 
-interface FlutterwavePaymentProps {
+interface PesapalPaymentProps {
   isOpen: boolean;
   onClose: () => void;
   amount: number;
@@ -22,7 +22,7 @@ interface FlutterwavePaymentProps {
   };
 }
 
-const FlutterwavePayment: React.FC<FlutterwavePaymentProps> = ({ 
+const PesapalPayment: React.FC<PesapalPaymentProps> = ({ 
   isOpen, 
   onClose, 
   amount, 
@@ -49,8 +49,8 @@ const FlutterwavePayment: React.FC<FlutterwavePaymentProps> = ({
     setPaymentError('');
 
     try {
-      // Call Flutterwave payment edge function
-      const { data, error } = await supabase.functions.invoke('process-flutterwave-payment', {
+      // Call Pesapal payment edge function
+      const { data, error } = await supabase.functions.invoke('process-pesapal-payment', {
         body: {
           amount,
           phoneNumber,
@@ -64,25 +64,21 @@ const FlutterwavePayment: React.FC<FlutterwavePaymentProps> = ({
       if (error) throw error;
 
       if (data.success) {
+        // If Pesapal returns a redirect URL, open it in new tab
+        if (data.data.redirect_url) {
+          window.open(data.data.redirect_url, '_blank');
+        }
+        
         setIsSuccess(true);
         toast({
-          title: "Payment Successful!",
-          description: "Your payment has been processed and the booking is confirmed.",
+          title: "Payment Initiated!",
+          description: "Complete the payment in the new tab to confirm your booking.",
         });
-        
-        // Update booking status to paid
-        await supabase
-          .from('bookings')
-          .update({ 
-            payment_status: 'paid',
-            payment_method: 'mpesa' 
-          })
-          .eq('id', bookingId);
         
         setTimeout(() => {
           setIsSuccess(false);
           onClose();
-        }, 2000);
+        }, 3000);
       } else {
         throw new Error(data.message || 'Payment failed');
       }
@@ -105,9 +101,9 @@ const FlutterwavePayment: React.FC<FlutterwavePaymentProps> = ({
         <DialogContent className="sm:max-w-md">
           <div className="flex flex-col items-center justify-center py-8 space-y-4">
             <CheckCircle className="h-16 w-16 text-green-500" />
-            <h3 className="text-xl font-semibold">Payment Successful!</h3>
+            <h3 className="text-xl font-semibold">Payment Initiated!</h3>
             <p className="text-center text-muted-foreground">
-              Your booking for {bookingDetails.itemName} has been confirmed.
+              Please complete the payment process to confirm your booking for {bookingDetails.itemName}.
             </p>
           </div>
         </DialogContent>
@@ -139,7 +135,7 @@ const FlutterwavePayment: React.FC<FlutterwavePaymentProps> = ({
           <div className="space-y-4">
             <div className="flex items-center gap-2 mb-3">
               <Smartphone className="h-6 w-6 text-green-600" />
-              <span className="font-medium">M-Pesa Payment</span>
+              <span className="font-medium">M-Pesa Payment via Pesapal</span>
             </div>
             
             <div className="space-y-3">
@@ -152,7 +148,7 @@ const FlutterwavePayment: React.FC<FlutterwavePaymentProps> = ({
                 disabled={isProcessing}
               />
               <p className="text-xs text-muted-foreground">
-                You will receive an STK push notification to complete the payment
+                You will be redirected to complete the M-Pesa payment
               </p>
             </div>
 
@@ -183,4 +179,4 @@ const FlutterwavePayment: React.FC<FlutterwavePaymentProps> = ({
   );
 };
 
-export default FlutterwavePayment;
+export default PesapalPayment;

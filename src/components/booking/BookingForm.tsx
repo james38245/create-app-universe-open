@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -14,6 +13,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import FlutterwavePayment from '@/components/payment/FlutterwavePayment';
+import PesapalPayment from '@/components/payment/PesapalPayment';
 
 interface BookingFormProps {
   type: 'venue' | 'service';
@@ -330,7 +330,7 @@ const BookingForm: React.FC<BookingFormProps> = ({
 
       {/* Payment Modal */}
       {showPaymentModal && (
-        <FlutterwavePayment
+        <PesapalPayment
           isOpen={showPaymentModal}
           onClose={() => setShowPaymentModal(false)}
           amount={calculateTotal()}
