@@ -19,7 +19,25 @@ export const FeaturedVenues = () => {
         .limit(3);
       
       if (error) throw error;
-      return data;
+      
+      // Transform the data to match VenueCard expectations
+      return data?.map(venue => ({
+        id: venue.id,
+        name: venue.name,
+        location: venue.location,
+        price: venue.price_per_day,
+        price_per_day: venue.price_per_day,
+        rating: venue.rating,
+        reviews: venue.total_reviews || 0,
+        total_reviews: venue.total_reviews || 0,
+        capacity: venue.capacity,
+        image: venue.images?.[0] || '/placeholder.svg',
+        images: venue.images || [],
+        amenities: venue.amenities || [],
+        description: venue.description,
+        venue_type: venue.venue_type,
+        is_active: venue.is_active
+      })) || [];
     }
   });
 
