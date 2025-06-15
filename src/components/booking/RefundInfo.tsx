@@ -65,7 +65,6 @@ const RefundInfo: React.FC<RefundInfoProps> = ({
               <h4 className="font-medium text-amber-800">Important Notes</h4>
               <ul className="text-sm text-amber-700 mt-1 space-y-1">
                 <li>• Transaction fees are non-refundable</li>
-                <li>• No commission is deducted from refunds</li>
                 <li>• Refunds are processed within 24-48 hours</li>
                 <li>• Money will be sent to your M-Pesa account</li>
               </ul>
