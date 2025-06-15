@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -18,6 +17,7 @@ interface VenueFormProviderProps {
   userProfile: any;
   setUserProfile: (profile: any) => void;
   onCancel: () => void;
+  isSubmitting?: boolean;
 }
 
 const VenueFormProvider: React.FC<VenueFormProviderProps> = ({
@@ -28,10 +28,10 @@ const VenueFormProvider: React.FC<VenueFormProviderProps> = ({
   setBlockedDates,
   userProfile,
   setUserProfile,
-  onCancel
+  onCancel,
+  isSubmitting = false
 }) => {
   const { user } = useAuth();
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const form = useForm<VenueFormData>({
     resolver: zodResolver(venueSchema),
@@ -53,12 +53,7 @@ const VenueFormProvider: React.FC<VenueFormProviderProps> = ({
   }, [user, setUserProfile]);
 
   const handleSubmit = async (data: VenueFormData) => {
-    setIsSubmitting(true);
-    try {
-      await onSubmit(data, uploadedImages, blockedDates);
-    } finally {
-      setIsSubmitting(false);
-    }
+    await onSubmit(data, uploadedImages, blockedDates);
   };
 
   return (

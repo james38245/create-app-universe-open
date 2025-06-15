@@ -291,6 +291,9 @@ export type Database = {
       }
       service_providers: {
         Row: {
+          admin_verified: boolean | null
+          admin_verified_at: string | null
+          admin_verified_by: string | null
           bio: string | null
           blocked_dates: string[] | null
           booking_terms: Json | null
@@ -307,9 +310,16 @@ export type Database = {
           total_reviews: number | null
           updated_at: string | null
           user_id: string
+          verification_completed_at: string | null
+          verification_requested_at: string | null
+          verification_status: string | null
+          verification_token: string | null
           years_experience: number | null
         }
         Insert: {
+          admin_verified?: boolean | null
+          admin_verified_at?: string | null
+          admin_verified_by?: string | null
           bio?: string | null
           blocked_dates?: string[] | null
           booking_terms?: Json | null
@@ -326,9 +336,16 @@ export type Database = {
           total_reviews?: number | null
           updated_at?: string | null
           user_id: string
+          verification_completed_at?: string | null
+          verification_requested_at?: string | null
+          verification_status?: string | null
+          verification_token?: string | null
           years_experience?: number | null
         }
         Update: {
+          admin_verified?: boolean | null
+          admin_verified_at?: string | null
+          admin_verified_by?: string | null
           bio?: string | null
           blocked_dates?: string[] | null
           booking_terms?: Json | null
@@ -345,6 +362,10 @@ export type Database = {
           total_reviews?: number | null
           updated_at?: string | null
           user_id?: string
+          verification_completed_at?: string | null
+          verification_requested_at?: string | null
+          verification_status?: string | null
+          verification_token?: string | null
           years_experience?: number | null
         }
         Relationships: [
@@ -413,6 +434,9 @@ export type Database = {
       }
       venues: {
         Row: {
+          admin_verified: boolean | null
+          admin_verified_at: string | null
+          admin_verified_by: string | null
           amenities: string[] | null
           blocked_dates: string[] | null
           booking_terms: Json | null
@@ -430,8 +454,15 @@ export type Database = {
           total_reviews: number | null
           updated_at: string | null
           venue_type: string
+          verification_completed_at: string | null
+          verification_requested_at: string | null
+          verification_status: string | null
+          verification_token: string | null
         }
         Insert: {
+          admin_verified?: boolean | null
+          admin_verified_at?: string | null
+          admin_verified_by?: string | null
           amenities?: string[] | null
           blocked_dates?: string[] | null
           booking_terms?: Json | null
@@ -449,8 +480,15 @@ export type Database = {
           total_reviews?: number | null
           updated_at?: string | null
           venue_type: string
+          verification_completed_at?: string | null
+          verification_requested_at?: string | null
+          verification_status?: string | null
+          verification_token?: string | null
         }
         Update: {
+          admin_verified?: boolean | null
+          admin_verified_at?: string | null
+          admin_verified_by?: string | null
           amenities?: string[] | null
           blocked_dates?: string[] | null
           booking_terms?: Json | null
@@ -468,6 +506,10 @@ export type Database = {
           total_reviews?: number | null
           updated_at?: string | null
           venue_type?: string
+          verification_completed_at?: string | null
+          verification_requested_at?: string | null
+          verification_status?: string | null
+          verification_token?: string | null
         }
         Relationships: [
           {
@@ -478,6 +520,45 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      verification_requests: {
+        Row: {
+          admin_notes: string | null
+          created_at: string | null
+          entity_id: string
+          entity_type: string
+          id: string
+          requested_at: string | null
+          status: string | null
+          user_id: string
+          verification_token: string
+          verified_at: string | null
+        }
+        Insert: {
+          admin_notes?: string | null
+          created_at?: string | null
+          entity_id: string
+          entity_type: string
+          id?: string
+          requested_at?: string | null
+          status?: string | null
+          user_id: string
+          verification_token: string
+          verified_at?: string | null
+        }
+        Update: {
+          admin_notes?: string | null
+          created_at?: string | null
+          entity_id?: string
+          entity_type?: string
+          id?: string
+          requested_at?: string | null
+          status?: string | null
+          user_id?: string
+          verification_token?: string
+          verified_at?: string | null
+        }
+        Relationships: []
       }
     }
     Views: {
@@ -496,6 +577,14 @@ export type Database = {
         Args: { booking_amount: number; transaction_fee_rate?: number }
         Returns: Json
       }
+      generate_verification_token: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
+      initiate_verification: {
+        Args: { p_entity_type: string; p_entity_id: string; p_user_id: string }
+        Returns: string
+      }
       is_admin: {
         Args: Record<PropertyKey, never>
         Returns: boolean
@@ -510,6 +599,10 @@ export type Database = {
           refund_reason?: string
           cancelled_by_user_id?: string
         }
+        Returns: boolean
+      }
+      verify_listing: {
+        Args: { p_token: string }
         Returns: boolean
       }
     }

@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -14,6 +13,10 @@ import ImageUpload from './ImageUpload';
 import ServiceProviderFormFields from './ServiceProviderFormFields';
 import AvailabilityCalendar from './AvailabilityCalendar';
 import BookingTermsSettings from './BookingTermsSettings';
+import { serviceProviderValidationSchema, sanitizeFormData, validateImageUrls } from '@/utils/listingValidation';
+import { useVerification } from '@/hooks/useVerification';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Shield, CheckCircle } from 'lucide-react';
 
 const serviceProviderSchema = z.object({
   service_category: z.string().min(1, 'Service category is required'),
@@ -78,6 +81,7 @@ interface AddServiceProviderFormProps {
 const AddServiceProviderForm: React.FC<AddServiceProviderFormProps> = ({ onSuccess, onCancel }) => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const { initiateVerification, isInitiating } = useVerification();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [uploadedImages, setUploadedImages] = useState<string[]>([]);
   const [blockedDates, setBlockedDates] = useState<string[]>([]);
@@ -126,39 +130,91 @@ const AddServiceProviderForm: React.FC<AddServiceProviderFormProps> = ({ onSucce
     }
   });
 
-  const onSubmit = async (data: ServiceProviderFormData) => {
+  const onSubmit = async (data: any) => {
     if (!user) return;
 
     setIsSubmitting(true);
     try {
+      // Sanitize all input data
+      const sanitizedData = sanitizeFormData(data);
+      
+      // Validate images
+      const validatedImages = validateImageUrls(uploadedImages);
+      if (validatedImages.length !== uploadedImages.length) {
+        toast({
+          title: "Security Warning",
+          description: "Some images were rejected for security reasons. Please use approved image hosting services.",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      // Validate form data with enhanced schema
+      const validationResult = serviceProviderValidationSchema.safeParse({
+        ...sanitizedData,
+        portfolio_images: validatedImages
+      });
+
+      if (!validationResult.success) {
+        const errors = validationResult.error.errors.map(err => err.message).join(', ');
+        toast({
+          title: "Validation Failed",
+          description: errors,
+          variant: "destructive"
+        });
+        return;
+      }
+
       const providerData = {
-        service_category: data.service_category,
-        specialties: data.specialties,
-        pricing_unit: data.pricing_unit,
-        price_per_event: data.pricing_unit === 'event' ? data.price_per_event : null,
-        price_per_hour: data.pricing_unit === 'hour' ? data.price_per_hour : null,
-        bio: data.bio,
-        years_experience: data.years_experience,
-        certifications: data.certifications || [],
-        response_time_hours: data.response_time_hours,
-        is_available: data.is_available,
-        portfolio_images: uploadedImages,
-        location: data.location,
-        coordinates: data.coordinates,
+        service_category: sanitizedData.service_category,
+        specialties: sanitizedData.specialties,
+        pricing_unit: sanitizedData.pricing_unit,
+        price_per_event: sanitizedData.pricing_unit === 'event' ? sanitizedData.price_per_event : null,
+        price_per_hour: sanitizedData.pricing_unit === 'hour' ? sanitizedData.price_per_hour : null,
+        bio: sanitizedData.bio,
+        years_experience: sanitizedData.years_experience,
+        certifications: sanitizedData.certifications || [],
+        response_time_hours: sanitizedData.response_time_hours,
+        is_available: false, // Will be activated after verification
+        portfolio_images: validatedImages,
+        location: sanitizedData.location,
+        coordinates: sanitizedData.coordinates,
         user_id: user.id,
-        booking_terms: data.booking_terms,
-        blocked_dates: blockedDates
+        booking_terms: sanitizedData.booking_terms,
+        blocked_dates: blockedDates,
+        verification_status: 'pending'
       };
 
-      const { error } = await supabase
+      const { data: providerResult, error } = await supabase
         .from('service_providers')
-        .insert(providerData);
+        .insert(providerData)
+        .select('id, service_category')
+        .single();
 
       if (error) throw error;
 
+      // Get user profile for email
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('email, full_name')
+        .eq('id', user.id)
+        .single();
+
+      if (!profile) throw new Error('User profile not found');
+
+      // Initiate verification process
+      await initiateVerification(
+        'service_provider',
+        providerResult.id,
+        user.id,
+        providerResult.service_category,
+        profile.email,
+        profile.full_name || profile.email.split('@')[0]
+      );
+
       toast({
-        title: "Success",
-        description: "Service provider profile created successfully with flexible pricing options!"
+        title: "Service Provider Profile Submitted",
+        description: "Your profile has been submitted and a verification email has been sent. Please check your email to complete the verification process."
       });
 
       queryClient.invalidateQueries({ queryKey: ['my-service-providers'] });
@@ -166,8 +222,8 @@ const AddServiceProviderForm: React.FC<AddServiceProviderFormProps> = ({ onSucce
     } catch (error) {
       console.error('Error adding service provider:', error);
       toast({
-        title: "Error",
-        description: "Failed to create service provider profile",
+        title: "Submission Failed",
+        description: "Failed to submit service provider profile for verification",
         variant: "destructive"
       });
     } finally {
@@ -176,54 +232,67 @@ const AddServiceProviderForm: React.FC<AddServiceProviderFormProps> = ({ onSucce
   };
 
   return (
-    <Card className="max-w-4xl mx-auto">
-      <CardHeader>
-        <CardTitle>Create Service Provider Profile</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            <ServiceProviderFormFields form={form} />
-            
-            <ImageUpload
-              uploadedImages={uploadedImages}
-              setUploadedImages={setUploadedImages}
-              onImagesChange={(images) => form.setValue('portfolio_images', images)}
-              bucketName="portfolio-images"
-              label="Portfolio Images"
-              inputId="portfolio-upload"
-              error={form.formState.errors.portfolio_images?.message}
-            />
+    <div className="max-w-4xl mx-auto space-y-6">
+      <Alert className="border-blue-200 bg-blue-50">
+        <Shield className="h-4 w-4 text-blue-600" />
+        <AlertDescription className="text-blue-800">
+          <strong>Security & Verification Process:</strong> All service provider profiles undergo verification to ensure platform security. 
+          After submission, you'll receive a verification email and our team will review your profile before it goes live.
+        </AlertDescription>
+      </Alert>
+      
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <CheckCircle className="h-5 w-5 text-green-600" />
+            Create Service Provider Profile - Secure Submission
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+              <ServiceProviderFormFields form={form} />
+              
+              <ImageUpload
+                uploadedImages={uploadedImages}
+                setUploadedImages={setUploadedImages}
+                onImagesChange={(images) => form.setValue('portfolio_images', images)}
+                bucketName="portfolio-images"
+                label="Portfolio Images"
+                inputId="portfolio-upload"
+                error={form.formState.errors.portfolio_images?.message}
+              />
 
-            <BookingTermsSettings form={form} />
+              <BookingTermsSettings form={form} />
 
-            <AvailabilityCalendar
-              blockedDates={blockedDates}
-              setBlockedDates={setBlockedDates}
-              onDatesChange={(dates) => form.setValue('blocked_dates', dates)}
-            />
+              <AvailabilityCalendar
+                blockedDates={blockedDates}
+                setBlockedDates={setBlockedDates}
+                onDatesChange={(dates) => form.setValue('blocked_dates', dates)}
+              />
 
-            <div className="flex gap-4">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={onCancel}
-                className="flex-1"
-              >
-                Cancel
-              </Button>
-              <Button
-                type="submit"
-                disabled={isSubmitting}
-                className="flex-1"
-              >
-                {isSubmitting ? 'Creating...' : 'Create Profile'}
-              </Button>
-            </div>
-          </form>
-        </Form>
-      </CardContent>
-    </Card>
+              <div className="flex gap-4">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={onCancel}
+                  className="flex-1"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={isSubmitting || isInitiating}
+                  className="flex-1"
+                >
+                  {isSubmitting || isInitiating ? 'Submitting...' : 'Submit for Verification'}
+                </Button>
+              </div>
+            </form>
+          </Form>
+        </CardContent>
+      </Card>
+    </div>
   );
 };
 
