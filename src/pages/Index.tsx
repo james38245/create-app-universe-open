@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { HeroSection } from '@/components/HeroSection';
 import { FeaturedVenues } from '@/components/FeaturedVenues';
-import { FeaturedProviders } from '@/components/FeaturedProviders';
+import FeaturedProviders from '@/components/FeaturedProviders';
 import { AuthModal } from '@/components/AuthModal';
 import { useAuth } from '@/hooks/useAuth';
 

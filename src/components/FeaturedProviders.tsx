@@ -40,15 +40,15 @@ const FeaturedProviders = () => {
   const transformedProviders = providers?.map(provider => ({
     id: provider.id,
     business_name: provider.profiles?.full_name || 'Service Provider',
-    service_type: provider.service_category,
+    service_type: provider.service_category || 'General Services',
     location: 'Kenya', // Default location since it's not in the current schema
-    base_price: provider.price_per_event,
-    rating: provider.rating,
-    total_reviews: provider.total_reviews,
-    description: provider.bio || '',
+    base_price: provider.price_per_event || 0,
+    rating: provider.rating || 0,
+    total_reviews: provider.total_reviews || 0,
+    description: provider.bio || 'Professional service provider',
     image_url: provider.profiles?.avatar_url,
-    specialties: provider.specialties,
-    is_available: provider.is_available,
+    specialties: provider.specialties || [],
+    is_available: provider.is_available || false,
   })) || [];
 
   return (
