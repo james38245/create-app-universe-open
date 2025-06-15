@@ -12,7 +12,7 @@ const FeaturedProviders = () => {
         .from('service_providers')
         .select(`
           *,
-          profiles!inner(full_name, avatar_url)
+          profiles!service_providers_user_id_fkey(full_name, avatar_url)
         `)
         .eq('admin_verified', true)
         .eq('is_available', true)
@@ -39,6 +39,7 @@ const FeaturedProviders = () => {
 
   const transformedProviders = providers?.map(provider => ({
     id: provider.id,
+    user_id: provider.user_id,
     business_name: provider.profiles?.full_name || 'Service Provider',
     service_type: provider.service_category || 'General Services',
     location: 'Kenya', // Default location since it's not in the current schema

@@ -24,12 +24,39 @@ import {
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { useProfile } from '@/hooks/useProfile';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 
 const UserMenu = () => {
   const navigate = useNavigate();
   const { user, loading, signOut } = useAuth();
   const { toast } = useToast();
   const { profileData, loading: profileLoading, refreshProfile } = useProfile();
+
+  // Check if user has any listings (venues or service providers)
+  const { data: hasListings } = useQuery({
+    queryKey: ['user-has-listings', user?.id],
+    queryFn: async () => {
+      if (!user) return false;
+      
+      // Check for service provider listings
+      const { data: serviceProviders } = await supabase
+        .from('service_providers')
+        .select('id')
+        .eq('user_id', user.id)
+        .limit(1);
+      
+      // Check for venue listings
+      const { data: venues } = await supabase
+        .from('venues')
+        .select('id')
+        .eq('owner_id', user.id)
+        .limit(1);
+      
+      return (serviceProviders && serviceProviders.length > 0) || (venues && venues.length > 0);
+    },
+    enabled: !!user
+  });
 
   // Listen for profile updates and refresh when needed
   useEffect(() => {
@@ -70,7 +97,7 @@ const UserMenu = () => {
     }
   };
 
-  const accountMenuItems = [
+  const baseMenuItems = [
     {
       icon: User,
       label: 'Profile',
@@ -82,12 +109,6 @@ const UserMenu = () => {
       label: 'Settings',
       path: '/settings',
       description: 'App preferences'
-    },
-    {
-      icon: FileText,
-      label: 'Documents',
-      path: '/profile?tab=documents',
-      description: 'Certificates & CV'
     },
     {
       icon: CreditCard,
@@ -114,6 +135,20 @@ const UserMenu = () => {
       description: 'Admin functions'
     }
   ];
+
+  // Add Documents menu item only if user has listings
+  const accountMenuItems = hasListings 
+    ? [
+        ...baseMenuItems.slice(0, 2), // Profile and Settings
+        {
+          icon: FileText,
+          label: 'Documents',
+          path: '/profile?tab=documents',
+          description: 'Certificates & CV'
+        },
+        ...baseMenuItems.slice(2) // Rest of the items
+      ]
+    : baseMenuItems;
 
   // ---- Get profile info for UserMenu, fallback to user ----
   // Prioritize `profiles` table (profileData), else fallback to user_metadata
@@ -202,4 +237,3 @@ const UserMenu = () => {
 };
 
 export default UserMenu;
-
