@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import AdminLogin from '@/components/admin/AdminLogin';
 import AdminDashboard from '@/pages/AdminDashboard';
+import { AdminDataProvider } from '@/contexts/AdminDataContext';
 
 const AdminPage = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -89,23 +90,25 @@ const AdminPage = () => {
   const adminRole = localStorage.getItem('admin_role');
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="flex justify-between items-center p-4 bg-white border-b shadow-sm">
-        <div>
-          <h1 className="text-xl font-bold text-gray-800">Master Administrator Panel</h1>
-          <p className="text-sm text-gray-600">
-            Logged in as: {adminEmail} ({adminRole === 'master_admin' ? 'Master Admin' : 'Admin'})
-          </p>
+    <AdminDataProvider>
+      <div className="min-h-screen bg-background">
+        <div className="flex justify-between items-center p-4 bg-white border-b shadow-sm">
+          <div>
+            <h1 className="text-xl font-bold text-gray-800">Master Administrator Panel</h1>
+            <p className="text-sm text-gray-600">
+              Logged in as: {adminEmail} ({adminRole === 'master_admin' ? 'Master Admin' : 'Admin'})
+            </p>
+          </div>
+          <button
+            onClick={handleLogout}
+            className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors"
+          >
+            Secure Logout
+          </button>
         </div>
-        <button
-          onClick={handleLogout}
-          className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors"
-        >
-          Secure Logout
-        </button>
+        <AdminDashboard />
       </div>
-      <AdminDashboard />
-    </div>
+    </AdminDataProvider>
   );
 };
 
