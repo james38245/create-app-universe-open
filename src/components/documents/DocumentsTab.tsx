@@ -21,7 +21,7 @@ const DocumentsTab = () => {
     getDocumentUrl
   } = useDocuments();
 
-  // Check if user is a service provider
+  // Check if user is a service provider (seller)
   const { data: isServiceProvider, isLoading: checkingProvider } = useQuery({
     queryKey: ['is-service-provider', user?.id],
     queryFn: async () => {
@@ -39,6 +39,24 @@ const DocumentsTab = () => {
     enabled: !!user
   });
 
+  // Check if user is admin
+  const { data: isAdmin } = useQuery({
+    queryKey: ['is-admin', user?.id],
+    queryFn: async () => {
+      if (!user) return false;
+      
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('user_type')
+        .eq('id', user.id)
+        .maybeSingle();
+      
+      if (error) throw error;
+      return data?.user_type === 'admin';
+    },
+    enabled: !!user
+  });
+
   if (loading || checkingProvider) {
     return (
       <div className="flex items-center justify-center py-8">
@@ -47,8 +65,8 @@ const DocumentsTab = () => {
     );
   }
 
-  // Only service providers can upload documents
-  if (!isServiceProvider) {
+  // Only service providers (sellers) and admins can access document management
+  if (!isServiceProvider && !isAdmin) {
     return (
       <Card>
         <CardContent className="py-8 text-center">
@@ -71,6 +89,11 @@ const DocumentsTab = () => {
           <p className="text-sm text-muted-foreground">
             Upload and manage your CV, resume, certificates, and portfolio documents. 
             CV and resume documents are visible to potential clients when public.
+            {isAdmin && (
+              <span className="block mt-2 text-blue-600 font-medium">
+                Admin Access: You can manage documents for all users.
+              </span>
+            )}
           </p>
         </CardHeader>
         <CardContent>

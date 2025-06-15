@@ -28,6 +28,19 @@ export const useDocuments = () => {
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
 
+  // Check if current user is admin
+  const checkIsAdmin = async () => {
+    if (!user) return false;
+    
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('user_type')
+      .eq('id', user.id)
+      .maybeSingle();
+    
+    return !error && data?.user_type === 'admin';
+  };
+
   const fetchDocuments = async () => {
     if (!user) {
       setLoading(false);
@@ -35,11 +48,16 @@ export const useDocuments = () => {
     }
 
     try {
-      const { data, error } = await supabase
-        .from('user_documents')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
+      const isAdmin = await checkIsAdmin();
+      
+      let query = supabase.from('user_documents').select('*');
+      
+      // If not admin, only show user's own documents
+      if (!isAdmin) {
+        query = query.eq('user_id', user.id);
+      }
+      
+      const { data, error } = await query.order('created_at', { ascending: false });
 
       if (error) throw error;
       setDocuments(data as Document[] || []);
@@ -47,7 +65,7 @@ export const useDocuments = () => {
       console.error('Error fetching documents:', error);
       toast({
         title: "Error loading documents",
-        description: "Failed to load your documents.",
+        description: "Failed to load documents.",
         variant: "destructive"
       });
     } finally {
@@ -60,6 +78,24 @@ export const useDocuments = () => {
 
     setUploading(true);
     try {
+      // Check if user is a service provider (only they can upload)
+      const { data: serviceProvider } = await supabase
+        .from('service_providers')
+        .select('id')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      const isAdmin = await checkIsAdmin();
+
+      if (!serviceProvider && !isAdmin) {
+        toast({
+          title: "Access denied",
+          description: "Only service providers can upload documents.",
+          variant: "destructive"
+        });
+        return false;
+      }
+
       const fileExt = file.name.split('.').pop();
       const fileName = `${Date.now()}.${fileExt}`;
       const filePath = `${user.id}/${fileName}`;
@@ -108,7 +144,24 @@ export const useDocuments = () => {
   };
 
   const deleteDocument = async (documentId: string, filePath: string) => {
+    if (!user) return;
+
     try {
+      const isAdmin = await checkIsAdmin();
+      
+      // Check ownership - user can only delete their own documents (unless admin)
+      const document = documents.find(doc => doc.id === documentId);
+      if (!document) return;
+      
+      if (!isAdmin && document.user_id !== user.id) {
+        toast({
+          title: "Access denied",
+          description: "You can only delete your own documents.",
+          variant: "destructive"
+        });
+        return;
+      }
+
       // Delete from storage
       const { error: storageError } = await supabase.storage
         .from('documents')
@@ -141,7 +194,24 @@ export const useDocuments = () => {
   };
 
   const togglePublic = async (documentId: string, isPublic: boolean) => {
+    if (!user) return;
+
     try {
+      const isAdmin = await checkIsAdmin();
+      
+      // Check ownership - user can only modify their own documents (unless admin)
+      const document = documents.find(doc => doc.id === documentId);
+      if (!document) return;
+      
+      if (!isAdmin && document.user_id !== user.id) {
+        toast({
+          title: "Access denied",
+          description: "You can only modify your own documents.",
+          variant: "destructive"
+        });
+        return;
+      }
+
       const { error } = await supabase
         .from('user_documents')
         .update({ is_public: isPublic })
