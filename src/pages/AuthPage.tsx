@@ -28,7 +28,7 @@ const AuthPage = () => {
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  // Redirect authenticated users
+  // Redirect authenticated users only if email verified:
   useEffect(() => {
     if (user && user.email_confirmed_at) {
       navigate('/profile');

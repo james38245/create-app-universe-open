@@ -33,7 +33,6 @@ const EmailVerification: React.FC<EmailVerificationProps> = ({
         return prev - 1;
       });
     }, 1000);
-
     return () => clearInterval(timer);
   }, []);
 
@@ -49,17 +48,20 @@ const EmailVerification: React.FC<EmailVerificationProps> = ({
     }
   }, []);
 
+  // Allow user to manually check verification (e.g., after they clicked link externally)
+  const checkVerified = async () => {
+    window.location.reload();
+  };
+
   const handleResend = async () => {
     if (!canResend || isResending) return;
-    
     setIsResending(true);
     setResendTimer(60);
     setCanResend(false);
-    
+
     try {
       const { error } = await resendConfirmation(email);
       if (error) throw error;
-      
       toast({
         title: "Verification Email Resent",
         description: "A new verification email has been sent to your email address.",
@@ -76,10 +78,6 @@ const EmailVerification: React.FC<EmailVerificationProps> = ({
     }
   };
 
-  const handleContinue = () => {
-    onVerificationComplete();
-  };
-
   if (isVerified) {
     return (
       <Card className="w-full max-w-md mx-auto">
@@ -93,8 +91,7 @@ const EmailVerification: React.FC<EmailVerificationProps> = ({
           <div className="text-center text-gray-600">
             <p>Your email has been successfully verified.</p>
           </div>
-          
-          <Button onClick={handleContinue} className="w-full">
+          <Button onClick={onVerificationComplete} className="w-full">
             Continue to Sign In
           </Button>
         </CardContent>
@@ -112,9 +109,7 @@ const EmailVerification: React.FC<EmailVerificationProps> = ({
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="text-center text-gray-600">
-          <p className="text-sm">
-            We've sent a verification link to:
-          </p>
+          <p className="text-sm">We've sent a verification link to:</p>
           <p className="font-medium text-gray-900 mt-1">{email}</p>
           <p className="text-sm mt-2">
             Please check your inbox and click the verification link to activate your account.
@@ -135,16 +130,25 @@ const EmailVerification: React.FC<EmailVerificationProps> = ({
         <div className="bg-orange-50 border border-orange-200 p-4 rounded-lg">
           <div className="text-sm text-orange-800">
             <p className="font-medium mb-1">Not receiving emails?</p>
-            <p>Make sure to check your spam folder. If you still don't see the email, you can resend it below.</p>
+            <p>
+              Make sure to check your spam folder. 
+              If it's not there, you can click below to resend the email.
+              <br /><br />
+              <strong>Still not working?</strong> Wait a few minutes, then click "Check Now" below after verifying to refresh this screen.
+            </p>
           </div>
         </div>
 
         <div className="text-center">
-          <p className="text-sm text-gray-600 mb-2">
-            Didn't receive the email?
-          </p>
           <Button 
-            variant="link" 
+            variant="default"
+            onClick={checkVerified}
+            className="w-full mb-2"
+          >Check Now</Button>
+        </div>
+        <div className="text-center">
+          <Button 
+            variant="link"
             size="sm"
             onClick={handleResend}
             disabled={!canResend || isResending}
