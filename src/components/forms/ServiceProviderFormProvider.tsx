@@ -21,8 +21,8 @@ const serviceProviderSchema = z.object({
   booking_terms: z.any().optional(),
   certifications: z.array(z.string()).optional(),
   coordinates: z.object({ 
-    lat: z.number(), 
-    lng: z.number() 
+    lat: z.number().optional(), 
+    lng: z.number().optional() 
   }).optional().nullable(),
   experience_years: z.number().optional(),
   hourly_rate: z.number().optional(),

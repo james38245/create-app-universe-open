@@ -529,6 +529,8 @@ export type Database = {
           name: string
           owner_id: string
           price_per_day: number
+          price_per_hour: number | null
+          pricing_unit: string | null
           rating: number | null
           security_validated: boolean | null
           total_reviews: number | null
@@ -559,6 +561,8 @@ export type Database = {
           name: string
           owner_id: string
           price_per_day: number
+          price_per_hour?: number | null
+          pricing_unit?: string | null
           rating?: number | null
           security_validated?: boolean | null
           total_reviews?: number | null
@@ -589,6 +593,8 @@ export type Database = {
           name?: string
           owner_id?: string
           price_per_day?: number
+          price_per_hour?: number | null
+          pricing_unit?: string | null
           rating?: number | null
           security_validated?: boolean | null
           total_reviews?: number | null

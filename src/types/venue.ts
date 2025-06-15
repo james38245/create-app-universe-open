@@ -1,3 +1,4 @@
+
 import * as z from 'zod';
 
 export const venueSchema = z.object({
@@ -38,7 +39,8 @@ export const venueSchema = z.object({
     agree_to_platform_terms: z.boolean(),
     agree_to_legal_compliance: z.boolean(),
     agree_to_service_delivery: z.boolean(),
-    special_terms: z.string().optional()
+    special_terms: z.string().optional(),
+    pricing_unit: z.enum(['day', 'hour']).default('day')
   }).optional(),
   blocked_dates: z.array(z.string()).optional()
 }).refine((data) => {
@@ -89,7 +91,8 @@ export const defaultVenueFormValues: VenueFormData = {
     agree_to_platform_terms: false,
     agree_to_legal_compliance: false,
     agree_to_service_delivery: false,
-    special_terms: ''
+    special_terms: '',
+    pricing_unit: 'day'
   },
   blocked_dates: []
 };
@@ -101,6 +104,8 @@ export interface ServiceProviderFormData {
   bio?: string;
   years_experience?: number;
   price_per_event?: number;
+  price_per_hour?: number;
+  pricing_unit?: 'event' | 'hour';
   specialties?: string[];
   certifications?: string[];
   portfolio_images?: string[];
