@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -9,6 +8,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Calendar, MapPin, Clock, Phone, MessageSquare, Star, Eye, X, CheckCircle, AlertCircle } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
+import ReviewModal from '@/components/booking/ReviewModal';
 
 const BookingsPage = () => {
   const [selectedTab, setSelectedTab] = useState('upcoming');
@@ -141,7 +141,51 @@ const BookingsPage = () => {
       title: "Booking Cancelled",
       description: "Your booking has been cancelled. Refund will be processed within 24-48 hours.",
     });
-    // Here you would update the booking status in your backend
+  };
+
+  const handleBookAgain = (booking: any) => {
+    // Navigate to the appropriate booking page with pre-filled data
+    const bookingData = {
+      type: booking.type,
+      venueId: booking.type === 'venue' ? booking.id : null,
+      serviceProviderId: booking.type === 'service' ? booking.id : null,
+      location: booking.location,
+      guests: booking.guests,
+      eventType: 'event', // You might want to store this in booking data
+      amount: booking.amount
+    };
+
+    if (booking.type === 'venue') {
+      navigate(`/venue/${booking.id}?rebook=true&bookingRef=${booking.bookingRef}`);
+    } else {
+      navigate(`/providers?rebook=true&bookingRef=${booking.bookingRef}&serviceProvider=${booking.id}`);
+    }
+
+    toast({
+      title: "Redirecting to Booking",
+      description: "Your previous booking details have been pre-filled.",
+    });
+  };
+
+  const handleRebookSimilar = (booking: any) => {
+    // Navigate to search/browse page with similar criteria
+    const searchParams = new URLSearchParams({
+      location: booking.location,
+      guests: booking.guests?.toString() || '',
+      type: booking.type,
+      priceRange: `0-${booking.amount * 1.2}` // Allow 20% higher price range
+    });
+
+    if (booking.type === 'venue') {
+      navigate(`/venues?${searchParams.toString()}`);
+    } else {
+      navigate(`/providers?${searchParams.toString()}&category=${booking.service}`);
+    }
+
+    toast({
+      title: "Finding Similar Options",
+      description: "Showing venues/services similar to your cancelled booking.",
+    });
   };
 
   const BookingCard = ({ booking }: { booking: any }) => (
@@ -344,17 +388,29 @@ const BookingsPage = () => {
                   
                   {booking.status === 'completed' && (
                     <>
-                      <Button size="sm" className="w-full md:w-auto bg-purple-600 hover:bg-purple-700">
-                        Leave Review
-                      </Button>
-                      <Button variant="outline" size="sm" className="w-full md:w-auto hover:bg-purple-50">
+                      <ReviewModal booking={booking}>
+                        <Button size="sm" className="w-full md:w-auto bg-purple-600 hover:bg-purple-700">
+                          Leave Review
+                        </Button>
+                      </ReviewModal>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="w-full md:w-auto hover:bg-purple-50"
+                        onClick={() => handleBookAgain(booking)}
+                      >
                         Book Again
                       </Button>
                     </>
                   )}
                   
                   {booking.status === 'cancelled' && (
-                    <Button variant="outline" size="sm" className="w-full md:w-auto hover:bg-purple-50">
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="w-full md:w-auto hover:bg-purple-50"
+                      onClick={() => handleRebookSimilar(booking)}
+                    >
                       Rebook Similar
                     </Button>
                   )}
