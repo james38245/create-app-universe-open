@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -26,6 +26,15 @@ const ConversationsList: React.FC<ConversationsListProps> = ({
   onToggleGoodStart,
   onStartConversation
 }) => {
+  const [searchTerm, setSearchTerm] = useState('');
+
+  // Filter conversations based on search term
+  const filteredConversations = conversations.filter(conversation =>
+    conversation.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    conversation.role.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    conversation.lastMessage.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   return (
     <Card className="lg:col-span-1">
       <CardHeader>
@@ -48,7 +57,12 @@ const ConversationsList: React.FC<ConversationsListProps> = ({
         </CardTitle>
         <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input placeholder="Search conversations..." className="pl-10" />
+          <Input 
+            placeholder="Search conversations..." 
+            className="pl-10" 
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
         </div>
       </CardHeader>
       
@@ -59,7 +73,7 @@ const ConversationsList: React.FC<ConversationsListProps> = ({
           </div>
         ) : (
           <div className="space-y-1">
-            {conversations.map((conversation) => (
+            {filteredConversations.map((conversation) => (
               <div
                 key={conversation.id}
                 onClick={() => onSelectChat(conversation.id)}
@@ -101,6 +115,20 @@ const ConversationsList: React.FC<ConversationsListProps> = ({
                 </div>
               </div>
             ))}
+
+            {filteredConversations.length === 0 && searchTerm && (
+              <div className="p-8 text-center text-muted-foreground">
+                <p>No conversations found for "{searchTerm}"</p>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setSearchTerm('')}
+                  className="mt-2"
+                >
+                  Clear Search
+                </Button>
+              </div>
+            )}
 
             {conversations.length === 0 && !showGoodStart && (
               <div className="p-8 text-center text-muted-foreground">

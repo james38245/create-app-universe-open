@@ -12,6 +12,12 @@ interface ChatHeaderProps {
 }
 
 const ChatHeader: React.FC<ChatHeaderProps> = ({ conversation, onVoiceCall }) => {
+  const handleCall = () => {
+    const phoneNumber = conversation.phoneNumber || '+254700000000';
+    // Open phone dialer with the user's registered contact number
+    window.location.href = `tel:${phoneNumber}`;
+  };
+
   return (
     <CardHeader className="border-b">
       <div className="flex items-center justify-between">
@@ -35,8 +41,8 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({ conversation, onVoiceCall }) =>
           <Button 
             variant="ghost" 
             size="icon"
-            onClick={onVoiceCall}
-            title="Voice Call (will open phone app)"
+            onClick={handleCall}
+            title={`Call ${conversation.phoneNumber || '+254700000000'}`}
           >
             <Phone className="h-4 w-4" />
           </Button>

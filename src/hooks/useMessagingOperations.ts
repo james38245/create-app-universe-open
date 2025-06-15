@@ -40,11 +40,15 @@ export const useMessagingOperations = (user: any) => {
       
       userMessages?.forEach((message) => {
         const otherParticipantId = message.sender_id === user.id ? message.recipient_id : message.sender_id;
+        const otherParticipant = message.sender_id === user.id ? message.recipient : message.sender;
         
         if (!message.sender || !message.recipient) return;
 
         if (!conversationMap.has(otherParticipantId)) {
           const conversation = createConversationFromMessage(message, user.id);
+          // Use avatar from user profile settings
+          conversation.avatar = otherParticipant?.avatar_url || '/placeholder.svg';
+          conversation.phoneNumber = otherParticipant?.phone || '+254700000000';
           conversationMap.set(otherParticipantId, conversation);
         }
       });
@@ -158,7 +162,7 @@ export const useMessagingOperations = (user: any) => {
       return existingConversation.id;
     }
 
-    // Verify the user exists in the profiles table
+    // Verify the user exists in the profiles table and get their avatar
     const { data: userProfile, error } = await supabase
       .from('profiles')
       .select('id, full_name, avatar_url, phone')
@@ -176,7 +180,7 @@ export const useMessagingOperations = (user: any) => {
       id: userId,
       name: userProfile.full_name || userName,
       role: userRole,
-      avatar: userProfile.avatar_url || '/placeholder.svg',
+      avatar: userProfile.avatar_url || '/placeholder.svg', // Load from user settings
       lastMessage: 'Start a conversation...',
       timestamp: 'now',
       unread: 0,
