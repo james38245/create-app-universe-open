@@ -1,16 +1,22 @@
 
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useProfile } from '@/hooks/useProfile';
 import { useAuth } from '@/hooks/useAuth';
 import ProfileHeader from '@/components/profile/ProfileHeader';
 import ProfileForm from '@/components/profile/ProfileForm';
-import { Loader2 } from 'lucide-react';
+import DocumentsTab from '@/components/documents/DocumentsTab';
+import { Loader2, User, FileText } from 'lucide-react';
 
 const ProfilePage = () => {
   const { user } = useAuth();
   const { profileData, loading, updateProfile } = useProfile();
   const [isEditing, setIsEditing] = useState(false);
+
+  // Get tab from URL params
+  const urlParams = new URLSearchParams(window.location.search);
+  const defaultTab = urlParams.get('tab') || 'profile';
 
   if (loading) {
     return (
@@ -58,11 +64,30 @@ const ProfilePage = () => {
               onImageUpdate={handleImageUpdate}
             />
             
-            <ProfileForm
-              profileData={profileData}
-              isEditing={isEditing}
-              onSave={handleSave}
-            />
+            <Tabs defaultValue={defaultTab} className="mt-6">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="profile" className="flex items-center gap-2">
+                  <User className="h-4 w-4" />
+                  Profile
+                </TabsTrigger>
+                <TabsTrigger value="documents" className="flex items-center gap-2">
+                  <FileText className="h-4 w-4" />
+                  Documents
+                </TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="profile" className="mt-6">
+                <ProfileForm
+                  profileData={profileData}
+                  isEditing={isEditing}
+                  onSave={handleSave}
+                />
+              </TabsContent>
+              
+              <TabsContent value="documents" className="mt-6">
+                <DocumentsTab />
+              </TabsContent>
+            </Tabs>
           </CardContent>
         </Card>
       </div>

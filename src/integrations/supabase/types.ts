@@ -335,6 +335,10 @@ export type Database = {
           booking_terms: Json | null
           certifications: string[] | null
           created_at: string | null
+          cv_document_id: string | null
+          documents_verified: boolean | null
+          documents_verified_at: string | null
+          documents_verified_by: string | null
           id: string
           is_available: boolean | null
           last_validated_at: string | null
@@ -342,6 +346,7 @@ export type Database = {
           price_per_event: number
           rating: number | null
           response_time_hours: number | null
+          resume_document_id: string | null
           security_validated: boolean | null
           service_category: string
           specialties: string[] | null
@@ -365,6 +370,10 @@ export type Database = {
           booking_terms?: Json | null
           certifications?: string[] | null
           created_at?: string | null
+          cv_document_id?: string | null
+          documents_verified?: boolean | null
+          documents_verified_at?: string | null
+          documents_verified_by?: string | null
           id?: string
           is_available?: boolean | null
           last_validated_at?: string | null
@@ -372,6 +381,7 @@ export type Database = {
           price_per_event: number
           rating?: number | null
           response_time_hours?: number | null
+          resume_document_id?: string | null
           security_validated?: boolean | null
           service_category: string
           specialties?: string[] | null
@@ -395,6 +405,10 @@ export type Database = {
           booking_terms?: Json | null
           certifications?: string[] | null
           created_at?: string | null
+          cv_document_id?: string | null
+          documents_verified?: boolean | null
+          documents_verified_at?: string | null
+          documents_verified_by?: string | null
           id?: string
           is_available?: boolean | null
           last_validated_at?: string | null
@@ -402,6 +416,7 @@ export type Database = {
           price_per_event?: number
           rating?: number | null
           response_time_hours?: number | null
+          resume_document_id?: string | null
           security_validated?: boolean | null
           service_category?: string
           specialties?: string[] | null
@@ -417,6 +432,27 @@ export type Database = {
           years_experience?: number | null
         }
         Relationships: [
+          {
+            foreignKeyName: "service_providers_cv_document_id_fkey"
+            columns: ["cv_document_id"]
+            isOneToOne: false
+            referencedRelation: "user_documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_providers_documents_verified_by_fkey"
+            columns: ["documents_verified_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_providers_resume_document_id_fkey"
+            columns: ["resume_document_id"]
+            isOneToOne: false
+            referencedRelation: "user_documents"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "service_providers_user_id_fkey"
             columns: ["user_id"]
@@ -476,6 +512,75 @@ export type Database = {
             columns: ["original_transaction_id"]
             isOneToOne: false
             referencedRelation: "transactions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_documents: {
+        Row: {
+          admin_notes: string | null
+          admin_verified_at: string | null
+          admin_verified_by: string | null
+          created_at: string | null
+          document_type: string
+          file_name: string
+          file_path: string
+          file_size: number | null
+          id: string
+          is_public: boolean | null
+          mime_type: string | null
+          updated_at: string | null
+          upload_date: string | null
+          user_id: string
+          verified_by_admin: boolean | null
+        }
+        Insert: {
+          admin_notes?: string | null
+          admin_verified_at?: string | null
+          admin_verified_by?: string | null
+          created_at?: string | null
+          document_type: string
+          file_name: string
+          file_path: string
+          file_size?: number | null
+          id?: string
+          is_public?: boolean | null
+          mime_type?: string | null
+          updated_at?: string | null
+          upload_date?: string | null
+          user_id: string
+          verified_by_admin?: boolean | null
+        }
+        Update: {
+          admin_notes?: string | null
+          admin_verified_at?: string | null
+          admin_verified_by?: string | null
+          created_at?: string | null
+          document_type?: string
+          file_name?: string
+          file_path?: string
+          file_size?: number | null
+          id?: string
+          is_public?: boolean | null
+          mime_type?: string | null
+          updated_at?: string | null
+          upload_date?: string | null
+          user_id?: string
+          verified_by_admin?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_documents_admin_verified_by_fkey"
+            columns: ["admin_verified_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_documents_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -682,6 +787,17 @@ export type Database = {
       generate_verification_token: {
         Args: Record<PropertyKey, never>
         Returns: string
+      }
+      get_user_public_documents: {
+        Args: { target_user_id: string }
+        Returns: {
+          id: string
+          document_type: string
+          file_name: string
+          upload_date: string
+          verified_by_admin: boolean
+          admin_notes: string
+        }[]
       }
       initiate_verification: {
         Args: { p_entity_type: string; p_entity_id: string; p_user_id: string }
