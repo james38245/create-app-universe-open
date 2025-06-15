@@ -1,16 +1,17 @@
 
-import React from 'react';
-import { useParams } from 'react-router-dom';
-import { ArrowLeft, Wifi, Car, Coffee, Camera, MapPin, Users, Star } from 'lucide-react';
+import React, { useState } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { ArrowLeft, Wifi, Car, Coffee, Camera, MapPin, Users, Star, Calendar as CalendarIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { useNavigate } from 'react-router-dom';
-import Calendar from '@/components/Calendar';
+import ImageModal from '@/components/ImageModal';
 
 const VenueDetailViewPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const [isImageModalOpen, setIsImageModalOpen] = useState(false);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   // Mock venue data - in real app, fetch based on id
   const venue = {
@@ -35,12 +36,171 @@ const VenueDetailViewPage = () => {
       { id: 'weekend', name: 'Weekend Package', duration: '2 days', price: 280000 }
     ],
     bookedDates: ['2024-01-15', '2024-01-20', '2024-01-25'],
+    availableDates: ['2024-01-16', '2024-01-17', '2024-01-18', '2024-01-19', '2024-01-21', '2024-01-22', '2024-01-23', '2024-01-24'],
     venueType: 'Hotel',
     ownerInfo: {
       name: 'Safari Park Management',
       responseTime: '2 hours',
       verificationStatus: 'Verified'
+    },
+    bookingTerms: {
+      cancellationPolicy: 'Full refund if cancelled 7 days before event',
+      refundPolicy: 'Full refund available up to 7 days before event. 50% refund 3-7 days before. No refund within 72 hours.',
+      paymentMethods: ['M-Pesa', 'Bank Transfer', 'Credit Card'],
+      depositPercentage: 30,
+      paymentDueDays: 7,
+      advanceBookingDays: 2
     }
+  };
+
+  const openImageModal = (index: number) => {
+    setCurrentImageIndex(index);
+    setIsImageModalOpen(true);
+  };
+
+  const nextImage = () => {
+    setCurrentImageIndex((prev) => (prev + 1) % venue.images.length);
+  };
+
+  const previousImage = () => {
+    setCurrentImageIndex((prev) => (prev - 1 + venue.images.length) % venue.images.length);
+  };
+
+  // Simple calendar component for showing availability
+  const AvailabilityCalendar = () => {
+    const [currentDate, setCurrentDate] = useState(new Date());
+    const year = currentDate.getFullYear();
+    const month = currentDate.getMonth();
+    
+    const firstDayOfMonth = new Date(year, month, 1);
+    const lastDayOfMonth = new Date(year, month + 1, 0);
+    const firstDayWeekday = firstDayOfMonth.getDay();
+    const daysInMonth = lastDayOfMonth.getDate();
+    
+    const monthNames = [
+      'January', 'February', 'March', 'April', 'May', 'June',
+      'July', 'August', 'September', 'October', 'November', 'December'
+    ];
+    
+    const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    
+    const formatDate = (day: number) => {
+      return `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    };
+    
+    const isDateBooked = (day: number) => {
+      return venue.bookedDates.includes(formatDate(day));
+    };
+    
+    const isDateAvailable = (day: number) => {
+      return venue.availableDates.includes(formatDate(day));
+    };
+    
+    const isPastDate = (day: number) => {
+      const date = new Date(year, month, day);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      return date < today;
+    };
+    
+    const renderCalendarDays = () => {
+      const days = [];
+      
+      // Empty cells for days before the first day of the month
+      for (let i = 0; i < firstDayWeekday; i++) {
+        days.push(<div key={`empty-${i}`} className="h-10" />);
+      }
+      
+      // Days of the month
+      for (let day = 1; day <= daysInMonth; day++) {
+        const isBooked = isDateBooked(day);
+        const isAvailable = isDateAvailable(day);
+        const isPast = isPastDate(day);
+        
+        let dayClass = "h-10 w-10 rounded-lg text-sm font-medium transition-colors flex items-center justify-center ";
+        
+        if (isPast) {
+          dayClass += "text-muted-foreground bg-gray-100";
+        } else if (isBooked) {
+          dayClass += "bg-red-100 text-red-600";
+        } else if (isAvailable) {
+          dayClass += "bg-green-100 text-green-600";
+        } else {
+          dayClass += "bg-gray-50 text-gray-400";
+        }
+        
+        days.push(
+          <div key={day} className={dayClass}>
+            {day}
+          </div>
+        );
+      }
+      
+      return days;
+    };
+
+    return (
+      <div className="space-y-4">
+        {/* Calendar Header */}
+        <div className="flex items-center justify-between">
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => setCurrentDate(prev => {
+              const newDate = new Date(prev);
+              newDate.setMonth(prev.getMonth() - 1);
+              return newDate;
+            })}
+          >
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
+          <span className="font-medium text-lg">
+            {monthNames[month]} {year}
+          </span>
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => setCurrentDate(prev => {
+              const newDate = new Date(prev);
+              newDate.setMonth(prev.getMonth() + 1);
+              return newDate;
+            })}
+          >
+            <ArrowLeft className="h-4 w-4 rotate-180" />
+          </Button>
+        </div>
+
+        {/* Day headers */}
+        <div className="grid grid-cols-7 gap-1">
+          {dayNames.map(day => (
+            <div key={day} className="h-8 flex items-center justify-center text-sm font-medium text-muted-foreground">
+              {day}
+            </div>
+          ))}
+        </div>
+        
+        {/* Calendar grid */}
+        <div className="grid grid-cols-7 gap-1">
+          {renderCalendarDays()}
+        </div>
+        
+        {/* Legend */}
+        <div className="flex flex-wrap gap-4 pt-4 border-t text-sm">
+          <div className="flex items-center gap-2">
+            <div className="w-4 h-4 bg-green-100 border border-green-300 rounded" />
+            <span>Available</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-4 h-4 bg-red-100 border border-red-300 rounded" />
+            <span>Booked</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-4 h-4 bg-gray-100 border border-gray-300 rounded" />
+            <span>Not Available</span>
+          </div>
+        </div>
+      </div>
+    );
   };
 
   return (
@@ -57,13 +217,14 @@ const VenueDetailViewPage = () => {
             Back to Venues
           </Button>
 
-          {/* Image Gallery */}
+          {/* Image Gallery - Clickable */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
             <div className="md:col-span-2">
               <img 
                 src={venue.images[0]} 
                 alt={venue.name}
-                className="w-full h-64 md:h-96 object-cover rounded-lg"
+                className="w-full h-64 md:h-96 object-cover rounded-lg cursor-pointer hover:opacity-90 transition-opacity"
+                onClick={() => openImageModal(0)}
               />
             </div>
             <div className="grid grid-cols-2 md:grid-cols-1 gap-4">
@@ -72,7 +233,8 @@ const VenueDetailViewPage = () => {
                   key={index}
                   src={image} 
                   alt={`${venue.name} view ${index + 2}`}
-                  className="w-full h-32 md:h-44 object-cover rounded-lg"
+                  className="w-full h-32 md:h-44 object-cover rounded-lg cursor-pointer hover:opacity-90 transition-opacity"
+                  onClick={() => openImageModal(index + 1)}
                 />
               ))}
             </div>
@@ -152,6 +314,37 @@ const VenueDetailViewPage = () => {
                 </CardContent>
               </Card>
 
+              {/* Booking Terms & Policies */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Booking Terms & Policies</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <h4 className="font-medium mb-2">Cancellation Policy</h4>
+                    <p className="text-sm text-muted-foreground">{venue.bookingTerms.cancellationPolicy}</p>
+                  </div>
+                  <div>
+                    <h4 className="font-medium mb-2">Refund Policy</h4>
+                    <p className="text-sm text-muted-foreground">{venue.bookingTerms.refundPolicy}</p>
+                  </div>
+                  <div>
+                    <h4 className="font-medium mb-2">Payment Methods</h4>
+                    <p className="text-sm text-muted-foreground">{venue.bookingTerms.paymentMethods.join(', ')}</p>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4 pt-2">
+                    <div>
+                      <p className="text-sm font-medium">Deposit Required</p>
+                      <p className="text-sm text-muted-foreground">{venue.bookingTerms.depositPercentage}%</p>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium">Book in Advance</p>
+                      <p className="text-sm text-muted-foreground">{venue.bookingTerms.advanceBookingDays} days</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
               {/* Owner Information */}
               <Card>
                 <CardHeader>
@@ -173,24 +366,25 @@ const VenueDetailViewPage = () => {
               </Card>
             </div>
 
-            {/* Right Column - Calendar & Action */}
+            {/* Right Column - Calendar & Booking */}
             <div className="space-y-6">
-              {/* Availability Calendar */}
+              {/* Availability Calendar - Read Only */}
               <Card>
                 <CardHeader>
-                  <CardTitle>Availability Calendar</CardTitle>
+                  <CardTitle className="flex items-center gap-2">
+                    <CalendarIcon className="h-5 w-5" />
+                    Availability Calendar
+                  </CardTitle>
                   <p className="text-sm text-muted-foreground">
                     View when this venue is available for booking
                   </p>
                 </CardHeader>
                 <CardContent>
-                  <Calendar 
-                    bookedDates={venue.bookedDates}
-                  />
+                  <AvailabilityCalendar />
                 </CardContent>
               </Card>
 
-              {/* Book Now Button */}
+              {/* Booking Action */}
               <Card>
                 <CardContent className="pt-6">
                   <div className="text-center space-y-4">
@@ -207,7 +401,7 @@ const VenueDetailViewPage = () => {
                       Book This Venue
                     </Button>
                     <p className="text-xs text-muted-foreground">
-                      No payment required to start booking
+                      Booking requires vendor approval
                     </p>
                   </div>
                 </CardContent>
@@ -216,6 +410,17 @@ const VenueDetailViewPage = () => {
           </div>
         </div>
       </div>
+
+      {/* Image Modal */}
+      <ImageModal
+        isOpen={isImageModalOpen}
+        onClose={() => setIsImageModalOpen(false)}
+        images={venue.images}
+        currentIndex={currentImageIndex}
+        onNext={nextImage}
+        onPrevious={previousImage}
+        venueName={venue.name}
+      />
     </div>
   );
 };

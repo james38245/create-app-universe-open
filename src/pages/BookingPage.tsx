@@ -15,6 +15,36 @@ import { CalendarIcon, ArrowLeft, Users, Clock, MapPin, AlertTriangle, CheckCirc
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 
+interface VenueData {
+  name: string;
+  location: string;
+  capacity: number;
+  packages: { id: string; name: string; duration: string; price: number; }[];
+  bookedDates: string[];
+  bookingTerms: {
+    cancellationPolicy: string;
+    depositPercentage: number;
+    paymentDueDays: number;
+    advanceBookingDays: number;
+    refundPolicy: string;
+    paymentMethods: string[];
+  };
+}
+
+interface ServiceProviderData {
+  name: string;
+  serviceType: string;
+  basePrice: number;
+  bookingTerms: {
+    cancellationPolicy: string;
+    depositPercentage: number;
+    paymentDueDays: number;
+    advanceBookingDays: number;
+    refundPolicy: string;
+    paymentMethods: string[];
+  };
+}
+
 const BookingPage = () => {
   const { id, type } = useParams();
   const navigate = useNavigate();
@@ -28,49 +58,59 @@ const BookingPage = () => {
   const [paymentMethod, setPaymentMethod] = useState('booking-then-payment');
 
   // Mock data based on type
-  const mockData = {
-    venue: {
-      name: 'Safari Park Hotel',
-      location: 'Nairobi, Kenya',
-      capacity: 500,
-      packages: [
-        { id: 'half-day', name: 'Half Day', duration: '4 hours', price: 75000 },
-        { id: 'full-day', name: 'Full Day', duration: '8 hours', price: 150000 },
-        { id: 'weekend', name: 'Weekend Package', duration: '2 days', price: 280000 }
-      ],
-      bookedDates: ['2024-01-15', '2024-01-20', '2024-01-25'],
-      bookingTerms: {
-        cancellationPolicy: 'Full refund if cancelled 7 days before event',
-        depositPercentage: 30,
-        paymentDueDays: 7,
-        advanceBookingDays: 2
-      }
-    },
-    provider: {
-      name: 'Premium Photography Services',
-      serviceType: 'Photography',
-      basePrice: 50000,
-      bookingTerms: {
-        cancellationPolicy: 'Full refund if cancelled 48 hours before event',
-        depositPercentage: 50,
-        paymentDueDays: 3,
-        advanceBookingDays: 1
-      }
+  const mockVenueData: VenueData = {
+    name: 'Safari Park Hotel',
+    location: 'Nairobi, Kenya',
+    capacity: 500,
+    packages: [
+      { id: 'half-day', name: 'Half Day', duration: '4 hours', price: 75000 },
+      { id: 'full-day', name: 'Full Day', duration: '8 hours', price: 150000 },
+      { id: 'weekend', name: 'Weekend Package', duration: '2 days', price: 280000 }
+    ],
+    bookedDates: ['2024-01-15', '2024-01-20', '2024-01-25'],
+    bookingTerms: {
+      cancellationPolicy: 'Full refund if cancelled 7 days before event',
+      depositPercentage: 30,
+      paymentDueDays: 7,
+      advanceBookingDays: 2,
+      refundPolicy: 'Full refund available up to 7 days before event. 50% refund 3-7 days before. No refund within 72 hours.',
+      paymentMethods: ['M-Pesa', 'Bank Transfer', 'Credit Card']
     }
   };
 
-  const currentData = type === 'venue' ? mockData.venue : mockData.provider;
-  const selectedPackageData = type === 'venue' ? 
-    currentData.packages?.find(pkg => pkg.id === selectedPackage) : 
-    { price: currentData.basePrice };
+  const mockServiceData: ServiceProviderData = {
+    name: 'Premium Photography Services',
+    serviceType: 'Photography',
+    basePrice: 50000,
+    bookingTerms: {
+      cancellationPolicy: 'Full refund if cancelled 48 hours before event',
+      depositPercentage: 50,
+      paymentDueDays: 3,
+      advanceBookingDays: 1,
+      refundPolicy: 'Full refund available up to 48 hours before event. 50% refund 24-48 hours before. No refund within 24 hours.',
+      paymentMethods: ['M-Pesa', 'Bank Transfer']
+    }
+  };
+
+  const currentData = type === 'venue' ? mockVenueData : mockServiceData;
   
+  const getSelectedPackageData = () => {
+    if (type === 'venue') {
+      const venueData = currentData as VenueData;
+      return venueData.packages.find(pkg => pkg.id === selectedPackage);
+    }
+    return { price: (currentData as ServiceProviderData).basePrice };
+  };
+
+  const selectedPackageData = getSelectedPackageData();
   const totalAmount = selectedPackageData?.price || 0;
   const depositAmount = Math.round(totalAmount * (currentData.bookingTerms.depositPercentage / 100));
 
   const isDateAvailable = (date: Date) => {
     if (type === 'venue') {
+      const venueData = currentData as VenueData;
       const dateString = format(date, 'yyyy-MM-dd');
-      return !mockData.venue.bookedDates.includes(dateString);
+      return !venueData.bookedDates.includes(dateString);
     }
     return true; // For services, assume all dates are available for demo
   };
@@ -88,9 +128,18 @@ const BookingPage = () => {
       contactPhone,
       selectedPackage,
       paymentMethod,
-      totalAmount
+      totalAmount,
+      status: 'pending_approval' // Vendor approval required
     });
-    // Here you would typically submit to your backend
+    // Here you would typically submit to your backend for vendor approval
+    alert('Booking request submitted! The vendor will review and approve your request.');
+  };
+
+  const getLocationOrService = () => {
+    if (type === 'venue') {
+      return (currentData as VenueData).location;
+    }
+    return `${(currentData as ServiceProviderData).serviceType} Service`;
   };
 
   return (
@@ -112,7 +161,7 @@ const BookingPage = () => {
             </h1>
             <div className="flex items-center gap-2 text-gray-600">
               <MapPin className="h-4 w-4" />
-              <span>{currentData.location || `${currentData.serviceType} Service`}</span>
+              <span>{getLocationOrService()}</span>
             </div>
           </div>
 
@@ -126,11 +175,11 @@ const BookingPage = () => {
                 <CardContent>
                   <form onSubmit={handleSubmit} className="space-y-6">
                     {/* Package Selection for Venues */}
-                    {type === 'venue' && currentData.packages && (
+                    {type === 'venue' && (
                       <div className="space-y-3">
                         <Label>Select Package *</Label>
                         <RadioGroup value={selectedPackage} onValueChange={setSelectedPackage}>
-                          {currentData.packages.map((pkg) => (
+                          {(currentData as VenueData).packages.map((pkg) => (
                             <div key={pkg.id} className="flex items-center space-x-2 p-3 border rounded-lg">
                               <RadioGroupItem value={pkg.id} id={pkg.id} />
                               <div className="flex-1 flex justify-between">
@@ -187,12 +236,12 @@ const BookingPage = () => {
                         onChange={(e) => setGuestCount(e.target.value)}
                         placeholder="Enter number of guests"
                         min="1"
-                        max={type === 'venue' ? currentData.capacity : undefined}
+                        max={type === 'venue' ? (currentData as VenueData).capacity : undefined}
                         required
                       />
                       {type === 'venue' && (
                         <p className="text-sm text-muted-foreground">
-                          Maximum capacity: {currentData.capacity} guests
+                          Maximum capacity: {(currentData as VenueData).capacity} guests. Venue is booked as a whole regardless of guest count.
                         </p>
                       )}
                     </div>
@@ -269,6 +318,7 @@ const BookingPage = () => {
                                 <p>• No upfront payment required</p>
                                 <p>• Pay {currentData.bookingTerms.depositPercentage}% deposit after approval</p>
                                 <p>• Remaining balance due {currentData.bookingTerms.paymentDueDays} days before event</p>
+                                <p>• Accepted methods: {currentData.bookingTerms.paymentMethods.join(', ')}</p>
                               </div>
                             </div>
                           </div>
@@ -277,15 +327,16 @@ const BookingPage = () => {
                     </div>
 
                     <Button type="submit" className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700">
-                      Submit Booking Request
+                      Submit Booking Request for Vendor Approval
                     </Button>
                   </form>
                 </CardContent>
               </Card>
             </div>
 
-            {/* Booking Summary */}
-            <div className="lg:col-span-1">
+            {/* Booking Summary & Policies */}
+            <div className="lg:col-span-1 space-y-6">
+              {/* Booking Summary */}
               <Card className="sticky top-4">
                 <CardHeader>
                   <CardTitle>Booking Summary</CardTitle>
@@ -326,27 +377,50 @@ const BookingPage = () => {
                       <span>KSh {totalAmount.toLocaleString()}</span>
                     </div>
                   </div>
+                </CardContent>
+              </Card>
 
-                  <Separator />
+              {/* Refund Policy */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <AlertTriangle className="h-5 w-5 text-amber-500" />
+                    Refund Policy
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-muted-foreground">
+                    {currentData.bookingTerms.refundPolicy}
+                  </p>
+                </CardContent>
+              </Card>
 
-                  {/* Booking Terms */}
-                  <div className="space-y-3">
-                    <h4 className="font-medium">Booking Terms</h4>
-                    <div className="text-sm space-y-2">
-                      <div className="flex items-start gap-2">
-                        <AlertTriangle className="h-4 w-4 text-amber-500 mt-0.5 flex-shrink-0" />
-                        <div>
-                          <p className="font-medium">Cancellation Policy:</p>
-                          <p className="text-muted-foreground">{currentData.bookingTerms.cancellationPolicy}</p>
-                        </div>
-                      </div>
-                      <div className="text-muted-foreground text-xs space-y-1">
-                        <p>• Book at least {currentData.bookingTerms.advanceBookingDays} day(s) in advance</p>
-                        <p>• Deposit payment due within {currentData.bookingTerms.paymentDueDays} days of approval</p>
-                        <p>• Final pricing confirmed after review</p>
-                      </div>
-                    </div>
-                  </div>
+              {/* Cancellation Policy */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <AlertTriangle className="h-5 w-5 text-red-500" />
+                    Cancellation Policy
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-muted-foreground">
+                    {currentData.bookingTerms.cancellationPolicy}
+                  </p>
+                </CardContent>
+              </Card>
+
+              {/* Payment Terms */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Payment Terms</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-2 text-sm">
+                  <p>• Book at least {currentData.bookingTerms.advanceBookingDays} day(s) in advance</p>
+                  <p>• Deposit payment due within {currentData.bookingTerms.paymentDueDays} days of approval</p>
+                  <p>• Accepted payment methods: {currentData.bookingTerms.paymentMethods.join(', ')}</p>
+                  <p>• Vendor approval required before payment</p>
+                  <p>• Final pricing confirmed after review</p>
                 </CardContent>
               </Card>
             </div>
