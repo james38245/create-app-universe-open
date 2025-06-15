@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import ConversationsList from '@/components/messaging/ConversationsList';
 import ChatWindow from '@/components/messaging/ChatWindow';
-import { Conversation, Message } from '@/types/messaging';
+import { Conversation } from '@/types/messaging';
 
 const MessagesPage = () => {
   const { user } = useAuth();

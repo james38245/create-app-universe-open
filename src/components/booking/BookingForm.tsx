@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -10,6 +10,8 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { CalendarIcon } from 'lucide-react';
 import { format } from 'date-fns';
+import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
 
 interface BookingFormProps {
   type: 'venue' | 'service';
@@ -28,6 +30,7 @@ const BookingForm: React.FC<BookingFormProps> = ({
   onDateSelect,
   onSubmit
 }) => {
+  const { user } = useAuth();
   const [formData, setFormData] = React.useState({
     name: '',
     email: '',
@@ -36,6 +39,39 @@ const BookingForm: React.FC<BookingFormProps> = ({
     guestCount: '',
     specialRequests: ''
   });
+
+  const [isLoadingProfile, setIsLoadingProfile] = React.useState(true);
+
+  // Load user profile data on component mount
+  useEffect(() => {
+    const loadUserProfile = async () => {
+      if (user) {
+        try {
+          const { data: profile, error } = await supabase
+            .from('profiles')
+            .select('full_name, email, phone')
+            .eq('id', user.id)
+            .single();
+
+          if (error) {
+            console.error('Error loading profile:', error);
+          } else if (profile) {
+            setFormData(prev => ({
+              ...prev,
+              name: profile.full_name || '',
+              email: profile.email || '',
+              phone: profile.phone || ''
+            }));
+          }
+        } catch (error) {
+          console.error('Error fetching user profile:', error);
+        }
+      }
+      setIsLoadingProfile(false);
+    };
+
+    loadUserProfile();
+  }, [user]);
 
   const packages = type === 'venue' ? [
     { id: 'half-day', name: 'Half Day', duration: '4 hours', price: 75000 },
@@ -56,6 +92,21 @@ const BookingForm: React.FC<BookingFormProps> = ({
       type
     });
   };
+
+  if (isLoadingProfile) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Loading booking form...</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-center py-8">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card>
@@ -127,37 +178,44 @@ const BookingForm: React.FC<BookingFormProps> = ({
             </div>
           </div>
 
-          {/* Contact Information */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Contact Information - Pre-filled and read-only */}
+          <div className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="name">Full Name</Label>
               <Input
                 id="name"
                 value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                required
+                readOnly
+                className="bg-gray-50"
+                placeholder="Loading from your profile..."
               />
+              <p className="text-xs text-muted-foreground">
+                This information is automatically filled from your profile
+              </p>
             </div>
+            
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <Input
                 id="email"
                 type="email"
                 value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                required
+                readOnly
+                className="bg-gray-50"
+                placeholder="Loading from your profile..."
               />
             </div>
-          </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="phone">Phone Number</Label>
-            <Input
-              id="phone"
-              value={formData.phone}
-              onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-              required
-            />
+            <div className="space-y-2">
+              <Label htmlFor="phone">Phone Number</Label>
+              <Input
+                id="phone"
+                value={formData.phone}
+                readOnly
+                className="bg-gray-50"
+                placeholder="Loading from your profile..."
+              />
+            </div>
           </div>
 
           <div className="space-y-2">
