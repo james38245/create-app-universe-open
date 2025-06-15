@@ -8,6 +8,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from '@/hooks/use-toast';
 import { useVerification } from '@/hooks/useVerification';
+import { Form } from '@/components/ui/form';
 import ServiceProviderSecurityAlert from './ServiceProviderSecurityAlert';
 import ServiceProviderFormHeader from './ServiceProviderFormHeader';
 import ServiceProviderFormContent from './ServiceProviderFormContent';
@@ -18,7 +19,7 @@ const serviceProviderSchema = z.object({
   blocked_dates: z.array(z.string()).optional(),
   booking_terms: z.any().optional(),
   certifications: z.array(z.string()).optional(),
-  coordinates: z.object({ lat: z.number().optional(), lng: z.number().optional() }).optional(),
+  coordinates: z.object({ lat: z.number().optional(), lng: z.number().optional() }).optional().nullable(),
   experience_years: z.number().optional(),
   hourly_rate: z.number().optional(),
   id: z.string().optional(),
@@ -52,7 +53,7 @@ const ServiceProviderFormProvider: React.FC<ServiceProviderFormProviderProps> = 
     defaultValues: {
       bio: '',
       certifications: [],
-      coordinates: undefined,
+      coordinates: null,
       experience_years: 1,
       hourly_rate: 1000,
       images: [],
@@ -134,12 +135,16 @@ const ServiceProviderFormProvider: React.FC<ServiceProviderFormProviderProps> = 
     <div className="space-y-6">
       <ServiceProviderSecurityAlert />
       <ServiceProviderFormHeader />
-      <ServiceProviderFormContent form={form} />
-      <ServiceProviderFormActions
-        onCancel={onCancel || (() => {})}
-        isSubmitting={createServiceProviderMutation.isPending}
-        isInitiating={false}
-      />
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          <ServiceProviderFormContent form={form} />
+          <ServiceProviderFormActions
+            onCancel={onCancel || (() => {})}
+            isSubmitting={createServiceProviderMutation.isPending}
+            isInitiating={false}
+          />
+        </form>
+      </Form>
     </div>
   );
 };

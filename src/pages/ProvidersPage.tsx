@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -80,6 +81,21 @@ const ProvidersPage = () => {
     );
   }
 
+  // Transform providers data to match ServiceProviderCard expected format
+  const transformedProviders = displayedProviders.map(provider => ({
+    id: provider.id,
+    business_name: provider.profiles?.full_name || 'Service Provider',
+    service_type: provider.service_category || 'General Services',
+    location: 'Kenya', // Default location since it's not in the current schema
+    base_price: provider.price_per_event || 0,
+    rating: provider.rating || 0,
+    total_reviews: provider.total_reviews || 0,
+    description: provider.bio || 'Professional service provider',
+    image_url: provider.profiles?.avatar_url,
+    specialties: provider.specialties || [],
+    is_available: provider.is_available || false,
+  }));
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50">
       <div className="pt-16 md:pt-0 pb-20 md:pb-0 md:ml-64">
@@ -107,7 +123,7 @@ const ProvidersPage = () => {
           <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
             <div className="mb-4 md:mb-0">
               <p className="text-gray-600">
-                {displayedProviders.length} service provider{displayedProviders.length !== 1 ? 's' : ''} found
+                {transformedProviders.length} service provider{transformedProviders.length !== 1 ? 's' : ''} found
               </p>
             </div>
             
@@ -134,15 +150,16 @@ const ProvidersPage = () => {
           </div>
 
           {/* Service Providers Grid/List */}
-          {displayedProviders.length > 0 ? (
+          {transformedProviders.length > 0 ? (
             <div className={viewMode === 'grid' 
               ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6' 
               : 'space-y-4'
             }>
-              {displayedProviders.map((provider) => (
+              {transformedProviders.map((provider) => (
                 <ServiceProviderCard 
                   key={provider.id} 
                   provider={provider}
+                  layout={viewMode}
                 />
               ))}
             </div>
