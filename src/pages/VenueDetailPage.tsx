@@ -14,7 +14,6 @@ const VenueDetailPage = () => {
   const { id } = useParams();
   const [selectedDate, setSelectedDate] = useState<string>('');
   const [selectedPackage, setSelectedPackage] = useState<string>('full-day');
-  const [guestCount, setGuestCount] = useState<number>(100);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
 
   // Mock venue data
@@ -94,8 +93,6 @@ const VenueDetailPage = () => {
                 packages={venue.packages}
                 selectedPackage={selectedPackage}
                 onPackageSelect={setSelectedPackage}
-                guestCount={guestCount}
-                onGuestCountChange={setGuestCount}
                 selectedDate={selectedDate}
                 totalAmount={totalAmount}
                 maxCapacity={venue.capacity}

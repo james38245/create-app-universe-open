@@ -3,9 +3,7 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Clock } from 'lucide-react';
+import { Clock, Users } from 'lucide-react';
 
 interface Package {
   id: string;
@@ -18,8 +16,6 @@ interface VenueBookingFormProps {
   packages: Package[];
   selectedPackage: string;
   onPackageSelect: (packageId: string) => void;
-  guestCount: number;
-  onGuestCountChange: (count: number) => void;
   selectedDate: string;
   totalAmount: number;
   maxCapacity: number;
@@ -30,8 +26,6 @@ const VenueBookingForm: React.FC<VenueBookingFormProps> = ({
   packages,
   selectedPackage,
   onPackageSelect,
-  guestCount,
-  onGuestCountChange,
   selectedDate,
   totalAmount,
   maxCapacity,
@@ -48,7 +42,7 @@ const VenueBookingForm: React.FC<VenueBookingFormProps> = ({
       <CardContent className="space-y-4">
         {/* Package Selection */}
         <div className="space-y-3">
-          <Label>Select Package</Label>
+          <label className="text-sm font-medium">Select Package</label>
           {packages.map((pkg) => (
             <div
               key={pkg.id}
@@ -72,17 +66,15 @@ const VenueBookingForm: React.FC<VenueBookingFormProps> = ({
 
         <Separator />
 
-        {/* Guest Count */}
-        <div className="space-y-2">
-          <Label htmlFor="guests">Number of Guests</Label>
-          <Input
-            id="guests"
-            type="number"
-            value={guestCount}
-            onChange={(e) => onGuestCountChange(Number(e.target.value))}
-            min="1"
-            max={maxCapacity}
-          />
+        {/* Venue Capacity Display */}
+        <div className="p-3 bg-muted rounded-lg">
+          <div className="flex items-center gap-2">
+            <Users className="h-4 w-4 text-muted-foreground" />
+            <div>
+              <p className="text-sm font-medium">Venue Capacity</p>
+              <p className="text-sm text-muted-foreground">Up to {maxCapacity} guests</p>
+            </div>
+          </div>
         </div>
 
         {/* Selected Date Display */}
