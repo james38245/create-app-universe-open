@@ -21,8 +21,8 @@ const serviceProviderSchema = z.object({
   booking_terms: z.any().optional(),
   certifications: z.array(z.string()).optional(),
   coordinates: z.object({ 
-    lat: z.number().optional(), 
-    lng: z.number().optional() 
+    lat: z.number(), 
+    lng: z.number() 
   }).optional().nullable(),
   experience_years: z.number().optional(),
   hourly_rate: z.number().optional(),
@@ -37,6 +37,9 @@ const serviceProviderSchema = z.object({
   social_links: z.any().optional(),
   specialties: z.array(z.string()).optional(),
   user_id: z.string().optional(),
+  pricing_unit: z.enum(['event', 'hour']).optional(),
+  price_per_event: z.number().optional(),
+  price_per_hour: z.number().optional(),
 });
 
 export type FormData = z.infer<typeof serviceProviderSchema>;
@@ -67,6 +70,9 @@ const ServiceProviderFormProvider: React.FC<ServiceProviderFormProviderProps> = 
       service_type: '',
       social_links: {},
       specialties: [],
+      pricing_unit: 'event',
+      price_per_event: 25000,
+      price_per_hour: 5000,
     },
   });
 
@@ -77,13 +83,18 @@ const ServiceProviderFormProvider: React.FC<ServiceProviderFormProviderProps> = 
       // Sanitize form data for security
       const sanitizedData = sanitizeFormData(data);
 
+      // Determine the correct price based on pricing unit
+      const priceValue = sanitizedData.pricing_unit === 'hour' 
+        ? sanitizedData.price_per_hour 
+        : sanitizedData.price_per_event;
+
       // Validate against security schema
       const validationResult = serviceProviderValidationSchema.safeParse({
         service_category: sanitizedData.service_type,
         specialties: sanitizedData.specialties || [],
         bio: sanitizedData.bio || '',
         years_experience: sanitizedData.experience_years || 0,
-        price_per_event: sanitizedData.hourly_rate || 0,
+        price_per_event: priceValue || 0,
         portfolio_images: uploadedImages,
         certifications: sanitizedData.certifications || [],
         response_time_hours: 24,
@@ -104,10 +115,11 @@ const ServiceProviderFormProvider: React.FC<ServiceProviderFormProviderProps> = 
           deposit_percentage: 50,
           cancellation_policy: "Full refund if cancelled 48 hours before event",
           advance_booking_days: 1,
-          minimum_booking_hours: 2
+          minimum_booking_hours: 2,
+          pricing_unit: sanitizedData.pricing_unit || 'event'
         },
         years_experience: sanitizedData.experience_years || 1,
-        price_per_event: sanitizedData.hourly_rate || 1000,
+        price_per_event: priceValue || 25000,
         portfolio_images: uploadedImages,
         service_category: sanitizedData.service_type || '',
         specialties: sanitizedData.specialties || [],
