@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -43,13 +42,7 @@ const ProvidersPage = () => {
       filtered = filtered.filter(provider =>
         provider.service_category.toLowerCase().includes(searchTerm.toLowerCase()) ||
         provider.profiles?.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        provider.description?.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-    }
-
-    if (location) {
-      filtered = filtered.filter(provider =>
-        provider.location?.toLowerCase().includes(location.toLowerCase())
+        provider.bio?.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
 

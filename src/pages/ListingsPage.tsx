@@ -1,12 +1,11 @@
-
 import React, { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Plus, Building, User, Eye, Edit, Trash2 } from 'lucide-react';
+import { Plus, Building, User, Eye, Edit, Trash2, Send } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { toast } from '@/hooks/use-toast';
 import AddVenueForm from '@/components/forms/AddVenueForm';
@@ -17,6 +16,7 @@ const ListingsPage = () => {
   const [activeTab, setActiveTab] = useState('venues');
   const [showAddVenueForm, setShowAddVenueForm] = useState(false);
   const [showAddServiceForm, setShowAddServiceForm] = useState(false);
+  const queryClient = useQueryClient();
 
   const { data: venues, isLoading: venuesLoading } = useQuery({
     queryKey: ['my-venues', user?.id],
@@ -46,6 +46,56 @@ const ListingsPage = () => {
       return data;
     },
     enabled: !!user
+  });
+
+  const postVenueMutation = useMutation({
+    mutationFn: async (venueId: string) => {
+      const { error } = await supabase
+        .from('venues')
+        .update({ is_active: true })
+        .eq('id', venueId);
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['my-venues'] });
+      toast({
+        title: "Success",
+        description: "Venue posted successfully and is now visible to clients"
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to post venue",
+        variant: "destructive"
+      });
+    }
+  });
+
+  const postProviderMutation = useMutation({
+    mutationFn: async (providerId: string) => {
+      const { error } = await supabase
+        .from('service_providers')
+        .update({ is_available: true })
+        .eq('id', providerId);
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['my-service-providers'] });
+      toast({
+        title: "Success", 
+        description: "Service posted successfully and is now visible to clients"
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to post service",
+        variant: "destructive"
+      });
+    }
   });
 
   const handleDeleteVenue = async (venueId: string) => {
@@ -183,7 +233,7 @@ const ListingsPage = () => {
                         <div className="flex justify-between items-start">
                           <CardTitle className="text-lg">{venue.name}</CardTitle>
                           <Badge variant={venue.is_active ? "default" : "secondary"}>
-                            {venue.is_active ? "Active" : "Inactive"}
+                            {venue.is_active ? "Posted" : "Draft"}
                           </Badge>
                         </div>
                       </CardHeader>
@@ -200,7 +250,18 @@ const ListingsPage = () => {
                             </p>
                           )}
                         </div>
-                        <div className="flex gap-2">
+                        <div className="flex gap-2 flex-wrap">
+                          {!venue.is_active && (
+                            <Button 
+                              size="sm"
+                              onClick={() => postVenueMutation.mutate(venue.id)}
+                              disabled={postVenueMutation.isPending}
+                              className="bg-green-600 hover:bg-green-700"
+                            >
+                              <Send className="h-4 w-4 mr-1" />
+                              Post
+                            </Button>
+                          )}
                           <Button variant="outline" size="sm">
                             <Eye className="h-4 w-4 mr-1" />
                             View
@@ -262,7 +323,7 @@ const ListingsPage = () => {
                         <div className="flex justify-between items-start">
                           <CardTitle className="text-lg">{provider.service_category}</CardTitle>
                           <Badge variant={provider.is_available ? "default" : "secondary"}>
-                            {provider.is_available ? "Available" : "Busy"}
+                            {provider.is_available ? "Posted" : "Draft"}
                           </Badge>
                         </div>
                       </CardHeader>
@@ -292,7 +353,18 @@ const ListingsPage = () => {
                             </div>
                           )}
                         </div>
-                        <div className="flex gap-2">
+                        <div className="flex gap-2 flex-wrap">
+                          {!provider.is_available && (
+                            <Button 
+                              size="sm"
+                              onClick={() => postProviderMutation.mutate(provider.id)}
+                              disabled={postProviderMutation.isPending}
+                              className="bg-green-600 hover:bg-green-700"
+                            >
+                              <Send className="h-4 w-4 mr-1" />
+                              Post
+                            </Button>
+                          )}
                           <Button variant="outline" size="sm">
                             <Eye className="h-4 w-4 mr-1" />
                             View
