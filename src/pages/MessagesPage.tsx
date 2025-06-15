@@ -22,6 +22,7 @@ const MessagesPage = () => {
   const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
   const [newMessage, setNewMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [showGoodStart, setShowGoodStart] = useState(false);
 
   const handleConversationSelect = async (conversation: Conversation) => {
     setSelectedConversation(conversation);
@@ -51,6 +52,28 @@ const MessagesPage = () => {
 
   const handleBackToList = () => {
     setSelectedConversation(null);
+  };
+
+  const handleVoiceCall = () => {
+    if (selectedConversation?.phoneNumber) {
+      window.open(`tel:${selectedConversation.phoneNumber}`, '_self');
+    }
+  };
+
+  const handleSelectChat = (chatId: string) => {
+    const conversation = conversations.find(conv => conv.id === chatId);
+    if (conversation) {
+      handleConversationSelect(conversation);
+    }
+  };
+
+  const handleStartConversation = async (userId: string, userName: string, userRole: string) => {
+    try {
+      await startConversation(userId, userName, userRole);
+      setShowGoodStart(false);
+    } catch (error) {
+      console.error('Error starting conversation:', error);
+    }
   };
 
   if (!user) {
@@ -95,27 +118,28 @@ const MessagesPage = () => {
 
             {/* Conversations List */}
             <div className={`lg:col-span-1 ${selectedConversation ? 'hidden lg:block' : ''}`}>
-              <Card className="h-full">
-                <ConversationsList
-                  conversations={conversations}
-                  onConversationSelect={handleConversationSelect}
-                  isLoading={isLoading}
-                />
-              </Card>
+              <ConversationsList
+                conversations={conversations}
+                selectedChat={selectedConversation?.id || null}
+                showGoodStart={showGoodStart}
+                onSelectChat={handleSelectChat}
+                onToggleGoodStart={() => setShowGoodStart(!showGoodStart)}
+                onStartConversation={handleStartConversation}
+              />
             </div>
 
             {/* Chat Window */}
             <div className={`lg:col-span-2 ${!selectedConversation ? 'hidden lg:block' : ''}`}>
-              <Card className="h-full">
-                <ChatWindow
-                  selectedConversation={selectedConversation}
-                  messages={messages}
-                  newMessage={newMessage}
-                  onMessageChange={setNewMessage}
-                  onSendMessage={handleSendMessage}
-                  isLoading={isLoading}
-                />
-              </Card>
+              <ChatWindow
+                selectedConversation={selectedConversation}
+                messages={messages}
+                newMessage={newMessage}
+                conversations={conversations}
+                onMessageChange={setNewMessage}
+                onSendMessage={handleSendMessage}
+                onVoiceCall={handleVoiceCall}
+                onShowGoodStart={() => setShowGoodStart(true)}
+              />
             </div>
           </div>
         </div>
